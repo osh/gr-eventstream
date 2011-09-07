@@ -35,7 +35,7 @@ class qa_es (gr_unittest.TestCase):
 
     def test_001_square_ff (self):
         print "ok"
-        print dir(es);
+        #print dir(es);
     
     def test_002_es_source (self):
 
@@ -48,7 +48,7 @@ class qa_es (gr_unittest.TestCase):
         queue = es.queue();
 
         # create the source block and set a max stream length on it
-        src = es.source( arb, queue, gr.sizeof_float );
+        src = es.source( arb, queue, [gr.sizeof_float] );
         src.set_max(20);
        
         # add a singular event
@@ -60,7 +60,7 @@ class qa_es (gr_unittest.TestCase):
         #e1 = es.es_make_event_gen_vector_f(arb, [1,2,3,4]);
         #e1.set_time(13)
 
-        print dir(es)
+        #print dir(es)
         #e1 = es.event_create( "test_event", 13, 4 );
         #e1 = es.event_create( "test_event", 13, 4 );
         queue.register_event_type( es.event_type( e1 ) );
@@ -75,17 +75,6 @@ class qa_es (gr_unittest.TestCase):
         tb.run();
         print snk.data();
     
-    def test_003_es_flowgraph(self):
-        tb = gr.top_block();
-
-        data = [1,2,3,4];
-        src = gr.vector_source_c(data);
- 
-        e1 = es.event_create("Evt1", 2,1);
-        
-        hb = gr.hier_block2("blk", gr.io_signature(0,0,0), gr.io_signature(0,0,0));
-        h1 = es.es_handler_flowgraph( 1, hb);
-        
 
 if __name__ == '__main__':
     gr_unittest.main ()

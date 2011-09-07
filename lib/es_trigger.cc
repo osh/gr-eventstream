@@ -1,21 +1,21 @@
 /* -*- c++ -*- */
 /*
- * Copyright 2004 Free Software Foundation, Inc.
+ * Copyright 2011 Free Software Foundation, Inc.
  * 
- * This file is part of GNU Radio
+ * This file is part of gr-eventstream
  * 
- * GNU Radio is free software; you can redistribute it and/or modify
+ * gr-eventstream is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3, or (at your option)
  * any later version.
  * 
- * GNU Radio is distributed in the hope that it will be useful,
+ * gr-eventstream is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
+ * along with gr-eventstream; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
  */
@@ -38,11 +38,11 @@
  * Create a new instance of es_trigger and return
  * a boost shared_ptr.  This is effectively the public constructor.
  */
-es_trigger_sptr 
+/*"es_trigger_sptr 
 es_make_trigger (pmt_t arb, es_queue_sptr queue, int itemsize, std::string blkname)
 {
   return es_trigger_sptr (new es_trigger (arb,queue,itemsize,blkname));
-}
+}*/
 
 /*
  * Specify constraints on number of input and output streams.
@@ -53,16 +53,10 @@ es_make_trigger (pmt_t arb, es_queue_sptr queue, int itemsize, std::string blkna
  * are connected to this block.  In this case, we accept
  * only 1 input and 1 output.
  */
-static const int MIN_IN = 1;	// mininum number of input streams
-static const int MAX_IN = 1;	// maximum number of input streams
-static const int MIN_OUT = 1;	// minimum number of output streams
-static const int MAX_OUT = 1;	// maximum number of output streams
-
-es_trigger::es_trigger (pmt_t _arb, es_queue_sptr _queue, int _itemsize, std::string blkname)
-  : gr_sync_block (blkname,
-		   gr_make_io_signature (MIN_IN, MAX_IN, _itemsize),
-		   gr_make_io_signature (MIN_OUT, MAX_OUT, _itemsize)), 
-
+es_trigger::es_trigger (pmt_t _arb, es_queue_sptr _queue, std::string blkname, gr_io_signature_sptr in_sig, gr_io_signature_sptr out_sig)
+  : gr_sync_block (blkname.append("_trigger"),
+		   in_sig,
+		   out_sig),
     arb(_arb), event_queue(_queue), d_time(0), d_length(1), d_lookback(0)
 {
     event_types.push_back( pmt_intern( "default_trigger_event" ) );

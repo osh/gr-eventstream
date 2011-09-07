@@ -18,16 +18,16 @@ namespace detail {
 namespace atomic {
 
 
-// Different ARM processors have different atomic instructions.  In particular, 
-// architecture versions before v6 (which are still in widespread use, e.g. the 
-// Intel/Marvell XScale chips like the one in the NSLU2) have only atomic swap.  
-// On Linux the kernel provides some support that lets us abstract away from 
-// these differences: it provides emulated CAS and barrier functions at special 
-// addresses that are garaunteed not to be interrupted by the kernel.  Using 
-// this facility is slightly slower than inline assembler would be, but much 
+// Different ARM processors have different atomic instructions.  In particular,
+// architecture versions before v6 (which are still in widespread use, e.g. the
+// Intel/Marvell XScale chips like the one in the NSLU2) have only atomic swap.
+// On Linux the kernel provides some support that lets us abstract away from
+// these differences: it provides emulated CAS and barrier functions at special
+// addresses that are garaunteed not to be interrupted by the kernel.  Using
+// this facility is slightly slower than inline assembler would be, but much
 // faster than a system call.
 //
-// For documentation, see arch/arm/kernel/entry-armv.S in the kernel source 
+// For documentation, see arch/arm/kernel/entry-armv.S in the kernel source
 // (search for "User Helpers").
 
 
@@ -67,7 +67,7 @@ static inline void fence_after(memory_order order)
 template<typename T>
 class atomic_linux_arm_4 {
 
-	typedef int (kernel_cmpxchg_t)(T oldval, T newval, T *ptr);
+	typedef int (kernel_cmpxchg_t)(T oldval, T newval, volatile T *ptr);
 #	define BOOST_ATOMIC_KERNEL_CMPXCHG (*(kernel_cmpxchg_t *)0xffff0fc0)
 	// Returns 0 if *ptr was changed.
 
@@ -96,7 +96,7 @@ public:
 		// Also it seems that when an ll/sc implementation is used the kernel
 		// loops until the store succeeds.
 		bool success = BOOST_ATOMIC_KERNEL_CMPXCHG(expected,desired,&i)==0;
-		if (!success) e = load(memory_order_relaxed);
+		if (!success) expected = load(memory_order_relaxed);
 		return success;
 	}
 	bool compare_exchange_weak(
@@ -111,7 +111,7 @@ public:
 	{
 		// Copied from build_exchange.
                 T o=load(memory_order_relaxed);
-                do {} while(!compare_exchange_weak(o, replacement, order));
+                do {} while(!compare_exchange_weak(o, replacement, order, order));
                 return o;
 		// Note that ARM has an atomic swap instruction that we could use here:
 		//   T oldval;
@@ -121,9 +121,9 @@ public:
 		// its implementation is on those newer architectures.  I don't think this would gain
 		// much since exchange() is not used often.
 	}
-	
+
 	bool is_lock_free(void) const volatile {return true;}
-protected:
+
 	typedef T integral_type;
 private:
 	T i;

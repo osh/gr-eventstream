@@ -1,4 +1,24 @@
-
+/* -*- c++ -*- */
+/*
+ * Copyright 2011 Free Software Foundation, Inc.
+ * 
+ * This file is part of gr-eventstream
+ * 
+ * gr-eventstream is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3, or (at your option)
+ * any later version.
+ * 
+ * gr-eventstream is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with gr-eventstream; see the file COPYING.  If not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street,
+ * Boston, MA 02110-1301, USA.
+ */
 
 #include <qa_es_source.h>
 #include <cppunit/TestAssert.h>
@@ -15,9 +35,8 @@ qa_es_source::t1()
 
     es_queue_sptr q = es_make_queue();
     pmt_t arb = es_make_arbiter();
-    //es_source_sptr s = es_make_source(arb,q,sizeof(float));
-
-    gr_io_signature_sptr outsig( gr_make_io_signature( 1, 1, sizeof(float) ) );
+    gr_vector_int outsig(1);
+    outsig[0] = sizeof(float);
     es_source_sptr s = es_make_source(arb,q, outsig);
  
     pmt_t e1 = event_create( es::event_type_1, 1, 4 );
@@ -45,8 +64,8 @@ qa_es_source::t2()
     es_queue_sptr q = es_make_queue();
     pmt_t arb = es_make_arbiter();
 
-    gr_io_signature_sptr outsig( gr_make_io_signature( 1, 1, sizeof(float) ) );
-    //es_source_sptr s = es_make_source(arb,q,sizeof(float));
+    gr_vector_int outsig(1);
+    outsig[0] = sizeof(float);
     es_source_sptr s = es_make_source(arb,q,outsig);
 
     s->set_max(10);

@@ -1,4 +1,24 @@
-
+/* -*- c++ -*- */
+/*
+ * Copyright 2011 Free Software Foundation, Inc.
+ * 
+ * This file is part of gr-eventstream
+ * 
+ * gr-eventstream is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3, or (at your option)
+ * any later version.
+ * 
+ * gr-eventstream is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with gr-eventstream; see the file COPYING.  If not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street,
+ * Boston, MA 02110-1301, USA.
+ */
 
 #include <qa_es_sink.h>
 #include <cppunit/TestAssert.h>
@@ -38,7 +58,8 @@ qa_es_sink::t1()
     gr_top_block_sptr tb = gr_make_top_block("qa_es_sink_t1_top");
     gr_vector_source_f_sptr src = gr_make_vector_source_f(vec);
     
-    gr_io_signature_sptr insig( gr_make_io_signature( 1, 1, sizeof(float) ) );
+    gr_vector_int insig(1);
+    insig[0] = sizeof(float);
     es_sink_sptr snk = es_make_sink( arb, queue, insig, 1 );
     
     // connect traditional flowgraph portion
@@ -47,7 +68,8 @@ qa_es_sink::t1()
     pmt_t evt1 = event_create("NEW_EVT_TYPE_3_4", 3, 4);
     pmt_t evt2 = event_create("NEW_EVT_TYPE_5_4", 5, 4);
 
-    pmt_t h1 = make_handler_pmt( new es_handler_print(es_handler_print::TYPE_F32) );
+    //pmt_t h1 = make_handler_pmt( new es_handler_print(es_handler_print::TYPE_F32) );
+    es_handler_sptr h1 = es_make_handler_print(es_handler_print::TYPE_F32);
     
     // register the NEW_EVT_TYPE as a known event type handled by this queue
     queue->register_event_type( event_type( evt1 ) );

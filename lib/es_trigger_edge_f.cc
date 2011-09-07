@@ -1,21 +1,21 @@
 /* -*- c++ -*- */
 /*
- * Copyright 2004 Free Software Foundation, Inc.
+ * Copyright 2011 Free Software Foundation, Inc.
  * 
- * This file is part of GNU Radio
+ * This file is part of gr-eventstream
  * 
- * GNU Radio is free software; you can redistribute it and/or modify
+ * gr-eventstream is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3, or (at your option)
  * any later version.
  * 
- * GNU Radio is distributed in the hope that it will be useful,
+ * gr-eventstream is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
+ * along with gr-eventstream; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
  */
@@ -39,8 +39,8 @@
  * a boost shared_ptr.  This is effectively the public constructor.
  */
 es_trigger_edge_f_sptr 
-es_make_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback) {
-  return es_trigger_edge_f_sptr (new es_trigger_edge_f (arb,queue,thresh,length,lookback));
+es_make_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback, int itemsize, int guard, std::string evt_type) {
+  return es_trigger_edge_f_sptr (new es_trigger_edge_f (arb,queue,thresh,length,lookback,itemsize,guard,evt_type));
 
 }
 
@@ -54,17 +54,25 @@ es_make_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length
  * only 1 input and 1 output.
  */
 static const int MIN_IN = 1;	// mininum number of input streams
-static const int MAX_IN = 1;	// maximum number of input streams
-static const int MIN_OUT = 1;	// minimum number of output streams
+static const int MAX_IN = 2;	// maximum number of input streams
+static const int MIN_OUT = 0;	// minimum number of output streams
 static const int MAX_OUT = 1;	// maximum number of output streams
 
-es_trigger_edge_f::es_trigger_edge_f (pmt_t _arb, es_queue_sptr _queue, float thresh, int length, int lookback)
-  : d_thresh(thresh), es_trigger (_arb, _queue, sizeof(float), "es_trigger_edge_f")
+es_trigger_edge_f::es_trigger_edge_f (pmt_t _arb, es_queue_sptr _queue, float thresh, int length, int lookback, int itemsize, int guard, std::string evt_type)
+  : 
+    d_guard(guard),
+    d_lasttrigger(0),
+    d_thresh(thresh), 
+    es_trigger (_arb, _queue, "es_trigger_edge_f",
+        gr_make_io_signature2(MIN_IN, MAX_IN, sizeof(float), itemsize),
+        gr_make_io_signature(MIN_OUT,MAX_OUT, itemsize))
 {
     printf("num event_types = %d\n", event_types.size());
-    event_types[0] = pmt_intern("event_trigger");
+    //event_types[0] = pmt_intern("EDGE_TRIGGER_EVENT");
+    event_types[0] = pmt_intern(evt_type);
+    d_time = 0;
     d_length = length;
-    d_lookback = lookback;   
+    d_lookback = lookback;
 }
 
 es_trigger_edge_f::~es_trigger_edge_f ()
@@ -77,30 +85,43 @@ es_trigger_edge_f::work (int noutput_items,
 			gr_vector_void_star &output_items)
 {
   
+//  printf("trigger::work() d_time = %llu\n", d_time);
   float *in = (float*) input_items[0];
-  float *out = (float*) output_items[0];
     
-  printf("es_trigger_edge_f::work() running.\n");
+//  printf("es_trigger_edge_f::work() running.\n");
     
-  // copy input to output
-  memcpy(out, in, noutput_items*sizeof(float));
- 
+  // copy input to output if output connected
+  if(output_items.size() == 1 && input_items.size() == 2){
+    int itemsize = input_signature()->sizeof_stream_item(1);
+    void *ii = (void*) input_items[1];
+    void *oi = (void*) output_items[0];
+    memcpy(oi, ii, noutput_items*itemsize);
+  }
+
   d_lastval = (d_time==0)?in[0]:d_lastval;
   if(d_time == 0){ d_lastval = in[0]; }
   
   for(int i=0; i<noutput_items; i++){
     //printf("in[i]=%f, d_thresh=%f, d_lastval=%f\n", in[i], d_thresh, d_lastval);
-    if(in[i] > d_thresh && d_lastval < d_thresh){
-    
+    if((in[i] > d_thresh) && (d_lastval < d_thresh) && ((d_lasttrigger==0)||(d_lasttrigger + d_guard <= d_time + i))){
         // create an event at the appropriate time,
         //  factoring lookback and event length specified in constructor
-        pmt_t e1 = event_create( event_type(0), d_time-d_lookback, d_length );
-      
+        if(i+d_time < d_lookback){
+            printf("WARNING: d_time < d_lookback, spawning event at time zero.\n");
+        }
+        //pmt_t e1 = event_create( event_type(0), d_time-d_lookback, d_length );
+        uint64_t event_time = (i+d_time)>d_lookback?i+d_time-d_lookback:0;
+        pmt_t e1 = event_create( event_type(0), event_time, d_length );
+        printf("creating event @ time %llu, length = %llu\n", event_time, d_length);
+    
         // add event to our queue
         event_queue->add_event(e1);
+
+        // record our last trigger
+        d_lasttrigger = event_time;
     }
     d_lastval = in[i];
-    d_time++;
+    //d_time++;
   }
   
   // consume the current input items

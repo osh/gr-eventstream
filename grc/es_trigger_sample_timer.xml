@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<block>
+  <name>Trigger Sample-Timer Event</name>
+  <key>es_trigger_sample_timer</key>
+  <category>EVENTSTREAM</category>
+  <import>import es</import>
+  <make>es.trigger_sample_timer($queue, "SAMPLE_TIMER_EVENT", $type.size, $period, $shift, $sched_dist, $length )</make>
+  
+  <param>
+    <name>Eventstream Queue</name>
+    <key>queue</key>
+    <value>variable_es_queue_0</value>
+    <type>raw</type>
+  </param>
+  <param>
+    <name>Event Length (samples)</name>
+    <key>length</key>
+    <value>100</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Event Periodicity (samples)</name>
+    <key>period</key>
+    <value>10000</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Periodic Event Offset From 0 (samples)</name>
+    <key>shift</key>
+    <value>5000</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Schedule-Ahead Distance</name>
+    <key>sched_dist</key>
+    <value>25000</value>
+    <type>int</type>
+  </param>
+
+  <param>
+      <name>Passthrough Data Type</name>
+      <key>type</key>
+      <type>enum</type>
+      <option>
+          <name>Complex</name>
+          <key>complex</key>
+          <opt>size:gr.sizeof_gr_complex</opt>
+      </option>
+      <option>
+          <name>Float</name>
+          <key>float</key>
+          <opt>size:gr.sizeof_float</opt>
+      </option>
+      <option>
+          <name>Int</name>
+          <key>int</key>
+          <opt>size:gr.sizeof_int</opt>
+      </option>
+      <option>
+          <name>Short</name>
+          <key>short</key>
+          <opt>size:gr.sizeof_short</opt>
+      </option>
+      <option>
+          <name>Byte</name>
+          <key>byte</key>
+          <opt>size:gr.sizeof_char</opt>
+      </option>
+  </param>
+
+  <sink>
+    <name>in</name>
+    <type>$type</type>
+    <optional>1</optional>
+  </sink>
+  
+  <source>
+    <name>out</name>
+    <type>$type</type>
+    <optional>1</optional>
+  </source>
+
+  <event_emit>SAMPLE_TIMER_EVENT</event_emit>
+
+
+</block>

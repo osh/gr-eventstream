@@ -1,3 +1,24 @@
+/* -*- c++ -*- */
+/*
+ * Copyright 2011 Free Software Foundation, Inc.
+ * 
+ * This file is part of gr-eventstream
+ * 
+ * gr-eventstream is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3, or (at your option)
+ * any later version.
+ * 
+ * gr-eventstream is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with gr-eventstream; see the file COPYING.  If not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street,
+ * Boston, MA 02110-1301, USA.
+ */
 
 #include <stdio.h>
 #include <es/es_common.h>
@@ -6,13 +27,14 @@
 /*
  * Constructor function, sets up parameters
  */
-es_event_loop_thread::es_event_loop_thread(pmt_t _arb, es_queue_sptr _queue, boost::lockfree::fifo<es_eh_pair*> *_qq, boost::lockfree::fifo<unsigned long long> *_dq, boost::condition *_qq_cond) :
+es_event_loop_thread::es_event_loop_thread(pmt_t _arb, es_queue_sptr _queue, boost::lockfree::fifo<es_eh_pair*> *_qq, boost::lockfree::fifo<unsigned long long> *_dq, boost::condition *_qq_cond, boost::atomic<int> *nevents) :
     arb(_arb),
     queue(_queue),
     qq(_qq),
     dq(_dq),
     qq_cond(_qq_cond),
-    finished(false)
+    finished(false),
+    d_nevents(nevents)
 {
     start();
 }
@@ -31,6 +53,7 @@ void es_event_loop_thread::start(){
 void es_event_loop_thread::stop(){
     finished = true;
     qq_cond->notify_all();
+    d_thread->interrupt();
     d_thread->join();
 }
 
@@ -42,7 +65,7 @@ void es_event_loop_thread::stop(){
  */
 void es_event_loop_thread::do_work(){
 
-    // used by boost::condition, has no scope outside of this thread, unneccisary
+//    // used by boost::condition, has no scope outside of this thread, unneccisary
     boost::mutex access;
     boost::mutex::scoped_lock lock(access);
 
@@ -54,16 +77,19 @@ void es_event_loop_thread::do_work(){
         qq_cond->wait(lock);
 
         // get events to handle as long as they are available
-        while( (*qq).dequeue(&eh) ){
+        while( (*qq).dequeue(eh) ){
 
-            //if(finished){ return; }
-            printf("dequeue returned.\n");
+            //printf("dequeue returned.\n");
 
             // run the event/handler pair
             eh->run();
 
             // enqueue the time marker for deletion
             (*dq).enqueue( eh->time() );
+
+            // decrement number of events
+            int a = *d_nevents;
+            (*d_nevents)--;
 
             // delete the reference
             delete eh;

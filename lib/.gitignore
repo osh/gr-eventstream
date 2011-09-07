@@ -7,6 +7,7 @@
 /*.la
 /*.lo
 /*.pyc
+/*.o
 /es.cc
 /es.py
 /test_all

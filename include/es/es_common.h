@@ -1,3 +1,24 @@
+/* -*- c++ -*- */
+/*
+ * Copyright 2011 Free Software Foundation, Inc.
+ * 
+ * This file is part of gr-eventstream
+ * 
+ * gr-eventstream is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3, or (at your option)
+ * any later version.
+ * 
+ * gr-eventstream is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with gr-eventstream; see the file COPYING.  If not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street,
+ * Boston, MA 02110-1301, USA.
+ */
 #ifndef EVENTSTREAM_COMMON_H
 #define EVENTSTREAM_COMMON_H
 
@@ -37,7 +58,9 @@ void event_print( pmt_t event );
 pmt_t event_create( pmt_t es_event_type, unsigned long long time, unsigned long long max_len );      
 pmt_t event_create( std::string es_event_type, unsigned long long time, unsigned long long max_len );      
 pmt_t event_field( pmt_t event, pmt_t field );
+bool event_has_field( pmt_t event, pmt_t field );
 
+pmt_t event_type_pmt( pmt_t event );       
 std::string event_type( pmt_t event );       
 bool event_type_compare( pmt_t event, pmt_t evt_type );
 uint64_t event_time( pmt_t event );
@@ -52,5 +75,9 @@ pmt_t register_buffer( pmt_t event, pmt_t bufs);
 pmt_t register_buffer( pmt_t event, gr_vector_void_star buf);
 pmt_t register_buffer( pmt_t event, gr_vector_const_void_star buf);
 
+
+gr_io_signature_sptr es_make_io_signature( int min, const std::vector<int> &sizes );
+
+std::vector<unsigned char> string_to_vector(std::string);
 
 #endif

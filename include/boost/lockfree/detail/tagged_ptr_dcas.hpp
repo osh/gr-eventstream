@@ -15,10 +15,9 @@
 
 #include <cstddef>              /* for std::size_t */
 
-namespace boost
-{
-namespace lockfree
-{
+namespace boost {
+namespace lockfree {
+namespace detail {
 
 template <class T>
 class BOOST_LOCKFREE_DCAS_ALIGNMENT tagged_ptr
@@ -114,6 +113,7 @@ protected:
     tag_t tag;
 };
 
+} /* namespace detail */
 } /* namespace lockfree */
 } /* namespace boost */
 

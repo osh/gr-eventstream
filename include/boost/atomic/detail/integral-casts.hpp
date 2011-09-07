@@ -15,13 +15,12 @@ template<typename T>
 class platform_atomic<T, 1> : private platform_atomic_integral<uint8_t> {
 public:
 	typedef platform_atomic_integral<uint8_t> super;
-	typedef union { T e; uint8_t i;} conv;
-	
+
 	platform_atomic() {}
 	explicit platform_atomic(T t) : super(to_integral(t))
 	{
 	}
-	
+
 	void store(T t, memory_order order=memory_order_seq_cst) volatile
 	{
 		super::store(to_integral(t), order);
@@ -56,15 +55,15 @@ public:
 		expected=from_integral(_expected);
 		return success;
 	}
-	
+
 	T exchange(T replacement, memory_order order=memory_order_seq_cst) volatile
 	{
 		return from_integral(super::exchange(to_integral(replacement), order));
 	}
-	
+
 	operator T(void) const volatile {return load();}
-	T operator=(T v) volatile {store(v); return v;}	
-	
+	T operator=(T v) volatile {store(v); return v;}
+
 	using super::is_lock_free;
 protected:
 	static inline uint8_t to_integral(T &t)
@@ -85,13 +84,12 @@ template<typename T>
 class platform_atomic<T, 2> : private platform_atomic_integral<uint16_t> {
 public:
 	typedef platform_atomic_integral<uint16_t> super;
-	typedef union { T e; uint16_t i;} conv;
-	
+
 	platform_atomic() {}
 	explicit platform_atomic(T t) : super(to_integral(t))
 	{
 	}
-	
+
 	void store(T t, memory_order order=memory_order_seq_cst) volatile
 	{
 		super::store(to_integral(t), order);
@@ -126,15 +124,15 @@ public:
 		expected=from_integral(_expected);
 		return success;
 	}
-	
+
 	T exchange(T replacement, memory_order order=memory_order_seq_cst) volatile
 	{
 		return from_integral(super::exchange(to_integral(replacement), order));
 	}
-	
+
 	operator T(void) const volatile {return load();}
-	T operator=(T v) volatile {store(v); return v;}	
-	
+	T operator=(T v) volatile {store(v); return v;}
+
 	using super::is_lock_free;
 protected:
 	static inline uint16_t to_integral(T &t)
@@ -155,13 +153,12 @@ template<typename T>
 class platform_atomic<T, 4> : private platform_atomic_integral<uint32_t> {
 public:
 	typedef platform_atomic_integral<uint32_t> super;
-	typedef union { T e; uint32_t i;} conv;
-	
+
 	platform_atomic() {}
 	explicit platform_atomic(T t) : super(to_integral(t))
 	{
 	}
-	
+
 	void store(T t, memory_order order=memory_order_seq_cst) volatile
 	{
 		super::store(to_integral(t), order);
@@ -196,15 +193,15 @@ public:
 		expected=from_integral(_expected);
 		return success;
 	}
-	
+
 	T exchange(T replacement, memory_order order=memory_order_seq_cst) volatile
 	{
 		return from_integral(super::exchange(to_integral(replacement), order));
 	}
-	
+
 	operator T(void) const volatile {return load();}
-	T operator=(T v) volatile {store(v); return v;}	
-	
+	T operator=(T v) volatile {store(v); return v;}
+
 	using super::is_lock_free;
 protected:
 	static inline uint32_t to_integral(T &t)
@@ -225,13 +222,12 @@ template<typename T>
 class platform_atomic<T, 8> : private platform_atomic_integral<uint64_t> {
 public:
 	typedef platform_atomic_integral<uint64_t> super;
-	typedef union { T e; uint64_t i;} conv;
-	
+
 	platform_atomic() {}
 	explicit platform_atomic(T t) : super(to_integral(t))
 	{
 	}
-	
+
 	void store(T t, memory_order order=memory_order_seq_cst) volatile
 	{
 		super::store(to_integral(t), order);
@@ -266,15 +262,15 @@ public:
 		expected=from_integral(_expected);
 		return success;
 	}
-	
+
 	T exchange(T replacement, memory_order order=memory_order_seq_cst) volatile
 	{
 		return from_integral(super::exchange(to_integral(replacement), order));
 	}
-	
+
 	operator T(void) const volatile {return load();}
-	T operator=(T v) volatile {store(v); return v;}	
-	
+	T operator=(T v) volatile {store(v); return v;}
+
 	using super::is_lock_free;
 protected:
 	static inline uint64_t to_integral(T &t)
@@ -290,6 +286,16 @@ protected:
 		return tmp;
 	}
 };
+
+template<typename T>
+static inline void platform_atomic_thread_fence(T order)
+{
+    /* FIXME: this does not provide
+    sequential consistency, need one global
+    variable for that... */
+    platform_atomic<int> a;
+    a.exchange(0, order);
+}
 
 } } }
 

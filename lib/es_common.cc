@@ -1,5 +1,27 @@
+/* -*- c++ -*- */
+/*
+ * Copyright 2011 Free Software Foundation, Inc.
+ * 
+ * This file is part of gr-eventstream
+ * 
+ * gr-eventstream is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3, or (at your option)
+ * any later version.
+ * 
+ * gr-eventstream is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with gr-eventstream; see the file COPYING.  If not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street,
+ * Boston, MA 02110-1301, USA.
+ */
 
 #include <es/es_common.h>
+#include <gr_io_signature.h>
 
 using namespace pmt;
 
@@ -51,6 +73,12 @@ pmt_t event_args_add( pmt_t evt, pmt_t arg_key, pmt_t arg_val ){
     return pmt_make_tuple( msg_head, msg_hash );
 }
 
+pmt_t event_type_pmt( pmt_t event ){
+    assert(is_event( event ) );
+    pmt_t msg_hash = pmt_tuple_ref(event, 1);
+    return pmt_dict_ref( msg_hash, es::event_type, PMT_NIL );
+}
+
 std::string event_type( pmt_t event ){
     assert(is_event( event ) );
     pmt_t msg_hash = pmt_tuple_ref(event, 1);
@@ -89,6 +117,11 @@ bool is_event( pmt_t event ){
     // make sure the first tuple val identifies us as an es_event
     assert(pmt_eq( msg_type, es::type_es_event) );
     return true;
+}
+
+bool event_has_field( pmt_t event, pmt_t field){
+    pmt_t msg_hash = pmt_tuple_ref(event, 1);
+    return pmt_dict_has_key( msg_hash, field );
 }
 
 pmt_t event_field( pmt_t event, pmt_t field ){
@@ -136,11 +169,8 @@ pmt_t register_buffer( pmt_t event, gr_vector_void_star buf ){
         buflist = pmt_list_add(buflist, pmt_make_any( boost::any( buf[i] ) ) );
     }
 
-//    boost::any v1(buf);
-//    msg_hash = pmt_dict_add( msg_hash, es::event_buffer, pmt_make_any( v1 ) );
     msg_hash = pmt_dict_add( msg_hash, es::event_buffer, buflist );
 
-    printf("register_buffer returning.\n");
     return pmt_make_tuple( pmt_tuple_ref(event,0), msg_hash );
 }
 
@@ -148,4 +178,22 @@ pmt_t register_buffer( pmt_t event, gr_vector_const_void_star buf ){
     gr_vector_void_star* a = (gr_vector_void_star*) &buf;
     return register_buffer( event, *a );
 }
+
+
+gr_io_signature_sptr es_make_io_signature( int min, const std::vector<int> &sizes ){
+    if(sizes.size() == 0){
+        return gr_make_io_signature(0,0,0);
+    } else {
+        return gr_make_io_signaturev(min, sizes.size(), sizes);
+    }
+}
+
+std::vector<unsigned char> string_to_vector(std::string s){
+    std::vector<unsigned char> vec(s.size());
+    for(int i=0; i<s.size(); i++){
+        vec[i] = s[i];
+    }
+    return vec;
+}
+
 

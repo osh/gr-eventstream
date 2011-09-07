@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<block>
+  <name>Hier Stream Event - Emitted Event</name>
+  <key>es_hier_event_emit</key>
+  <category>EVENTSTREAM</category>
+  <import>import es;
+from gruel import pmt;</import>
+  <make>self.$(id) = $(id) = $evtname</make>
+
+  <param>
+    <name>Event Symbol Key</name>
+    <key>evtname</key>
+    <value>EMITTED_EVENT_1</value>
+    <type>string</type>
+  </param>
+
+  <doc>
+    This block may be placed inside a Hierarchical Stream Event
+It indicates that the stream event may emit an event of the given type
+Typically the event queue to post the new event to is passed as a parameter
+  </doc>
+
+</block>

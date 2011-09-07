@@ -1,3 +1,24 @@
+/* -*- c++ -*- */
+/*
+ * Copyright 2011 Free Software Foundation, Inc.
+ * 
+ * This file is part of gr-eventstream
+ * 
+ * gr-eventstream is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3, or (at your option)
+ * any later version.
+ * 
+ * gr-eventstream is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with gr-eventstream; see the file COPYING.  If not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street,
+ * Boston, MA 02110-1301, USA.
+ */
 #ifndef INCLUDED_EVENTSTREAM_TRIGGER_RISINGEDGE_F_H
 #define INCLUDED_EVENTSTREAM_TRIGGER_RISINGEDGE_F_H
 
@@ -11,15 +32,16 @@ using namespace pmt;
 
 typedef boost::shared_ptr<es_trigger_edge_f> es_trigger_edge_f_sptr;
 
-es_trigger_edge_f_sptr es_make_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback);
+es_trigger_edge_f_sptr es_make_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback, int itemsize, int guard=1, std::string evt_type="EDGE_TRIGGER_EVENT");
 
 class es_trigger_edge_f : public es_trigger
 {
 private:
-  friend es_trigger_edge_f_sptr es_make_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback);
+  friend es_trigger_edge_f_sptr es_make_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback, int itemsize, int guard, std::string evt_type);
 
-  es_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback);  	// private constructor
-
+  es_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback, int itemsize, int guard=1, std::string evt_type="EDGE_TRIGGER_EVENT");  	// private constructor
+  int d_guard;
+  uint64_t d_lasttrigger;
 
  public:
   ~es_trigger_edge_f ();	// public destructor

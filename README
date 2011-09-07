@@ -19,27 +19,4 @@
 # Boston, MA 02110-1301, USA.
 # 
 
-This directory (and the resulting tarball) contains a build tree with
-examples, Makefiles, etc that demonstrate how to write signal
-processing blocks for the GNU Radio system.  This directory is
-intentionally distributed separately from the unified tarball of the
-rest of GNU Radio in order to avoid problems for people who have begun
-to write blocks with a modified copy of gr-es-write-a-block.
-
-This package requires that gnuradio-core is already installed.  It
-also depends on some GNU Radio prerequisites, such as Boost and
-cppunit.
-
-To build the examples from the tarball use the normal recipe:
-
-  $ ./configure
-  $ make
-  $ make check
-
-If you're building from git, you'll need to use this sequence, since
-git doesn't contain configure or the generated Makefiles.
-
-  $ ./bootstrap
-  $ ./configure
-  $ make
-  $ make check
+This directory contains the GNU Radio event stream scheduler

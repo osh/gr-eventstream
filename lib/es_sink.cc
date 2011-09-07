@@ -1,21 +1,21 @@
 /* -*- c++ -*- */
 /*
- * Copyright 2004 Free Software Foundation, Inc.
+ * Copyright 2011 Free Software Foundation, Inc.
  * 
- * This file is part of GNU Radio
+ * This file is part of gr-eventstream
  * 
- * GNU Radio is free software; you can redistribute it and/or modify
+ * gr-eventstream is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3, or (at your option)
  * any later version.
  * 
- * GNU Radio is distributed in the hope that it will be useful,
+ * gr-eventstream is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
+ * along with gr-eventstream; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
  */
@@ -32,13 +32,14 @@
 #include <es/es.h>
 #include <gr_io_signature.h>
 #include <stdio.h>
+#include <Python.h>
 
 /*
  * Create a new instance of es_sink and return
  * a boost shared_ptr.  This is effectively the public constructor.
  */
 es_sink_sptr 
-es_make_sink (pmt_t arb, es_queue_sptr queue, gr_io_signature_sptr insig, int n_threads)
+es_make_sink (pmt_t arb, es_queue_sptr queue, gr_vector_int insig, int n_threads)
 {
   return es_sink_sptr (new es_sink (arb,queue,insig,n_threads));
 }
@@ -58,10 +59,11 @@ static const int MAX_OUT = 0;	// maximum number of output streams
 /*
  * The private constructor
  */
-es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_io_signature_sptr insig, int _n_threads) 
+es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_vector_int insig, int _n_threads) 
   : gr_sync_block ("es_sink",
-           insig,
-		   gr_make_io_signature (MIN_OUT, MAX_OUT, 0)), event_queue(_queue), arb(_arb), n_threads(_n_threads)
+           es_make_io_signature(insig.size(), insig),
+		   gr_make_io_signature (MIN_OUT, MAX_OUT, 0)), event_queue(_queue), arb(_arb), n_threads(_n_threads),
+    d_nevents(0)
 {
     d_time = 0;
     d_history = 1024*64;
@@ -69,7 +71,7 @@ es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_io_signature_sptr insig, 
 
     // instantiate the threadpool workers
     for(int i=0; i<n_threads; i++){
-        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(arb, event_queue, &qq, &dq, &qq_cond) );
+        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(arb, event_queue, &qq, &dq, &qq_cond, &d_nevents) );
         threadpool.push_back( th );
     }
 
@@ -80,6 +82,12 @@ es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_io_signature_sptr insig, 
  */
 es_sink::~es_sink ()
 {
+
+    //printf("es_sink::destructor running!\n");
+    wait_events();
+
+    //printf("waiting for join\n");
+    // stop all the threads in the pool
     for(int i=0; i<n_threads; i++){
         threadpool[i]->stop();
     }
@@ -93,7 +101,7 @@ es_sink::work (int noutput_items,
 {
   char *in = (char*) input_items[0];
  
-  printf("entered es_sink::work()\n");
+  //printf("entered es_sink::work()\n");
   // compute the min and max sample times currently accessible in the buffer
   unsigned long long max_time = d_time + noutput_items;
   unsigned long long min_time = (d_history > d_time)?0:d_time-d_history;
@@ -102,16 +110,22 @@ es_sink::work (int noutput_items,
   es_eh_pair *eh = NULL;
   
   unsigned long long delete_index;
-  while( dq.dequeue(&delete_index) ){
-    printf(" removing live_time %llu \n", delete_index);
-    assert(0);
+  //while( dq.dequeue(&delete_index) ){
+  while( dq.dequeue(delete_index) ){
+//    printf(" removing live_time %llu \n", delete_index);
+    //assert(0);
     }
 
 
   // while we can service events with the current buffer, get them and handle them.
+//  printf("event_queue->fetch_next_event( %llu, %llu, &eh )\n", min_time, max_time );
   while( event_queue->fetch_next_event( min_time, max_time, &eh ) ){
 
-    printf("es_sink::work()::fetched event successfully.\n");
+  //  int a = d_nevents;
+ //   printf("incrementing d_nevents (%d->%d)\n", a, a+1);
+    d_nevents++;
+
+//    printf("es_sink::work()::fetched event successfully (%llu --> %llu)\n",min_time,max_time);
     pmt_t event = eh->event;
 
     // compute the local buffer offset of the event
@@ -140,14 +154,26 @@ es_sink::work (int noutput_items,
     eh->event = event;
 
     // post the event to the event-loop input queue  
-    printf("es_sink::work()::posting event to event loop queue (qq) with buffer.\n");
+    //printf("es_sink::work()::posting event to event loop queue (qq) with buffer.\n");
+
     qq.enqueue(eh);
     qq_cond.notify_one();
 
   }
 
   // consume the current input items
+  d_time += noutput_items;
   return noutput_items;
 }
 
+void es_sink::wait_events(){
+    // wait for all events to get picked up by threads
+    while(d_nevents>0){
+        // we need to allow our python flowgraph handlers to be able to grab the GIL here...
+        qq_cond.notify_all();
+        Py_BEGIN_ALLOW_THREADS
+        boost::this_thread::yield();
+        Py_END_ALLOW_THREADS
+        }
+}
 

@@ -17,12 +17,11 @@
 
 #include <boost/cstdint.hpp>
 
-namespace boost
-{
-namespace lockfree
-{
+namespace boost {
+namespace lockfree {
+namespace detail {
 
-#if defined (__x86_64__) || defined (_M_X64) || defined(__alpha__)
+#if defined (__x86_64__) || defined (_M_X64)
 
 template <class T>
 class tagged_ptr
@@ -153,6 +152,7 @@ protected:
 #error unsupported platform
 #endif
 
+} /* namespace detail */
 } /* namespace lockfree */
 } /* namespace boost */
 
