@@ -90,8 +90,8 @@ void es_handler_flowgraph::handler( pmt_t msg, gr_vector_void_star buf ){
             printf("buf[i] = %x\n", buf[i]);
             printf("data[i] = %x, datalen = %d\n", data[i], handler->sink->data_len_items());
             if(handler->sink->data_len_items() > num_items){
-                printf("mismatch between flowgraph sink and evt length item counts! (sink.length = %d > evt_len = %d)\n",handler->sink->data_len_items(), num_items);
-                assert(0);
+                printf("(sink.length = %d > evt_len = %d)\n",handler->sink->data_len_items(), num_items);
+                throw std::runtime_error("mismatch between flowgraph sink and evt length item counts");
             }
             int gen_items = handler->sink->data_len_items();
             printf("(es_handler_flowgraph) producing (sink len) --- %d items, padding by %d\n", gen_items, num_items-gen_items);

@@ -39,7 +39,7 @@ typedef boost::shared_ptr<es_handler> es_handler_sptr;
 
 class es_handler : public gruel::msg_accepter {
     public:
-        void post(pmt_t msg);
+        void post(pmt_t which_port, pmt_t msg);
         gr_vector_void_star get_buffer_ptr(pmt_t buffer_pmt);
         virtual void handler(pmt_t msg, gr_vector_void_star buf);
         pmt_t get_ma(){ make_handler_pmt(this); }

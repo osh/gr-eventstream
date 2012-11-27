@@ -34,7 +34,7 @@ es_eh_pair::es_eh_pair(pmt_t _event, pmt_t _handler) :
 void es_eh_pair::run(){
 //    printf("es_eh_pair::run()\n");
     boost::shared_ptr<gruel::msg_accepter> h = pmt_msg_accepter_ref( handler );
-    h->post( event );
+    h->post( pmt::PMT_NIL, event );
 }
 
 

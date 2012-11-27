@@ -106,7 +106,7 @@ es_pyhandler* PythonFactoryCallBack(int index, void *clientdata)
    } else {
         printf("PyEval did not return result!\n");
         PyErr_Print();
-        assert(0);
+        throw std::runtime_error("error in python callback");
     }
 
    Py_XDECREF(result);
@@ -152,7 +152,7 @@ es_hook_rval* PythonHookCallBack(struct es_hook_args* args, void *clientdata)
    } else {
         printf("PyEval did not return result!\n");
         PyErr_Print();
-        assert(0);
+        throw std::runtime_error("error in python callback");
    }
    // de-ref count return val, we are done with it
    Py_XDECREF(result);

@@ -52,8 +52,7 @@ es_pyhandler::es_pyhandler() :
             PyEval_InitThreads();
         }
     } else {
-        printf("dont use es_pyhandler without python?\n");
-        assert(0);
+        throw std::runtime_error("dont use es_pyhandler without python!");
     }
 
 
@@ -82,8 +81,7 @@ void es_pyhandler::set_vars(PyObject* _vars){
 // default factory function handler
 //
 es_pyhandler* default_factory_cb( int index, void* _cb_data ){
-    printf("default_factory_cb called, please define one...\n");
-    assert(0);
+    throw std::runtime_error("default_factory_cb called, please define one...");
     return NULL;
 }
 

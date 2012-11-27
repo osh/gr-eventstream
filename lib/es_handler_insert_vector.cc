@@ -92,14 +92,11 @@ void es_handler_insert_vector::handler( pmt_t msg, gr_vector_void_star buf ){
             //assert( blen == len * d_output_signature->sizeof_stream_item(i) );
             memcpy( buf[i], bufdatasrc, blen );
         }
-//        printf("handler finished successfully\n");
-//        assert(0);
 
     } else
 
     {
-        printf("insert_vector handler was called with a malformed message.\n");
-        assert(0);
+        throw std::runtime_error("insert_vector handler was called with a malformed message.");
     }
 
 }

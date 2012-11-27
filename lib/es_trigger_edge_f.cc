@@ -73,6 +73,7 @@ es_trigger_edge_f::es_trigger_edge_f (pmt_t _arb, es_queue_sptr _queue, float th
     d_time = 0;
     d_length = length;
     d_lookback = lookback;
+
 }
 
 es_trigger_edge_f::~es_trigger_edge_f ()
@@ -84,12 +85,13 @@ es_trigger_edge_f::work (int noutput_items,
 			gr_vector_const_void_star &input_items,
 			gr_vector_void_star &output_items)
 {
-  
-//  printf("trigger::work() d_time = %llu\n", d_time);
   float *in = (float*) input_items[0];
-    
-//  printf("es_trigger_edge_f::work() running.\n");
-    
+   
+  // make sure we have passthrough input if we have passthrough output 
+  if((output_items.size() == 1 && input_items.size() == 1) ){
+        throw std::runtime_error("if passthrough output is connected, input must be!");
+        }
+
   // copy input to output if output connected
   if(output_items.size() == 1 && input_items.size() == 2){
     int itemsize = input_signature()->sizeof_stream_item(1);

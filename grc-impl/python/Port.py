@@ -112,7 +112,7 @@ class Port(_Port, _GUIPort):
         else:
             if not self.get_enabled_connections() and not self.get_optional():
                 self.add_error_message('Port is not connected.')
-            if not self.is_source() and len(self.get_enabled_connections()) > 1:
+            if not self.is_source() and (not self.get_type() == "message") and len(self.get_enabled_connections()) > 1:
                 self.add_error_message('Port has too many connections.')
 
     def rewrite(self):

@@ -132,8 +132,7 @@ es_source::work (int noutput_items,
     //event_print(eh->event);
 
     if(eh == NULL){ 
-        printf("eh==NULL==%x!\n",eh); 
-        assert(0); 
+        throw std::runtime_error("eh == NULL");
     }
 
     int buffer_offset = eh->time() - d_time;

@@ -39,7 +39,7 @@ pmt_t make_handler_pmt( es_handler* h ){
     return pmt_make_msg_accepter(make_ma_sptr(h));
     }
 
-void es_handler::post(pmt_t msg){
+void es_handler::post(pmt_t which_port, pmt_t msg){
     handler( msg, get_buffer_ptr( event_field( msg, es::event_buffer ) ) );
 }
 
@@ -64,8 +64,7 @@ gr_vector_void_star es_handler::get_buffer_ptr(pmt_t buffer_arg){
             //outvec[i] = pmt_blob_rw_data(list_nth);
             outvec[i] = (void*)pmt_blob_data(list_nth);
         } else {
-            printf("unknown pmt type in event buffer!!\n");
-            assert(0);
+            throw std::runtime_error("unknown pmt type in event buffer!");
         }
     }
     return outvec;
@@ -77,7 +76,7 @@ gr_vector_void_star es_handler::get_buffer_ptr(pmt_t buffer_arg){
 */
 void es_handler::handler(pmt_t msg, gr_vector_void_star buf){
     printf("es_handler::handler() this=%x (base class handler called!! not good)\n",this);
-    assert(0);
+    throw std::runtime_error("base class handler called!! not good");
 }   
 
 

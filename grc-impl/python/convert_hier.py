@@ -25,9 +25,13 @@ def convert_hier(flow_graph, python_file):
     #extract info from the flow graph
     input_sigs = [];
     output_sigs = [];
+    input_msgp = [];
+    output_msgp = [];
     if(not flow_graph._suppress_io):
         input_sigs = flow_graph.get_io_signaturev('in')
         output_sigs = flow_graph.get_io_signaturev('out')
+        input_msgp = flow_graph.get_msg_pad_sources();
+        output_msgp = flow_graph.get_msg_pad_sinks();
     parameters = flow_graph.get_parameters()
     block_key = flow_graph.get_option('id')
     block_name = flow_graph.get_option('title') or flow_graph.get_option('id').replace('_', ' ').title()
@@ -58,7 +62,7 @@ def convert_hier(flow_graph, python_file):
         param_n['type'] = 'raw'
         params_n.append(param_n)
     block_n['param'] = params_n
-    #sink data
+    #sink data stream ports
     block_n['sink'] = list()
     for input_sig in input_sigs:
         sink_n = odict()
@@ -66,13 +70,27 @@ def convert_hier(flow_graph, python_file):
         sink_n['type'] = input_sig['type']
         sink_n['vlen'] = input_sig['vlen']
         block_n['sink'].append(sink_n)
-    #source data
+    #sink data msg ports
+    for input_sig in input_msgp:
+        sink_n = odict()
+        sink_n['name'] = input_sig.get_param("label").get_value();
+        sink_n['type'] = "message"
+        sink_n['optional'] = input_sig.get_param("optional").get_value();
+        block_n['sink'].append(sink_n);
+    #source data stream ports
     block_n['source'] = list()
     for output_sig in output_sigs:
         source_n = odict()
         source_n['name'] = output_sig['label']
         source_n['type'] = output_sig['type']
         source_n['vlen'] = output_sig['vlen']
+        block_n['source'].append(source_n)
+    #source data msg ports
+    for output_sig in output_msgp:
+        source_n = odict()
+        source_n['name'] = output_sig.get_param("label").get_value();
+        source_n['type'] = "message";
+        source_n['optional'] = output_sig.get_param("optional").get_value();
         block_n['source'].append(source_n)
     #doc data
     block_n['doc'] = "%s\n%s\n%s"%(block_author, block_desc, python_file)

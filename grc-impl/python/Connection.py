@@ -32,6 +32,9 @@ class Connection(_Connection, _GUIConnection):
         return (self.get_source().get_type() == self.get_sink().get_type() == 'msg') and \
             self.get_source().is_msgq() and self.get_sink().is_msgq()
 
+    def is_message(self):
+        return self.get_source().get_type() == self.get_sink().get_type() == 'message';
+
     def is_msg(self):
         return (self.get_source().get_type() == self.get_sink().get_type() == 'msg') and \
             not self.get_source().is_msgq() and not self.get_sink().is_msgq()
