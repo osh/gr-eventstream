@@ -31,18 +31,13 @@ using namespace pmt;
 
 class es_handler;
 
-pmt_t make_handler_pmt( es_handler* h );
-
-gruel::msg_accepter_sptr make_ma_sptr( es_handler* h );
-
 typedef boost::shared_ptr<es_handler> es_handler_sptr;
 
-class es_handler : public gruel::msg_accepter {
+class es_handler : public gr_basic_block {
     public:
-        void post(pmt_t which_port, pmt_t msg);
         gr_vector_void_star get_buffer_ptr(pmt_t buffer_pmt);
+        void handler_helper( pmt_t msg );
         virtual void handler(pmt_t msg, gr_vector_void_star buf);
-        pmt_t get_ma(){ make_handler_pmt(this); }
         ~es_handler();
 };
 

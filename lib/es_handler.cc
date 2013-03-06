@@ -30,16 +30,7 @@ pmt_t pmt_complex_vector( std::vector< gr_complex > vec ){
     return pmt_init_c32vector(vec.size(), &vec[0]);
 }
 
-gruel::msg_accepter_sptr make_ma_sptr( es_handler* h) {
-    gruel::msg_accepter_sptr ptr1( (gruel::msg_accepter*) h);
-    return ptr1;
-}
-
-pmt_t make_handler_pmt( es_handler* h ){
-    return pmt_make_msg_accepter(make_ma_sptr(h));
-    }
-
-void es_handler::post(pmt_t which_port, pmt_t msg){
+void es_handler::handler_helper( pmt_t msg ){
     handler( msg, get_buffer_ptr( event_field( msg, es::event_buffer ) ) );
 }
 
@@ -47,7 +38,6 @@ es_handler::~es_handler(){
     printf("Handler Base Class destructing (%x)!\n",this);
 }
 
-//void* es_handler::get_buffer_ptr(pmt_t buffer_arg){
 gr_vector_void_star es_handler::get_buffer_ptr(pmt_t buffer_arg){
     int nvec = pmt_length(buffer_arg);
     gr_vector_void_star outvec(nvec);
@@ -61,7 +51,6 @@ gr_vector_void_star es_handler::get_buffer_ptr(pmt_t buffer_arg){
             const uint8_t* dataptr = pmt_u8vector_elements(list_nth, buf_len);
             outvec[i] = (void*) dataptr;
         } else if(pmt_is_blob( list_nth) ){
-            //outvec[i] = pmt_blob_rw_data(list_nth);
             outvec[i] = (void*)pmt_blob_data(list_nth);
         } else {
             throw std::runtime_error("unknown pmt type in event buffer!");

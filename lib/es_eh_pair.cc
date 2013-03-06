@@ -22,6 +22,7 @@
 
 #include <es/es_eh_pair.hh>
 #include <es/es_common.h>
+#include <es/es_handler.h>
 #include <stdio.h>
 
 es_eh_pair::es_eh_pair(pmt_t _event, pmt_t _handler) :
@@ -33,8 +34,17 @@ es_eh_pair::es_eh_pair(pmt_t _event, pmt_t _handler) :
 
 void es_eh_pair::run(){
 //    printf("es_eh_pair::run()\n");
+//    handler->hanler( 
+
+    // new style call
+    es_handler_sptr h = boost::any_cast< es_handler_sptr >(pmt_any_ref(handler));
+    h->handler_helper( event );
+
+/*  // old way -- pmt msg acceptor ref
     boost::shared_ptr<gruel::msg_accepter> h = pmt_msg_accepter_ref( handler );
     h->post( pmt::PMT_NIL, event );
+*/
+
 }
 
 

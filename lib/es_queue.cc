@@ -183,17 +183,18 @@ void es_queue::bind_handler(pmt_t type, es_handler_sptr handler){
 
 void es_queue::bind_handler(std::string type, es_handler_sptr handler){
 
-    pmt_t handler_pmt = make_handler_pmt( &(*handler) );
+//    pmt_t handler_pmt = make_handler_pmt( &(*handler) );
+    pmt_t handler_pmt = pmt_make_any( handler );
     protect_handler(handler);
     
     pmt_t type_pmt = pmt_intern(type);
 
     DEBUG(printf("EVENTSTREAM_QUEUE::BIND_HANDLER (%s).\n",type.c_str());)
 
-    boost::shared_ptr<gruel::msg_accepter> h = pmt_msg_accepter_ref(handler_pmt);
+//    boost::shared_ptr<gruel::msg_accepter> h = pmt_msg_accepter_ref(handler_pmt);
 
-    DEBUG(printf("pmt adx = %x\n", &(*handler_pmt));)
-    DEBUG(printf("handler adx = %x\n",&(*(h)));)
+//    DEBUG(printf("pmt adx = %x\n", &(*handler_pmt));)
+//    DEBUG(printf("handler adx = %x\n",&(*(h)));)
 
     assert(pmt_dict_has_key(bindings, type_pmt));
 
