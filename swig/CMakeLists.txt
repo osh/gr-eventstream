@@ -40,7 +40,7 @@ GR_PYTHON_INSTALL(
 
 install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/swig/
-    DESTINATION include/swig COMPONENT "eventstream_devel"
+    DESTINATION include/es/swig COMPONENT "eventstream_devel"
     FILES_MATCHING 
     PATTERN "*.i" 
 )
