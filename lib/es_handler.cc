@@ -30,12 +30,26 @@ pmt_t pmt_complex_vector( std::vector< gr_complex > vec ){
     return pmt_init_c32vector(vec.size(), &vec[0]);
 }
 
+es_handler::es_handler()
+    : gr_basic_block("handler", 
+        gr_make_io_signature(0,0,0),
+        gr_make_io_signature(0,0,0))
+{
+}
+
+es_handler::es_handler(std::string name)
+    : gr_basic_block(name, 
+        gr_make_io_signature(0,0,0),
+        gr_make_io_signature(0,0,0))
+{
+}
+
 void es_handler::handler_helper( pmt_t msg ){
     handler( msg, get_buffer_ptr( event_field( msg, es::event_buffer ) ) );
 }
 
 es_handler::~es_handler(){
-    printf("Handler Base Class destructing (%x)!\n",this);
+//    printf("Handler Base Class destructing (%x)!\n",this);
 }
 
 gr_vector_void_star es_handler::get_buffer_ptr(pmt_t buffer_arg){

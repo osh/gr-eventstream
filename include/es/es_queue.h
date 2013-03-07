@@ -52,16 +52,15 @@ class es_queue {
 
         es_queue();
         int add_event(pmt_t evt);
-        void print();
+        void print(bool already_locked = false);
         int fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh);
         int fetch_next_event2(unsigned long long min, unsigned long long max, es_eh_pair **eh);
 
         //int fetch_next_event(unsigned long long min, unsigned long long max, pmt_t &eh);
         //int fetch_next_event2(unsigned long long min, unsigned long long max, pmt_t &eh);
-
               
-        void bind_handler(std::string type, es_handler_sptr handler);
-        void bind_handler(pmt_t type, es_handler_sptr handler);
+        void bind_handler(std::string type, gr_basic_block_sptr handler);
+        void bind_handler(pmt_t type, gr_basic_block_sptr handler);
 
         void protect_handler(es_handler_sptr h){ protected_handler.push_back(h); }
 

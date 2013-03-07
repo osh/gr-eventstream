@@ -213,9 +213,9 @@ class $(class_name):
         #for $b in $blk._bindings
         ${blk.get_id()}.register_event_type( pmt.pmt_intern("$b[0]") );
         try:
-            ${blk.get_id()}.bind_handler( pmt.pmt_intern("$b[0]"), self.${b[1]}._handler );
+            ${blk.get_id()}.bind_handler( pmt.pmt_intern("$b[0]"), self.${b[1]}._handler.to_basic_block() );
         except:
-            ${blk.get_id()}.bind_handler( pmt.pmt_intern("$b[0]"), self.${b[1]} );
+            ${blk.get_id()}.bind_handler( pmt.pmt_intern("$b[0]"), self.${b[1]}.to_basic_block() );
         ## TODO: this bind may need some more checking when we allow binding to non-flowgraph-type-handlers
         #end for       
     #end if

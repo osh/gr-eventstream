@@ -20,7 +20,9 @@
  * Boston, MA 02110-1301, USA.
  */
 
-class es_handler;
+%{
+#include <es_handler.h>
+%}
 %include <es_handler.h>
 %template(es_handler_sptr) boost::shared_ptr<es_handler>;
 

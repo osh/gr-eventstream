@@ -124,7 +124,7 @@ int es_queue::add_event(pmt_t evt){
 }
 
 
-void es_queue::print(){
+void es_queue::print(bool already_locked){
 
     printf("EVENTSTREAM_BINDINGS...\n");
 
@@ -142,12 +142,16 @@ void es_queue::print(){
     }*/
     printf("%s\n", pmt_write_string( bindings ).c_str() );
 
-    queue_lock.lock();
+    if(!already_locked)
+        queue_lock.lock();
+
     printf("EVENTSTREAM_QUEUE (size = %d)\n", event_queue.size());
     for(int i=0; i<event_queue.size(); i++){
         //event_queue[i].print();
     }
-    queue_lock.unlock();
+
+    if(!already_locked)
+        queue_lock.unlock();
 
 }
 
@@ -177,24 +181,19 @@ int es_queue::register_event_type(std::string type){
     return 0;
 }
 
-void es_queue::bind_handler(pmt_t type, es_handler_sptr handler){
+void es_queue::bind_handler(pmt_t type, gr_basic_block_sptr handler){
     bind_handler( pmt_symbol_to_string(type), handler);
     }
 
-void es_queue::bind_handler(std::string type, es_handler_sptr handler){
+void es_queue::bind_handler(std::string type, gr_basic_block_sptr handler){
 
-//    pmt_t handler_pmt = make_handler_pmt( &(*handler) );
-    pmt_t handler_pmt = pmt_make_any( handler );
-    protect_handler(handler);
+
+    es_handler_sptr h = boost::dynamic_pointer_cast<es_handler>(handler);
+    pmt_t handler_pmt = pmt_make_any( (es_handler*) h.get() );
     
     pmt_t type_pmt = pmt_intern(type);
 
     DEBUG(printf("EVENTSTREAM_QUEUE::BIND_HANDLER (%s).\n",type.c_str());)
-
-//    boost::shared_ptr<gruel::msg_accepter> h = pmt_msg_accepter_ref(handler_pmt);
-
-//    DEBUG(printf("pmt adx = %x\n", &(*handler_pmt));)
-//    DEBUG(printf("handler adx = %x\n",&(*(h)));)
 
     assert(pmt_dict_has_key(bindings, type_pmt));
 
@@ -220,7 +219,7 @@ int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, e
             case BALK:
                 printf("function call mandates min=%llu & max=%llu\n", min, max);
                 printf("however event[0] start = %llu, end = %llu\n", event_queue[0]->time(), event_queue[0]->time() + event_queue[0]->length());
-                print();
+                print(true);
                 throw std::runtime_error("event arrived scheduled before allowed buffer!");
                 break;
             case ASAP:

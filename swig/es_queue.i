@@ -39,8 +39,8 @@ class es_queue {
         int length();
         int register_event_type(std::string type);
         int register_event_type(pmt_t type);
-        void bind_handler(std::string type, es_handler_sptr handler);
-        void bind_handler(pmt_t type, es_handler_sptr handler);
+        void bind_handler(std::string type, gr_basic_block_sptr handler);
+        void bind_handler(pmt_t type, gr_basic_block_sptr handler);
         void set_early_behavior(enum es_queue_early_behaviors);
         void protect_handler(es_handler_sptr h);
 };

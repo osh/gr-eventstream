@@ -74,6 +74,10 @@ private:
   std::vector<boost::shared_ptr<es_event_loop_thread> > threadpool;
   std::vector<unsigned long long> live_event_times;
 
+  bool state_done_prevent_exit() { return (d_nevents + event_queue->length())!=0; }
+  bool state_done_call_empty() { return (d_nevents + event_queue->length())!=0; }
+  //bool state_done_prevent_exit() { return false; }
+  //bool state_done_call_empty() { return false; }
 
 };
 
