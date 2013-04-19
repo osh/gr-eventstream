@@ -37,6 +37,7 @@ list(APPEND eventstream_sources
     es_trigger_sample_timer.cc
     es_pyhandler_def.cc
     es_patterned_interleaver.cc
+    es_exceptions.cc
 )
 
 list(APPEND test_eventstream_sources

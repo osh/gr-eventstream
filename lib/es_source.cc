@@ -31,6 +31,7 @@
 
 #include <es/es_source.h>
 #include <es/es_common.h>
+#include <es/es_exceptions.h>
 #include <es/es.h>
 #include <gr_io_signature.h>
 #include <stdio.h>
@@ -126,7 +127,18 @@ es_source::work (int noutput_items,
     memset( output_items[i], 0x00, noutput_items*d_output_signature->sizeof_stream_item(i) );
   }
 
-  while( event_queue->fetch_next_event2( min_time, max_time, &eh ) ){
+  bool have_event(true);
+  while( have_event ){
+     
+    // get an event off the queue
+    fetchevent:
+    try  {
+        have_event = event_queue->fetch_next_event2( min_time, max_time, &eh );
+        if(!have_event) break;
+    } catch(EarlyEventException &e){
+        std::cout << "discarding event: " << e.what() << std::endl;
+        goto fetchevent;
+    }
 
     //printf("es_source::got event back -- \n");
     //event_print(eh->event);
@@ -228,9 +240,9 @@ es_source::work (int noutput_items,
             delete bufs[i];
         }
 
-    }
-
-  }
+    } 
+   
+  } // end while
 
   // Tell runtime system how many output items we produced.
   noutput_items = (unsigned int) std::min((unsigned long long)noutput_items, d_maxlen - d_time);

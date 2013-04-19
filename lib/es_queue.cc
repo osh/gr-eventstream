@@ -22,6 +22,7 @@
 
 #include <es/es_queue.h>
 #include <es/es_common.h>
+#include <es/es_exceptions.h>
 
 #include <limits.h>
 #include <stdio.h>
@@ -220,7 +221,8 @@ int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, e
                 printf("function call mandates min=%llu & max=%llu\n", min, max);
                 printf("however event[0] start = %llu, end = %llu\n", event_queue[0]->time(), event_queue[0]->time() + event_queue[0]->length());
                 print(true);
-                throw std::runtime_error("event arrived scheduled before allowed buffer!");
+                queue_lock.unlock();
+                throw EarlyEventException("event arrived scheduled before allowed buffer!");
                 break;
             case ASAP:
                 // update event time to be as soon as possible
@@ -255,7 +257,8 @@ int es_queue::fetch_next_event2(unsigned long long min, unsigned long long max, 
                 printf("function call mandates min=%llu & max=%llu\n", min, max);
                 printf("however event[0] start = %llu, end = %llu\n", event_queue[0]->time(), event_queue[0]->time() + event_queue[0]->length());
                 print();
-                throw std::runtime_error("event arrived scheduled before allowed buffer!");
+                queue_lock.unlock();
+                throw EarlyEventException("event arrived scheduled before allowed buffer!");
                 break;
             case ASAP:
                 event_queue[0]->event = event_args_add(event_queue[0]->event, pmt_intern("es::event_time") , pmt_from_uint64(min));      
