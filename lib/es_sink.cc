@@ -30,7 +30,6 @@
 #endif
 
 #include <es/es.h>
-#include <es/es_exceptions.h>
 #include <gr_io_signature.h>
 #include <stdio.h>
 #include <Python.h>
@@ -120,17 +119,8 @@ es_sink::work (int noutput_items,
 
   // while we can service events with the current buffer, get them and handle them.
 //  printf("event_queue->fetch_next_event( %llu, %llu, &eh )\n", min_time, max_time );
-  bool have_event(true);
-  while( have_event ){
-    fetchevent:
-    try  {
-        have_event = event_queue->fetch_next_event( min_time, max_time, &eh );
-        if(!have_event) break;
-    } catch(EarlyEventException &e){
-        std::cout << "discarding event: " << e.what() << std::endl;
-        goto fetchevent;
-    }
-    
+  while( event_queue->fetch_next_event( min_time, max_time, &eh ) ){
+
   //  int a = d_nevents;
  //   printf("incrementing d_nevents (%d->%d)\n", a, a+1);
     d_nevents++;
