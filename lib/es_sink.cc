@@ -74,7 +74,7 @@ es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_vector_int insig, int _n_
         boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(arb, event_queue, &qq, &dq, &qq_cond, &d_nevents) );
         threadpool.push_back( th );
     }
-    set_output_multiple(100000);
+//    set_output_multiple(100000);
 }
 
 /*
