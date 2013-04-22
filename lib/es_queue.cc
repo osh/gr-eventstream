@@ -34,7 +34,7 @@ es_queue_sptr es_make_queue(){
 }
 
 es_queue::es_queue() :
-    d_early_behavior(BALK)
+    d_early_behavior(DISCARD)
 {
     bindings = pmt_make_dict();
 }
@@ -208,6 +208,7 @@ void es_queue::bind_handler(std::string type, gr_basic_block_sptr handler){
 
 
 int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh){
+  fstart:
     *eh = NULL;
     queue_lock.lock();
     if(event_queue.size() == 0){
@@ -217,6 +218,15 @@ int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, e
     //if(event_time(eh_pair_event(event_queue[0])) < min){
     if(event_queue[0]->time() < min){
         switch(d_early_behavior){
+            // discard event
+            case DISCARD:
+                printf("**WARNING** discarding bad event\n");
+                printf("function call mandates min=%llu & max=%llu\n", min, max);
+                printf("however event[0] start = %llu, end = %llu\n", event_queue[0]->time(), event_queue[0]->time() + event_queue[0]->length());
+                event_queue.erase(event_queue.begin());
+                queue_lock.unlock();
+                goto fstart;
+            // throw an assertion
             case BALK:
                 printf("function call mandates min=%llu & max=%llu\n", min, max);
                 printf("however event[0] start = %llu, end = %llu\n", event_queue[0]->time(), event_queue[0]->time() + event_queue[0]->length());
@@ -224,6 +234,7 @@ int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, e
                 queue_lock.unlock();
                 throw EarlyEventException("event arrived scheduled before allowed buffer!");
                 break;
+            // schedule as soon as possible
             case ASAP:
                 // update event time to be as soon as possible
                 event_queue[0]->event = event_args_add(event_queue[0]->event, pmt_intern("es::event_time") , pmt_from_uint64(min));      
@@ -237,14 +248,16 @@ int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, e
             queue_lock.unlock();
             *eh = eh_test;
             return true;
-        }   
+        } else {
+            std::cout << "WARNING: skipping event that ends too late! evt:("<<eh_test->time()<<","<<eh_test->time() + eh_test->length() <<") buf:("<<min<<","<<max<<")\n";
+        }
     }
     queue_lock.unlock();
     return false;
 }
 
 int es_queue::fetch_next_event2(unsigned long long min, unsigned long long max, es_eh_pair **eh){
-
+  fstart2:
     *eh = NULL;
     if(event_queue.size() == 0){
         return false;
@@ -253,6 +266,14 @@ int es_queue::fetch_next_event2(unsigned long long min, unsigned long long max, 
     if(event_queue[0]->time() < min){
         printf("early behavior = %d\n", d_early_behavior);
         switch(d_early_behavior){
+            case DISCARD:
+                printf("**WARNING** discarding bad event\n");
+                printf("function call mandates min=%llu & max=%llu\n", min, max);
+                printf("however event[0] start = %llu, end = %llu\n", event_queue[0]->time(), event_queue[0]->time() + event_queue[0]->length());
+                print();
+                event_queue.erase(event_queue.begin());
+                queue_lock.unlock();
+                goto fstart2;
             case BALK:
                 printf("function call mandates min=%llu & max=%llu\n", min, max);
                 printf("however event[0] start = %llu, end = %llu\n", event_queue[0]->time(), event_queue[0]->time() + event_queue[0]->length());

@@ -127,18 +127,7 @@ es_source::work (int noutput_items,
     memset( output_items[i], 0x00, noutput_items*d_output_signature->sizeof_stream_item(i) );
   }
 
-  bool have_event(true);
-  while( have_event ){
-     
-    // get an event off the queue
-    fetchevent:
-    try  {
-        have_event = event_queue->fetch_next_event2( min_time, max_time, &eh );
-        if(!have_event) break;
-    } catch(EarlyEventException &e){
-        std::cout << "discarding event: " << e.what() << std::endl;
-        goto fetchevent;
-    }
+  while( event_queue->fetch_next_event2( min_time, max_time, &eh )){
 
     //printf("es_source::got event back -- \n");
     //event_print(eh->event);
