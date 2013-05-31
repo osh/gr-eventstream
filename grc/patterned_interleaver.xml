@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<block>
+    <name>Patterned Interleaver</name>
+    <key>patterned_interlaver</key>
+    <category>Stream Conversions</category>
+    <import>import es, numpy</import>
+    <make>es.patterned_interleaver($type.np, $ninputs, $pattern)</make>
+
+      <param>
+        <name>IO Type</name>
+        <key>type</key>
+        <type>enum</type>
+        <option>
+            <name>Complex</name>
+            <key>complex</key>
+            <opt>size:gr.sizeof_gr_complex</opt>
+            <opt>np:numpy.complex64</opt>
+        </option>
+        <option>
+            <name>Float</name>
+            <key>float</key>
+            <opt>size:gr.sizeof_float</opt>
+            <opt>np:numpy.float32</opt>
+        </option>
+        <option>
+            <name>Int</name>
+            <key>int</key>
+            <opt>size:gr.sizeof_int</opt>
+            <opt>np:numpy.int32</opt>
+        </option>
+        <option>
+            <name>Short</name>
+            <key>short</key>
+            <opt>size:gr.sizeof_short</opt>
+            <opt>np:numpy.int16</opt>
+        </option>
+        <option>
+            <name>Byte</name>
+            <key>byte</key>
+            <opt>size:gr.sizeof_char</opt>
+            <opt>np:numpy.int8</opt>
+        </option>
+    </param>
+
+
+    <param>
+        <name>Input Streams</name>
+        <key>ninputs</key>
+        <value>2</value>
+        <type>int</type>
+    </param>
+
+    <param>
+      <name>Select Pattern</name>
+      <key>pattern</key>
+      <value>[0,0,1,1]</value>
+      <type>int_vector</type>
+    </param>
+
+    <sink>
+      <name>in</name>
+      <type>$type</type>
+      <vlen>1</vlen>
+      <nports>$ninputs</nports>
+    </sink>
+    
+    <source>
+      <name>out</name>
+      <type>$type</type>
+      <vlen>1</vlen>
+    </source>
+
+</block>

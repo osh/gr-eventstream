@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<block>
+  <name>EventStream Arbiter</name>
+  <key>variable_es_arb</key>
+  <category>EVENTSTREAM</category>
+  <import>import es</import>
+  <var_make>self.$(id) = $(id) = es.es_make_arbiter()</var_make>
+  <make></make>
+  <param>
+    <name>value</name>
+    <key>value</key>
+    <value>ARB OK</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>initial hash</name>
+    <key>hash</key>
+    <value>{'someval':1, 'someval2':2}</value>
+    <type>raw</type>
+  </param>
+</block>

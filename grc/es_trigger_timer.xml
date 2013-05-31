@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<block>
+  <name>Trigger System-Timer Event</name>
+  <key>es_timer_trigger</key>
+  <category>EVENTSTREAM</category>
+  <import>import es</import>
+  <make>#slurp
+es.es_trigger_timer($queue, "TIMER_EXPIRED_EVENT", $length, $delay, $iterations);
+self.$(id).start();</make>
+  
+  <param>
+    <name>Eventstream Queue</name>
+    <key>queue</key>
+    <value>variable_es_queue_0</value>
+    <type>raw</type>
+  </param>
+
+  <param>
+    <name>Event Length</name>
+    <key>length</key>
+    <value>5000</value>
+    <type>int</type>
+  </param>
+  
+  <param>
+    <name>Delay Seconds</name>
+    <key>delay</key>
+    <value>1.0</value>
+    <type>real</type>
+  </param>
+  
+  <param>
+    <name>Num Iterations</name>
+    <key>iterations</key>
+    <value>-1</value>
+    <type>int</type>
+  </param>
+
+  <doc>
+    This block generates events on timer expiration
+    
+    delay - float, time in seconds
+
+    iterations - number of iterations before stopping, -1 for infinite
+  </doc>
+
+  <event_emit>TIMER_EXPIRED_EVENT</event_emit>
+
+</block>

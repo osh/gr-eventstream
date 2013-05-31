@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<block>
+  <name>Handler Print</name>
+  <key>es_handler_print</key>
+  <category>EVENTSTREAM</category>
+  <import>import es</import>
+  <make>es.es_make_handler_print($dt)</make>
+  
+  <param>
+    <name>Data Type</name>
+    <key>dt</key>
+    <type>enum</type>
+    <option>
+        <name>Float 32</name>
+        <key>es.es_handler_print.TYPE_F32</key>
+    </option>
+    <option>
+        <name>Complex Float (2x32)</name>
+        <key>es.es_handler_print.TYPE_C32</key>
+    </option>
+  </param>
+
+  <doc>
+    This handler simply prints events to STDOUT
+  </doc>
+
+  <event_handle>Debug Print</event_handle>
+
+</block>

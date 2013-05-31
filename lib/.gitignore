@@ -1,0 +1,13 @@
+/Makefile
+/Makefile.in
+/.la
+/.lo
+/.deps
+/.libs
+/*.la
+/*.lo
+/*.pyc
+/*.o
+/es.cc
+/es.py
+/test_all

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<block>
+  <name>Event Pre-Hook</name>
+  <key>variable_es_pre_hook</key>
+  <category>EVENTSTREAM</category>
+  <import>import es;
+import pmt;</import>
+  <var_make>self.$(id) = $(id) = $value</var_make>
+  <make></make>
+
+  <param>
+    <name>value</name>
+    <key>value</key>
+    <value>print 'ok'</value>
+    <type>string</type>
+    <multiline>True</multiline>
+  </param>
+
+  <doc>
+    A pre-hook is executed when the handler is called before the flowgraph is executed.
+
+    TODO: Doc
+
+    - info on early out, abandon return status, etc.
+        this may be used to create python-only events -- i.e. no flowgraph used
+    
+    - info on copying buffers
+
+    - info on accessing event arguments
+
+    - info on populating event arguments into stream metadata 
+           ( setting up TAGS in the pad source block )
+
+  </doc>
+
+</block>

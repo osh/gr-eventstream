@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<block>
+  <name>Event Queue</name>
+  <key>variable_es_queue</key>
+  <category>EVENTSTREAM</category>
+  <import>import es;
+import pmt;</import>
+  <var_make>self.$(id) = $(id) = es.queue()</var_make>
+  <make>self.${id}.set_early_behavior($eb.raw)</make>
+
+  <param>
+    <name>value</name>
+    <key>value</key>
+    <value>QUEUE OK</value>
+    <type>string</type>
+  </param>
+
+  <param>
+    <name>Early Behavior</name>
+    <key>eb</key>
+    <value></value>
+    <type>enum</type>
+    <option>
+        <name>BALK</name>
+        <key>balk</key>
+        <opt>raw:0</opt>
+    </option>
+    <option>
+        <name>ASAP</name>
+        <key>asap</key>
+        <opt>raw:1</opt>
+    </option>
+
+  </param>
+
+  <doc>
+    Ignore the value field....
+
+    The Early Behavior setting determines what happens when an event arrives before the available buffer.
+
+        BALK - throws an assertion and exits when this happens
+                useful for debugging if you have critical timing that can not be missed
+
+        ASAP - schedules events at the earliest possible next time
+                useful for opportunistic best-effort timing
+                
+  </doc>
+
+</block>

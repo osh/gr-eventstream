@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: es
+Description: GR Event Stream Interface
+Requires:
+Version: @VERSION@
+Libs: -L${libdir} -lwfcontrol @BOOST_LDFLAGS@ @BOOST_REGEX_LIB@
+Cflags: @BOOST_CPPFLAGS@ -I${includedir}
+

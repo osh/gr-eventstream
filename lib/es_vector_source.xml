@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<block>
+    <name>####SHORT####</name>
+    <key>####FULL####</key>
+    <category>####MODULE####</category>
+    <import>import ####MODULE####</import>
+    <make>####MODULE####.####SHORT####()</make>
+
+    ####XMLSINKLIST####
+
+    ####XMLSOURCELIST####
+
+</block>
