@@ -99,6 +99,12 @@ install(
     COMPONENT "eventstream_devel"
 )
 
+install(
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/GnuradioEventstreamConfig.cmake
+    DESTINATION lib${LIB_SUFFIX}/cmake/gnuradioeventstream/
+    COMPONENT "eventstream_devel"
+)
+
 ########################################################################
 # Install all headers in the include directories
 ########################################################################
