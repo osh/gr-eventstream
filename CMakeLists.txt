@@ -116,18 +116,6 @@ install(
     PATTERN "*.hh" 
 )
 
-install(FILES
-    ${CMAKE_SOURCE_DIR}/cmake/Modules/FindGnuradioEventstream.cmake
-    DESTINATION share/cmake/
-)
-#install(FILES
-#    ${CMAKE_BINARY_DIR}/include/es/es.h
-#    ${CMAKE_BINARY_DIR}/include/es/es.h
-#    DESTINATION include/es
-#    COMPONENT "es_devel"
-#)
-
-
 SET(EVENTSTREAM_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/lib
