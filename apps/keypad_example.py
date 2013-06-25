@@ -25,7 +25,7 @@ import pmt;
 
 fs = 48e3;
 evt_len = int(100e-3*fs);
-key_sym = pmt.pmt_intern("key");
+key_sym = pmt.intern("key");
 
 # Create our handler flowgraph, define the event's sources and/or sinks
 def key_factory(index):
@@ -55,7 +55,7 @@ def key_factory(index):
 # Create our handler's hook callback to be run before and after event flowgraph execution
 def pre_hook(val):
     key_pmt = es.event_field( val.msg, key_sym );   
-    key = pmt.pmt_symbol_to_string( key_pmt );
+    key = pmt.symbol_to_string( key_pmt );
     print key;
     if(key == "*"):
         key = "10";
@@ -113,7 +113,7 @@ tb.connect( (src,1), (f2c,1) );
 
 # create initial event, set up event bindings, handlers
 e1 = es.event_create("key-press", 10, evt_len );
-tmp_pmt = pmt.pmt_intern("1");
+tmp_pmt = pmt.intern("1");
 print tmp_pmt;
 e1 = es.event_args_add( e1, key_sym, tmp_pmt );
 queue.register_event_type( es.event_type( e1 ) );
@@ -134,7 +134,7 @@ def keypress(event):
     x = event.char
     print x;
     key_evt = es.event_create("key-press", 0, int(100e-3 * fs) );
-    key_evt = es.event_args_add( key_evt, key_sym, pmt.pmt_intern(str(x)) );
+    key_evt = es.event_args_add( key_evt, key_sym, pmt.intern(str(x)) );
     queue.add_event( key_evt );
            
     

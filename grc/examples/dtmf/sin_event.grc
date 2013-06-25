@@ -21,10 +21,10 @@ f1 = 480;
 f2 = 620;
 
 # grab the key argument if it exists.
-keypmt = pmt.pmt_intern("key");
+keypmt = pmt.intern("key");
 if(es.event_has_field(val.msg,keypmt)):
     keyarg = es.event_field( val.msg, keypmt);
-    key = pmt.pmt_symbol_to_string( keyarg );
+    key = pmt.symbol_to_string( keyarg );
     
     # remap *,# and 0 keys for DTMF
     if(key == "*"):

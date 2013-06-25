@@ -31,7 +31,7 @@ sig_amp = 1.0;
 noise_amp = 10**(-20.0/SNR_db);
 print sig_amp, noise_amp;
 fs = 1e5;
-key_sym = pmt.pmt_intern("key");
+key_sym = pmt.intern("key");
 
 # Create our handler flowgraph, define the event's sources and/or sinks
 def key_factory(index):
@@ -65,7 +65,7 @@ def key_factory(index):
 # Create our handler's hook callback to be run before and after event flowgraph execution
 def pre_hook(val):
     payload = es.event_field( val.msg, key_sym );   
-    payload = pmt.pmt_symbol_to_string( payload );
+    payload = pmt.symbol_to_string( payload );
     v = numpy.fromstring( payload, dtype=numpy.byte );
     blocks = val.handler.pb2();
     blocks["src"].set_data( es.StrVector([payload]), len(v) );
@@ -109,7 +109,7 @@ tb.connect(noise, throttle, (summer,1));
 
 # create initial event, set up event bindings, handlers
 e1 = es.event_create("burst_transmit", 10, 1000 );
-e1 = es.event_args_add( e1, key_sym, pmt.pmt_intern("1") );
+e1 = es.event_args_add( e1, key_sym, pmt.intern("1") );
 queue.register_event_type( es.event_type( e1 ) );
 queue.bind_handler( es.event_type( e1 ), es.make_handler_pmt(key_handler_graph) );
 
@@ -141,7 +141,7 @@ while(True):
     txtime = timenow + random.randint(0,1e4);
 
     key_evt = es.event_create("burst_transmit", txtime, int(100e2) );
-    key_evt = es.event_args_add( key_evt, key_sym, pmt.pmt_intern(str(quote)) );
+    key_evt = es.event_args_add( key_evt, key_sym, pmt.intern(str(quote)) );
     es.event_print(key_evt);
     queue.add_event( key_evt );
     

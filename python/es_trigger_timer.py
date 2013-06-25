@@ -18,7 +18,7 @@ class es_trigger_timer(threading.Thread):
         self.delay = delay;
         self.evt_length = evt_length;
         try:
-            self.queue.register_event_type( pmt.pmt_intern( self.d_type ) );
+            self.queue.register_event_type( pmt.intern( self.d_type ) );
         except:
             print "queue must be a valid es.queue !"
             sys.exit(-1);
@@ -27,7 +27,7 @@ class es_trigger_timer(threading.Thread):
         while(self.count == -1 or self.count > 0):
             time.sleep(self.delay);
             timer_evt = es.event_create(self.d_type, 0, self.evt_length);
-            timer_evt = es.event_args_add( timer_evt, pmt.pmt_intern("timer_counter"), pmt.pmt_from_long(self.count));
+            timer_evt = es.event_args_add( timer_evt, pmt.intern("timer_counter"), pmt.pmt_from_long(self.count));
             self.queue.add_event( timer_evt );
 
             if(self.count > 0):

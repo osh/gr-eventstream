@@ -12,11 +12,11 @@ class es_trigger_keyboard(threading.Thread):
         threading.Thread.__init__(self);
         import Tkinter as tk
         self.d_type = evt_type;
-        self.key_sym = pmt.pmt_intern("key");
+        self.key_sym = pmt.intern("key");
         self.queue = queue;
         self.evt_length = evt_length;
         try:
-            self.queue.register_event_type( pmt.pmt_intern( self.d_type ) );
+            self.queue.register_event_type( pmt.intern( self.d_type ) );
         except:
             print "queue must be a valid es.queue !"
             sys.exit(-1);
@@ -34,7 +34,7 @@ class es_trigger_keyboard(threading.Thread):
         x = event.char;
         print "KEYPRESS!: %s"%(x);    
         key_evt = es.event_create(self.d_type, 0, self.evt_length);
-        key_evt = es.event_args_add( key_evt, self.key_sym, pmt.pmt_intern(str(x)) );
+        key_evt = es.event_args_add( key_evt, self.key_sym, pmt.intern(str(x)) );
         self.queue.add_event( key_evt );
 
 

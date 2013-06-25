@@ -59,7 +59,7 @@ ph.set_pyfactory_cb(test_factory_cb);
 ph.run_factory();
 
 a = ph.empty_vec();
-b = pmt.pmt_intern("test");
+b = pmt.intern("test");
 c = es.stdMapStringBlock();
 
 ph.set_pypre_hook_cb(test_hook_cb);

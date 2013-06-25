@@ -29,7 +29,7 @@ es_event_sptr es_make_event(pmt_t arb){
 }
 
 es_event::es_event(pmt_t arb){
-    args = pmt_make_dict();
+    args = pmt::make_dict();
     d_time = ULLONG_MAX;
     d_max_length = 0;
     d_name = "EVENT_BASE";
@@ -46,13 +46,13 @@ void es_event::print(){
 //    std::string out = pmt_write_string(args);
 //    printf("RAW = %s\n", out.c_str());
 
-    pmt_t keys = pmt_dict_keys(args);
-    for(int i=0; i<pmt_length(keys); i++){
+    pmt_t keys = pmt::dict_keys(args);
+    for(int i=0; i<pmt::length(keys); i++){
         //printf("   * i = %d\n", i);
-        pmt_t key = pmt_nth(i, keys);
-        pmt_t val = pmt_dict_ref(args, key, key);
+        pmt_t key = pmt::nth(i, keys);
+        pmt_t val = pmt::dict_ref(args, key, key);
 
-        printf("   * %s = %s\n", pmt_symbol_to_string(key).c_str(), pmt_write_string(val).c_str() );
+        printf("   * %s = %s\n", pmt::symbol_to_string(key).c_str(), pmt::write_string(val).c_str() );
 
     }
 
