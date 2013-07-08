@@ -33,6 +33,10 @@ def convert_hier(flow_graph, python_file):
         input_msgp = flow_graph.get_msg_pad_sources();
         output_msgp = flow_graph.get_msg_pad_sinks();
     parameters = flow_graph.get_parameters()
+    bussink = flow_graph.get_bussink()
+    bussrc = flow_graph.get_bussrc()
+    bus_struct_sink = flow_graph.get_bus_structure_sink()
+    bus_struct_src = flow_graph.get_bus_structure_src()
     block_key = flow_graph.get_option('id')
     block_name = flow_graph.get_option('title') or flow_graph.get_option('id').replace('_', ' ').title()
     block_category = flow_graph.get_option('category')
@@ -63,12 +67,17 @@ def convert_hier(flow_graph, python_file):
         params_n.append(param_n)
     block_n['param'] = params_n
     #sink data stream ports
+    if bussink:
+        block_n['bus_sink'] = '1';
+    if bussrc:
+        block_n['bus_source'] = '1';
     block_n['sink'] = list()
     for input_sig in input_sigs:
         sink_n = odict()
         sink_n['name'] = input_sig['label']
         sink_n['type'] = input_sig['type']
         sink_n['vlen'] = input_sig['vlen']
+        if input_sig['optional']: sink_n['optional'] = '1'
         block_n['sink'].append(sink_n)
     #sink data msg ports
     for input_sig in input_msgp:
@@ -76,20 +85,25 @@ def convert_hier(flow_graph, python_file):
         sink_n['name'] = input_sig.get_param("label").get_value();
         sink_n['type'] = "message"
         sink_n['optional'] = input_sig.get_param("optional").get_value();
-        block_n['sink'].append(sink_n);
+        block_n['sink'].append(sink_n)
     #source data stream ports
     block_n['source'] = list()
+    if bus_struct_sink:
+        block_n['bus_structure_sink'] = bus_struct_sink[0].get_param('struct').get_value();
+    if bus_struct_src:
+        block_n['bus_structure_source'] = bus_struct_src[0].get_param('struct').get_value();
     for output_sig in output_sigs:
         source_n = odict()
         source_n['name'] = output_sig['label']
         source_n['type'] = output_sig['type']
         source_n['vlen'] = output_sig['vlen']
+        if output_sig['optional']: source_n['optional'] = '1'
         block_n['source'].append(source_n)
     #source data msg ports
     for output_sig in output_msgp:
         source_n = odict()
         source_n['name'] = output_sig.get_param("label").get_value();
-        source_n['type'] = "message";
+        source_n['type'] = "message"
         source_n['optional'] = output_sig.get_param("optional").get_value();
         block_n['source'].append(source_n)
     #doc data
@@ -105,5 +119,5 @@ def convert_hier(flow_graph, python_file):
         block_n['event_handle'] = block_name;
     #write the block_n to file
     xml_file = python_file + '.xml'
-    ParseXML.to_file({'block': block_n}, xml_file);
+    ParseXML.to_file({'block': block_n}, xml_file)
     ParseXML.validate_dtd(xml_file, BLOCK_DTD)

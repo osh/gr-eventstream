@@ -22,6 +22,7 @@ from Element import Element
 
 from Cheetah.Template import Template
 from UserDict import UserDict
+from .. gui import Actions
 
 class TemplateArg(UserDict):
     """
@@ -54,9 +55,13 @@ class Block(Element):
     def __init__(self, flow_graph, n):
         """
         Make a new block from nested data.
-        @param flow graph the parent element
-        @param n the nested odict
-        @return block a new block
+        
+        Args:
+            flow: graph the parent element
+            n: the nested odict
+        
+        Returns:
+            block a new block
         """
         #build the block
         Element.__init__(self, flow_graph)
@@ -67,8 +72,10 @@ class Block(Element):
         self._name = n.find('name')
         self._key = n.find('key')
         self._category = n.find('category') or ''
-	self._grc_source = n.find('grc_source') or ''
+        self._grc_source = n.find('grc_source') or ''
         self._block_wrapper_path = n.find('block_wrapper_path')
+        self._bussify_sink = n.find('bus_sink')
+        self._bussify_source = n.find('bus_source')
         #create the param objects
         self._params = list()
         #add the id param
@@ -106,6 +113,7 @@ class Block(Element):
                 raise Exception, 'Key "%s" already exists in sources'%key
             #store the port
             self.get_sources().append(source)
+        self.back_ofthe_bus(self.get_sources())
         #create the sink objects
         self._sinks = list()
         for sink in map(lambda n: self.get_parent().get_parent().Port(block=self, n=n, dir='sink'), sinks):
@@ -115,11 +123,55 @@ class Block(Element):
                 raise Exception, 'Key "%s" already exists in sinks'%key
             #store the port
             self.get_sinks().append(sink)
+        self.back_ofthe_bus(self.get_sinks())
+        self.current_bus_structure = {'source':'','sink':''};
+
+        # Virtual source/sink and pad source/sink blocks are
+        # indistinguishable from normal GR blocks. Make explicit
+        # checks for them here since they have no work function or
+        # buffers to manage.
+        is_not_virtual_or_pad = ((self._key != "virtual_source") \
+                                     and (self._key != "virtual_sink") \
+                                     and (self._key != "pad_source") \
+                                     and (self._key != "pad_sink"))
+
+        if (len(sources) or len(sinks)) and is_not_virtual_or_pad:
+            self.get_params().append(self.get_parent().get_parent().Param(
+                    block=self,
+                    n=odict({'name': 'Core Affinity',
+                             'key': 'affinity',
+                             'type': 'int_vector',
+                             'hide': 'part',
+                             })
+                    ))
+        if len(sources) and is_not_virtual_or_pad:
+            self.get_params().append(self.get_parent().get_parent().Param(
+                    block=self,
+                    n=odict({'name': 'Min Output Buffer',
+                             'key': 'minoutbuf',
+                             'type': 'int',
+                             'hide': 'part',
+                             'value': '0'
+                             })
+                    ))
+
+    def back_ofthe_bus(self, portlist):
+        portlist.sort(key=lambda a: a.get_type() == 'bus');
+        
+
+    def filter_bus_port(self, ports): 
+        buslist = [i for i in ports if i.get_type() == 'bus'];
+        if len(buslist) == 0:
+            return ports;
+        else:
+            return buslist;
 
     def get_enabled(self):
         """
         Get the enabled state of the block.
-        @return true for enabled
+        
+        Returns:
+            true for enabled
         """
         try: return eval(self.get_param('_enabled').get_value())
         except: return True
@@ -127,7 +179,9 @@ class Block(Element):
     def set_enabled(self, enabled):
         """
         Set the enabled state of the block.
-        @param enabled true for enabled
+        
+        Args:
+            enabled: true for enabled
         """
         self.get_param('_enabled').set_value(str(enabled))
 
@@ -140,7 +194,9 @@ class Block(Element):
     def get_category(self): return self._category
     def get_doc(self): return ''
     def get_ports(self): return self.get_sources() + self.get_sinks()
+    def get_ports_gui(self): return self.filter_bus_port(self.get_sources()) + self.filter_bus_port(self.get_sinks());
     def get_children(self): return self.get_ports() + self.get_params()
+    def get_children_gui(self): return self.get_ports_gui() + self.get_params()
     def get_block_wrapper_path(self): return self._block_wrapper_path
 
     ##############################################
@@ -149,6 +205,12 @@ class Block(Element):
     def get_param_keys(self): return _get_keys(self._params)
     def get_param(self, key): return _get_elem(self._params, key)
     def get_params(self): return self._params
+    def has_param(self, key):   
+        try: 
+            _get_elem(self._params, key); 
+            return True; 
+        except: 
+            return False;
 
     ##############################################
     # Access Sinks
@@ -156,6 +218,7 @@ class Block(Element):
     def get_sink_keys(self): return _get_keys(self._sinks)
     def get_sink(self, key): return _get_elem(self._sinks, key)
     def get_sinks(self): return self._sinks
+    def get_sinks_gui(self): return self.filter_bus_port(self.get_sinks())
 
     ##############################################
     # Access Sources
@@ -163,6 +226,7 @@ class Block(Element):
     def get_source_keys(self): return _get_keys(self._sources)
     def get_source(self, key): return _get_elem(self._sources, key)
     def get_sources(self): return self._sources
+    def get_sources_gui(self): return self.filter_bus_port(self.get_sources()); 
 
     def get_connections(self):
         return sum([port.get_connections() for port in self.get_ports()], [])
@@ -170,8 +234,12 @@ class Block(Element):
     def resolve_dependencies(self, tmpl):
         """
         Resolve a paramater dependency with cheetah templates.
-        @param tmpl the string with dependencies
-        @return the resolved value
+        
+        Args:
+            tmpl: the string with dependencies
+        
+        Returns:
+            the resolved value
         """
         tmpl = str(tmpl)
         if '$' not in tmpl: return tmpl
@@ -185,8 +253,12 @@ class Block(Element):
     def type_controller_modify(self, direction):
         """
         Change the type controller.
-        @param direction +1 or -1
-        @return true for change
+        
+        Args:
+            direction: +1 or -1
+        
+        Returns:
+            true for change
         """
         changed = False
         type_param = None
@@ -210,12 +282,15 @@ class Block(Element):
     def port_controller_modify(self, direction):
         """
         Change the port controller.
-        @param direction +1 or -1
-        @return true for change
+        
+        Args:
+            direction: +1 or -1
+        
+        Returns:
+            true for change
         """
         return False
 
-    
     # export event bindings for xml output
     def export_bindings(self):
         cl = list();
@@ -230,19 +305,91 @@ class Block(Element):
             d["handler"] = str(bp[1]);  
             cl.append(d);
         return cl;
+
+    def form_bus_structure(self, direc):
+        if direc == 'source':
+            get_p = self.get_sources;
+            get_p_gui = self.get_sources_gui;
+            bus_structure = self.get_bus_structure('source');
+        else:
+            get_p = self.get_sinks;
+            get_p_gui = self.get_sinks_gui
+            bus_structure = self.get_bus_structure('sink');
+
+        struct = [range(len(get_p()))];
+        if True in map(lambda a: isinstance(a.get_nports(), int), get_p()):
+                
+
+            structlet = [];
+            last = 0;
+            for j in [i.get_nports() for i in get_p() if isinstance(i.get_nports(), int)]:
+                structlet.extend(map(lambda a: a+last, range(j)));
+                last = structlet[-1] + 1;
+                struct = [structlet];
+        if bus_structure:
+                
+            struct = bus_structure
+
+        self.current_bus_structure[direc] = struct;
+        return struct
+
+    def bussify(self, n, direc):
+        if direc == 'source':
+            get_p = self.get_sources;
+            get_p_gui = self.get_sources_gui;
+            bus_structure = self.get_bus_structure('source');
+        else:
+            get_p = self.get_sinks;
+            get_p_gui = self.get_sinks_gui
+            bus_structure = self.get_bus_structure('sink');
+
+
+        for elt in get_p():
+            for connect in elt.get_connections():
+                self.get_parent().remove_element(connect);
+
+        
+        
+        
         
 
+        if (not 'bus' in map(lambda a: a.get_type(), get_p())) and len(get_p()) > 0:
+
+            struct = self.form_bus_structure(direc);
+            self.current_bus_structure[direc] = struct;
+            if get_p()[0].get_nports():
+                n['nports'] = str(1);
+        
+            for i in range(len(struct)):
+                n['key'] = str(len(get_p()));
+                n = odict(n);
+                port = self.get_parent().get_parent().Port(block=self, n=n, dir=direc);
+                get_p().append(port);
+                
+
+            
+                
+        elif 'bus' in map(lambda a: a.get_type(), get_p()):
+            for elt in get_p_gui():
+                get_p().remove(elt);
+            self.current_bus_structure[direc] = ''
     ##############################################
     ## Import/Export Methods
     ##############################################
     def export_data(self):
         """
         Export this block's params to nested data.
-        @return a nested data odict
+        
+        Returns:
+            a nested data odict
         """
         n = odict()
         n['key'] = self.get_key()
         n['param'] = map(lambda p: p.export_data(), self.get_params())
+        if 'bus' in map(lambda a: a.get_type(), self.get_sinks()):
+            n['bus_sink'] = str(1);
+        if 'bus' in map(lambda a: a.get_type(), self.get_sources()):
+            n['bus_source'] = str(1);
 
         # export event bindings if appropriate
         if(self.get_key() == "variable_es_queue"):
@@ -258,7 +405,9 @@ class Block(Element):
         call rewrite, and repeat the load until the params stick.
         This call to rewrite will also create any dynamic ports
         that are needed for the connections creation phase.
-        @param n the nested data odict
+        
+        Args:
+            n: the nested data odict
         """
         # TODO: add bindings to hash computation
         get_hash = lambda: hash(tuple(map(hash, self.get_params())))
@@ -284,3 +433,17 @@ class Block(Element):
             #store hash and call rewrite
             my_hash = get_hash()
             self.rewrite()
+        bussinks = n.findall('bus_sink');
+        if len(bussinks) > 0 and not self._bussify_sink:
+            self.bussify({'name':'bus','type':'bus'}, 'sink')
+        elif len(bussinks) > 0:
+            self.bussify({'name':'bus','type':'bus'}, 'sink')
+            self.bussify({'name':'bus','type':'bus'}, 'sink')
+        bussrcs = n.findall('bus_source');
+        if len(bussrcs) > 0 and not self._bussify_source:
+            self.bussify({'name':'bus','type':'bus'}, 'source')
+        elif len(bussrcs) > 0:
+            self.bussify({'name':'bus','type':'bus'}, 'source')
+            self.bussify({'name':'bus','type':'bus'}, 'source')
+
+

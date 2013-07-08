@@ -8,7 +8,6 @@
 ##@param parameters the paramater blocks
 ##@param blocks the signal blocks
 ##@param connections the connections
-##@param msgqs the old msgq type connections
 ##@param messages the msg type connections
 ##@param generate_options the type of flow graph
 ##@param var_id2cbs variable id map to callback strings
@@ -70,9 +69,9 @@ class $(class_name)(gr.top_block, Qt.QWidget):
         Qt.QWidget.__init__(self)
         self.setWindowTitle("$title")
         try:
-            self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
+             self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
         except:
-            pass
+             pass
         self.top_scroll_layout = Qt.QVBoxLayout()
         self.setLayout(self.top_scroll_layout)
         self.top_scroll = Qt.QScrollArea()
@@ -84,6 +83,9 @@ class $(class_name)(gr.top_block, Qt.QWidget):
         self.top_layout = Qt.QVBoxLayout(self.top_widget)
         self.top_grid_layout = Qt.QGridLayout()
         self.top_layout.addLayout(self.top_grid_layout)
+
+        self.settings = Qt.QSettings("GNU Radio", "$class_name")
+        self.restoreGeometry(self.settings.value("geometry").toByteArray())
 
 #elif $generate_options == 'no_gui'
 class $(class_name)(gr.top_block):
@@ -154,7 +156,6 @@ class $(class_name):
     #end if
 
 #end if
-
 ########################################################
 ##Create Parameters
 ##  Set the parameter to a property of self.
@@ -183,13 +184,13 @@ class $(class_name):
 ########################################################
 ##Create Message Queues
 ########################################################
-#if $msgqs
+#if $messages
 
         $DIVIDER
         # Message Queues
         $DIVIDER
 #end if
-#for $msg in $msgqs
+#for $msg in $messages
         $(msg.get_source().get_parent().get_id())_msgq_out = $(msg.get_sink().get_parent().get_id())_msgq_in = gr.msg_queue(2)
 #end for
 ########################################################
@@ -206,6 +207,12 @@ class $(class_name):
         $indent($blk.get_make())
     #else
         self.$blk.get_id() = $indent($blk.get_make())
+        #if $blk.has_param('affinity') and $blk.get_param('affinity').get_value()
+        (self.$blk.get_id()).set_processor_affinity($blk.get_param('affinity').get_value())
+        #end if
+        #if (len($blk.get_sources())>0) and $blk.has_param('affinity') and (int($blk.get_param('minoutbuf').get_value()) > 0)
+        (self.$blk.get_id()).set_min_output_buffer($blk.get_param('minoutbuf').get_value())
+        #end if
     #end if
 #end for
 ########################################################
@@ -245,7 +252,7 @@ class $(class_name):
 (self.$port.get_parent().get_id(), $port.get_key())#slurp
     #end if
 #end def
-#if $connections or $messages
+#if $connections
 
         $DIVIDER
         # Connections
@@ -255,35 +262,22 @@ class $(class_name):
     #set $source = $con.get_source()
     #set $sink = $con.get_sink()
     ##resolve virtual sources to the actual sources
-
-    ###if $generate_options != 'evt'
-        #if $source.get_parent().is_virtual_source()
-            #set $source = $source.resolve_virtual_source()
-        #end if
-        ##do not generate connections with virtual sinks
-        #if not $sink.get_parent().is_virtual_sink()
+    #if $source.get_parent().is_virtual_source()
+        #set $source = $source.resolve_virtual_source()
+    #end if
+    ##do not generate connections with virtual sinks
+    #if not $sink.get_parent().is_virtual_sink()
         self.connect($make_port_sig($source), $make_port_sig($sink))
-        #end if
-    ###end if
-#end for
-#for $msg in $messages
-    #set $source = $msg.get_source()
-    #set $sink = $msg.get_sink()
-        self.msg_connect(self.$source.get_parent().get_id(), "$source.get_key()", self.$sink.get_parent().get_id())
-#end for
-#for $msg in $messages
-	#set $source = $msg.get_source()
-	#set $sink = $msg.get_sink()
-		self.msg_connect(self.$source.get_parent().get_id(), "$source.get_key()", self.$sink.get_parent().get_id())
+    #end if
 #end for
 
 ########################################################
 ##Create Asynch Message Connections
 ########################################################
 #if $messages2
-       $DIVIDER
-       # Asynch Message Connections
-       $DIVIDER
+        $DIVIDER
+        # Asynch Message Connections
+        $DIVIDER
 #end if
 #for $msg in $messages2
         #set $sr = $msg.get_source()
@@ -303,17 +297,15 @@ class $(class_name):
         self.msg_connect($source, "$source_port", $sink, "$sink_port")
 #end for
 
-###############################################
+##################################################
 ## temp workaround, close out factory function and create callbacks in python side class
 #if $generate_options == 'evt'
-
 #for $blk in filter(lambda b: b.get_make(), $blocks)
         blks["$blk.get_id()"] = self.$blk.get_id();
 #end for
 #for $param in $parameters
         vars["$param.get_id()"] = self.$param.get_id();
 #end for
-
         r.set_pyb2(blks);
         r.set_pyvars(vars);
         r.tb = self.to_top_block();
@@ -343,7 +335,7 @@ class $(class_name):
     
 ###    # run custom post hook
         exec """$flow_graph.get_option('post_hook') """
-
+#
         r = es.es_hook_rval();
         return r;
     
@@ -361,7 +353,15 @@ class $(class_name):
         self._pyhandler.set_pypre_hook_cb(self.pre_hook);
         self._pyhandler.set_pypost_hook_cb(self.post_hook);
         self._handler = es.es_make_handler_flowgraph( self._pyhandler, pool_size );
-        
+#end if        
+########################################################
+# QT sink close method reimplementation
+########################################################
+#if $generate_options == 'qt_gui'
+    def closeEvent(self, event):
+        self.settings = Qt.QSettings("GNU Radio", "$class_name")
+        self.settings.setValue("geometry", self.saveGeometry())
+        event.accept()
 #end if
 
 ########################################################
@@ -418,40 +418,57 @@ if __name__ == '__main__':
     #end if
     #if $generate_options == 'wx_gui'
     tb = $(class_name)($(', '.join($params_eq_list)))
+        #if $flow_graph.get_option('max_nouts')
+    tb.Run($flow_graph.get_option('run'), $flow_graph.get_option('max_nouts'))
+        #else
     tb.Start($flow_graph.get_option('run'))
-    #for $m in $monitors
+        #for $m in $monitors
     (tb.$m.get_id()).start()
-    #end for
+        #end for
     tb.Wait()
+        #end if
     #elif $generate_options == 'qt_gui'
     qapp = Qt.QApplication(sys.argv)
     tb = $(class_name)($(', '.join($params_eq_list)))
     #if $flow_graph.get_option('run')
+        #if $flow_graph.get_option('max_nouts')
+    tb.start($flow_graph.get_option('max_nouts'))
+        #else
     tb.start()
+        #end if
     #end if
     tb.show()
-    #for $m in $monitors
+        #for $m in $monitors
     (tb.$m.get_id()).start()
-    #end for
+        #end for
     qapp.exec_()
     tb.stop()
+    tb = None #to clean up Qt widgets
     #elif $generate_options == 'no_gui'
     tb = $(class_name)($(', '.join($params_eq_list)))
         #set $run_options = $flow_graph.get_option('run_options')
         #if $run_options == 'prompt'
+            #if $flow_graph.get_option('max_nouts')
+    tb.start($flow_graph.get_option('max_nouts'))
+            #else
     tb.start()
-    #for $m in $monitors
+            #end if
+        #for $m in $monitors
     (tb.$m.get_id()).start()
-    #end for
+        #end for
     raw_input('Press Enter to quit: ')
     tb.stop()
         #elif $run_options == 'run'
+            #if $flow_graph.get_option('max_nouts')
+    tb.start($flow_graph.get_option('max_nouts'))
+            #else
     tb.start()
-    #for $m in $monitors
-    (tb.$m.get_id()).start()
-    #end for
-    tb.wait()
+            #end if
         #end if
+        #for $m in $monitors
+    (tb.$m.get_id()).start()
+        #end for
+    tb.wait()
     #elif $generate_options == 'evt'
     eh = $(class_name)($(', '.join($params_eq_list)))
     eh.factory(1);

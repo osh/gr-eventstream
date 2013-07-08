@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ASCII'?>
 <flow_graph>
-  <timestamp>Thu Nov 29 09:36:34 2012</timestamp>
+  <timestamp>Mon Jul  8 18:08:34 2013</timestamp>
   <block>
     <key>options</key>
     <param>
@@ -58,99 +58,6 @@
     <param>
       <key>_coordinate</key>
       <value>(10, 10)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
-    <key>iir_filter_ffd</key>
-    <param>
-      <key>id</key>
-      <value>iir_filter_ffd_0</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>False</value>
-    </param>
-    <param>
-      <key>fftaps</key>
-      <value></value>
-    </param>
-    <param>
-      <key>fbtaps</key>
-      <value></value>
-    </param>
-    <param>
-      <key>oldstyle</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(962, 102)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>180</value>
-    </param>
-  </block>
-  <block>
-    <key>gr_complex_to_mag_squared</key>
-    <param>
-      <key>id</key>
-      <value>gr_complex_to_mag_squared_0</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>False</value>
-    </param>
-    <param>
-      <key>vlen</key>
-      <value>1</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(959, 38)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
-    <key>freq_xlating_fir_filter_xxx</key>
-    <param>
-      <key>id</key>
-      <value>freq_xlating_fir_filter_xxx_0</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>False</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>ccc</value>
-    </param>
-    <param>
-      <key>decim</key>
-      <value>1</value>
-    </param>
-    <param>
-      <key>taps</key>
-      <value>[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]</value>
-    </param>
-    <param>
-      <key>center_freq</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>samp_rate</key>
-      <value>samp_rate</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(704, 10)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -278,29 +185,6 @@
     </event_binding>
   </block>
   <block>
-    <key>variable</key>
-    <param>
-      <key>id</key>
-      <value>samp_rate</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>1e6</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(10, 170)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
     <key>variable_es_arb</key>
     <param>
       <key>id</key>
@@ -321,103 +205,6 @@
     <param>
       <key>_coordinate</key>
       <value>(200, 17)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
-    <key>ofdm_tx</key>
-    <param>
-      <key>id</key>
-      <value>ofdm_tx_0</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>pool_size</key>
-      <value>1</value>
-    </param>
-    <param>
-      <key>preamble</key>
-      <value>[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]</value>
-    </param>
-    <param>
-      <key>NFFT</key>
-      <value>512</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(240, 323)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
-    <key>es_source</key>
-    <param>
-      <key>id</key>
-      <value>es_source_0</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>arb</key>
-      <value>variable_es_arb_0</value>
-    </param>
-    <param>
-      <key>queue</key>
-      <value>variable_tx_queue</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>complex</value>
-    </param>
-    <param>
-      <key>num_streams</key>
-      <value>1</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(119, 132)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
-    <key>gr_throttle</key>
-    <param>
-      <key>id</key>
-      <value>gr_throttle_0</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>complex</value>
-    </param>
-    <param>
-      <key>samples_per_second</key>
-      <value>samp_rate</value>
-    </param>
-    <param>
-      <key>vlen</key>
-      <value>1</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(385, 138)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -570,10 +357,10 @@
     </param>
   </block>
   <block>
-    <key>gr_delay</key>
+    <key>blocks_delay</key>
     <param>
       <key>id</key>
-      <value>gr_delay_0</value>
+      <value>blocks_delay_0</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -605,10 +392,10 @@
     </param>
   </block>
   <block>
-    <key>gr_file_sink</key>
+    <key>blocks_file_sink</key>
     <param>
       <key>id</key>
-      <value>gr_file_sink_0</value>
+      <value>blocks_file_sink_0</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -691,6 +478,76 @@
     </param>
   </block>
   <block>
+    <key>blocks_file_sink</key>
+    <param>
+      <key>id</key>
+      <value>blocks_file_sink_0_0</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>file</key>
+      <value>/tmp/det.out</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>unbuffered</key>
+      <value>False</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1033, 507)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+  </block>
+  <block>
+    <key>blocks_moving_average_xx</key>
+    <param>
+      <key>id</key>
+      <value>blocks_moving_average_xx_0</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>length</key>
+      <value>512/2</value>
+    </param>
+    <param>
+      <key>scale</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>max_iter</key>
+      <value>4000</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(844, 501)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+  </block>
+  <block>
     <key>blocks_multiply_conjugate_cc</key>
     <param>
       <key>id</key>
@@ -729,7 +586,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1006, 409)</value>
+      <value>(1040, 411)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -737,34 +594,30 @@
     </param>
   </block>
   <block>
-    <key>gr_file_sink</key>
+    <key>blocks_throttle</key>
     <param>
       <key>id</key>
-      <value>gr_file_sink_0_0</value>
+      <value>blocks_throttle_0</value>
     </param>
     <param>
       <key>_enabled</key>
       <value>True</value>
     </param>
     <param>
-      <key>file</key>
-      <value>/tmp/det.out</value>
+      <key>type</key>
+      <value>complex</value>
     </param>
     <param>
-      <key>type</key>
-      <value>float</value>
+      <key>samples_per_second</key>
+      <value>samp_rate</value>
     </param>
     <param>
       <key>vlen</key>
       <value>1</value>
     </param>
     <param>
-      <key>unbuffered</key>
-      <value>False</value>
-    </param>
-    <param>
       <key>_coordinate</key>
-      <value>(1043, 480)</value>
+      <value>(385, 138)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -772,34 +625,92 @@
     </param>
   </block>
   <block>
-    <key>gr_moving_average_xx</key>
+    <key>es_source2</key>
     <param>
       <key>id</key>
-      <value>gr_moving_average_xx_0</value>
+      <value>es_source2_0</value>
     </param>
     <param>
       <key>_enabled</key>
       <value>True</value>
     </param>
     <param>
-      <key>type</key>
-      <value>float</value>
-    </param>
-    <param>
-      <key>length</key>
-      <value>512/2</value>
-    </param>
-    <param>
-      <key>scale</key>
+      <key>nthreads</key>
       <value>1</value>
     </param>
     <param>
-      <key>max_iter</key>
-      <value>4000</value>
+      <key>arb</key>
+      <value>variable_es_arb_0</value>
+    </param>
+    <param>
+      <key>queue</key>
+      <value>variable_tx_queue</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>complex</value>
+    </param>
+    <param>
+      <key>num_streams</key>
+      <value>1</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(854, 474)</value>
+      <value>(94, 122)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>id</key>
+      <value>samp_rate</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>1e6</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(4, 112)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+  </block>
+  <block>
+    <key>ofdm_tx</key>
+    <param>
+      <key>id</key>
+      <value>ofdm_tx_0</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>pool_size</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>preamble</key>
+      <value>[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]</value>
+    </param>
+    <param>
+      <key>NFFT</key>
+      <value>512</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(446, 335)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -842,7 +753,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(147, 226)</value>
+      <value>(81, 224)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -856,37 +767,7 @@
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>gr_complex_to_mag_squared_0</source_block_id>
-    <sink_block_id>iir_filter_ffd_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>iir_filter_ffd_0</source_block_id>
-    <sink_block_id>es_trigger_edge_f_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>freq_xlating_fir_filter_xxx_0</source_block_id>
-    <sink_block_id>gr_complex_to_mag_squared_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>es_source_0</source_block_id>
-    <sink_block_id>es_trigger_sample_timer_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>es_source_0</source_block_id>
-    <sink_block_id>gr_throttle_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>gr_throttle_0</source_block_id>
+    <source_block_id>blocks_throttle_0</source_block_id>
     <sink_block_id>channel_model_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
@@ -899,18 +780,18 @@
   </connection>
   <connection>
     <source_block_id>channel_model_0</source_block_id>
-    <sink_block_id>gr_file_sink_0</sink_block_id>
+    <sink_block_id>blocks_file_sink_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
     <source_block_id>channel_model_0</source_block_id>
-    <sink_block_id>gr_delay_0</sink_block_id>
+    <sink_block_id>blocks_delay_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>gr_delay_0</source_block_id>
+    <source_block_id>blocks_delay_0</source_block_id>
     <sink_block_id>blocks_multiply_conjugate_cc_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>1</sink_key>
@@ -922,20 +803,32 @@
     <sink_key>0</sink_key>
   </connection>
   <connection>
+    <source_block_id>blocks_moving_average_xx_0</source_block_id>
+    <sink_block_id>blocks_file_sink_0_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_complex_to_mag_squared_0</source_block_id>
+    <sink_block_id>blocks_moving_average_xx_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
     <source_block_id>blocks_multiply_conjugate_cc_0</source_block_id>
     <sink_block_id>blocks_complex_to_mag_squared_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>blocks_complex_to_mag_squared_0</source_block_id>
-    <sink_block_id>gr_moving_average_xx_0</sink_block_id>
+    <source_block_id>es_source2_0</source_block_id>
+    <sink_block_id>blocks_throttle_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>gr_moving_average_xx_0</source_block_id>
-    <sink_block_id>gr_file_sink_0_0</sink_block_id>
+    <source_block_id>es_source2_0</source_block_id>
+    <sink_block_id>es_trigger_sample_timer_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>

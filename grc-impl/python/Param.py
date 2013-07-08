@@ -94,8 +94,8 @@ class Param(_Param, _GUIParam):
 
     def get_types(self): return (
         'raw', 'enum',
-        'complex', 'real', 'int',
-        'complex_vector', 'real_vector', 'int_vector',
+        'complex', 'real', 'float', 'int',
+        'complex_vector', 'real_vector', 'float_vector', 'int_vector',
         'hex', 'string', 'bool',
         'file_open', 'file_save',
         'id', 'stream_id',
@@ -106,7 +106,8 @@ class Param(_Param, _GUIParam):
     def __repr__(self):
         """
         Get the repr (nice string format) for this param.
-        @return the string representation
+        Returns:
+            the string representation
         """
         ##################################################
         # truncate helper method
@@ -167,17 +168,20 @@ class Param(_Param, _GUIParam):
     def get_color(self):
         """
         Get the color that represents this param's type.
-        @return a hex color code.
+        Returns:
+            a hex color code.
         """
         try:
             return {
                 #number types
                 'complex': Constants.COMPLEX_COLOR_SPEC,
                 'real': Constants.FLOAT_COLOR_SPEC,
+                'float': Constants.FLOAT_COLOR_SPEC,
                 'int': Constants.INT_COLOR_SPEC,
                 #vector types
                 'complex_vector': Constants.COMPLEX_VECTOR_COLOR_SPEC,
                 'real_vector': Constants.FLOAT_VECTOR_COLOR_SPEC,
+                                'float_vector': Constants.FLOAT_VECTOR_COLOR_SPEC,
                 'int_vector': Constants.INT_VECTOR_COLOR_SPEC,
                 #special
                 'bool': Constants.INT_COLOR_SPEC,
@@ -198,7 +202,8 @@ class Param(_Param, _GUIParam):
         If the parameter controls a port type, vlen, or nports, return part.
         If the parameter is an empty grid position, return part.
         These parameters are redundant to display in the flow graph view.
-        @return hide the hide property string
+        Returns:
+            hide the hide property string
         """
         hide = _Param.get_hide(self)
         if hide: return hide
@@ -234,7 +239,8 @@ class Param(_Param, _GUIParam):
     def evaluate(self):
         """
         Evaluate the value.
-        @return evaluated type
+        Returns:
+            evaluated type
         """
         self._init = True
         self._lisitify_flag = False
@@ -257,7 +263,7 @@ class Param(_Param, _GUIParam):
         #########################
         # Numeric Types
         #########################
-        elif t in ('raw', 'complex', 'real', 'int', 'hex', 'bool'):
+        elif t in ('raw', 'complex', 'real', 'float', 'int', 'hex', 'bool'):
             #raise exception if python cannot evaluate this value
             try: e = self.get_parent().get_parent().evaluate(v)
             except Exception, e: raise Exception, 'Value "%s" cannot be evaluated:\n%s'%(v, e)
@@ -267,9 +273,9 @@ class Param(_Param, _GUIParam):
                 if not isinstance(e, COMPLEX_TYPES):
                     raise Exception, 'Expression "%s" is invalid for type complex.'%str(e)
                 return e
-            elif t == 'real':
+            elif t == 'real' or t == 'float':
                 if not isinstance(e, REAL_TYPES):
-                    raise Exception, 'Expression "%s" is invalid for type real.'%str(e)
+                    raise Exception, 'Expression "%s" is invalid for type float.'%str(e)
                 return e
             elif t == 'int':
                 if not isinstance(e, INT_TYPES):
@@ -284,7 +290,7 @@ class Param(_Param, _GUIParam):
         #########################
         # Numeric Vector Types
         #########################
-        elif t in ('complex_vector', 'real_vector', 'int_vector'):
+        elif t in ('complex_vector', 'real_vector', 'float_vector', 'int_vector'):
             if not v: v = '()' #turn a blank string into an empty list, so it will eval
             #raise exception if python cannot evaluate this value
             try: e = self.get_parent().get_parent().evaluate(v)
@@ -297,12 +303,12 @@ class Param(_Param, _GUIParam):
                 if not all([isinstance(ei, COMPLEX_TYPES) for ei in e]):
                     raise Exception, 'Expression "%s" is invalid for type complex vector.'%str(e)
                 return e
-            elif t == 'real_vector':
+            elif t == 'real_vector' or t == 'float_vector':
                 if not isinstance(e, VECTOR_TYPES):
                     self._lisitify_flag = True
                     e = [e]
                 if not all([isinstance(ei, REAL_TYPES) for ei in e]):
-                    raise Exception, 'Expression "%s" is invalid for type real vector.'%str(e)
+                    raise Exception, 'Expression "%s" is invalid for type float vector.'%str(e)
                 return e
             elif t == 'int_vector':
                 if not isinstance(e, VECTOR_TYPES):
@@ -335,7 +341,7 @@ class Param(_Param, _GUIParam):
         # Stream ID Type
         #########################
         elif t == 'stream_id':
-            #get a list of all stream ids used in the virtual sinks 
+            #get a list of all stream ids used in the virtual sinks
             ids = [param.get_value() for param in filter(
                 lambda p: p.get_parent().is_virtual_sink(),
                 self.get_all_params(t),
@@ -435,7 +441,8 @@ class Param(_Param, _GUIParam):
         Convert the value to code.
         For string and list types, check the init flag, call evaluate().
         This ensures that evaluate() was called to set the xxxify_flags.
-        @return a string representing the code
+        Returns:
+            a string representing the code
         """
         v = self.get_value()
         t = self.get_type()
@@ -443,7 +450,7 @@ class Param(_Param, _GUIParam):
             if not self._init: self.evaluate()
             if self._stringify_flag: return '"%s"'%v.replace('"', '\"')
             else: return v
-        elif t in ('complex_vector', 'real_vector', 'int_vector'): #vector types
+        elif t in ('complex_vector', 'real_vector', 'float_vector', 'int_vector'): #vector types
             if not self._init: self.evaluate()
             if self._lisitify_flag: return '(%s, )'%v
             else: return '(%s)'%v
@@ -452,7 +459,10 @@ class Param(_Param, _GUIParam):
     def get_all_params(self, type):
         """
         Get all the params from the flowgraph that have the given type.
-        @param type the specified type
-        @return a list of params
+        Args:
+            type: the specified type
+        
+        Returns:
+            a list of params
         """
         return sum([filter(lambda p: p.get_type() == type, block.get_params()) for block in self.get_parent().get_parent().get_enabled_blocks()], [])

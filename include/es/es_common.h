@@ -72,8 +72,8 @@ pmt_t eh_pair_event( pmt_t eh_pair );
 pmt_t eh_pair_handler( pmt_t eh_pair );
 
 pmt_t register_buffer( pmt_t event, pmt_t bufs);
-pmt_t register_buffer( pmt_t event, gr_vector_void_star buf);
-pmt_t register_buffer( pmt_t event, gr_vector_const_void_star buf);
+pmt_t register_buffer( pmt_t event, gr_vector_void_star buf, gr_vector_int &sig);
+//pmt_t register_buffer( pmt_t event, gr_vector_const_void_star buf, gr_vector_int &sig);
 
 
 gr::io_signature::sptr es_make_io_signature( int min, const std::vector<int> &sizes );

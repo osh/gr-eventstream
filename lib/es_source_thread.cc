@@ -94,7 +94,7 @@ void es_source_thread::do_work(){
             for(int i=0 ; i<out_sig.size(); i++){
                 int itemsize = out_sig[i];
 
-                printf("allocating buffer idx = %d, itemsize = %d, n_items = %d\n", i, itemsize, n_items);
+//                printf("allocating buffer idx = %d, itemsize = %d, n_items = %d\n", i, itemsize, n_items);
                 
                 if(zerobuf.size() < itemsize*n_items){
                     zerobuf.resize(itemsize*n_items);

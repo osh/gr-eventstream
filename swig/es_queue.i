@@ -24,18 +24,18 @@
 
 GR_SWIG_BLOCK_MAGIC(es,queue);
 
-
-es_queue_sptr es_make_queue();
-
 enum es_queue_early_behaviors {
+    DISCARD,
     BALK,
     ASAP
 };
 
+es_queue_sptr es_make_queue(enum es_queue_early_behaviors eb = DISCARD);
+
 class es_queue {
     public:
 
-        es_queue();
+        es_queue(enum es_queue_early_behaviors eb = DISCARD);
         int add_event(pmt_t evt);
         void print_queue();
         int length();

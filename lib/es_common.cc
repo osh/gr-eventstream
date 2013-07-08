@@ -27,6 +27,7 @@ using namespace pmt;
 
 #include <stdio.h>
 #include <gnuradio/basic_block.h>
+#include <boost/format.hpp>
 
 pmt_t es_make_arbiter(){
     
@@ -133,6 +134,9 @@ pmt_t event_field( pmt_t event, pmt_t field ){
         printf("event_field(%s) got val. <-- %s\n", pmt::write_string(field).c_str(), pmt::write_string(val).c_str() );
         event_print(event);
     }
+    if( pmt::eq(PMT_NIL, val) ){
+        throw std::runtime_error((boost::format("could not find event field %s on event %s\n")%pmt::write_string(val).c_str()%pmt::write_string(event).c_str()).str());
+        }
     assert( !pmt::eq( PMT_NIL, val ) );
     return val;
 }
@@ -159,26 +163,23 @@ pmt_t register_buffer( pmt_t event, pmt_t bufs ){
     return event_args_add( event, es::event_buffer, bufs );
 }
 
-pmt_t register_buffer( pmt_t event, gr_vector_void_star buf ){
+pmt_t register_buffer( pmt_t event, gr_vector_void_star buf, gr_vector_int &sig ){
     assert(is_event(event));
     pmt_t msg_hash = pmt::tuple_ref(event, 1);
+    pmt_t buflist = pmt::PMT_NIL;
 
-    pmt_t buf0 = pmt::make_any( boost::any( buf[0] ) );
-    pmt_t buflist = pmt::list1( buf0 );
-    for(int i=1; i<buf.size(); i++){
-        buflist = pmt::list_add(buflist, pmt::make_any( boost::any( buf[i] ) ) );
+    for(int i=0; i<buf.size(); i++){
+        buflist = pmt::list_add(buflist, pmt::init_u8vector( sig[0], (const uint8_t*) buf[i]) );
     }
 
     msg_hash = pmt::dict_add( msg_hash, es::event_buffer, buflist );
-
     return pmt::make_tuple( pmt::tuple_ref(event,0), msg_hash );
 }
 
-pmt_t register_buffer( pmt_t event, gr_vector_const_void_star buf ){
-    gr_vector_void_star* a = (gr_vector_void_star*) &buf;
-    return register_buffer( event, *a );
-}
-
+//pmt_t register_buffer( pmt_t event, gr_vector_const_void_star buf, gr_vector_int sig ){
+//    gr_vector_void_star* a = (gr_vector_void_star*) &buf;
+//    return register_buffer( event, *a, sig);
+//}
 
 gr::io_signature::sptr es_make_io_signature( int min, const std::vector<int> &sizes ){
     if(sizes.size() == 0){

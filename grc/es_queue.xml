@@ -5,8 +5,9 @@
   <category>EVENTSTREAM</category>
   <import>import es;
 import pmt;</import>
-  <var_make>self.$(id) = $(id) = es.queue()</var_make>
-  <make>self.${id}.set_early_behavior($eb.raw)</make>
+  <var_make>self.$(id) = $(id) = es.queue($eb.raw)</var_make>
+  <make></make>
+  <callback>set_early_behavior($eb.raw)</callback>
 
   <param>
     <name>value</name>

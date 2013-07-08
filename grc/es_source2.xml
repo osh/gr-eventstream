@@ -5,7 +5,14 @@
   <category>EVENTSTREAM</category>
   <import>import es</import>
 <!--  <make>es.source2($arb,$queue,gr.io_signaturev($num_streams,$num_streams,$num_streams*[$type.size]))</make> -->
-  <make>es.source2($arb,$queue,$num_streams*[$type.size])</make>
+  <make>es.source2($arb,$queue,$num_streams*[$type.size], $nthreads)</make>
+
+  <param>
+    <name>Handler Threads</name>
+    <key>nthreads</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
 
   <param>
     <name>Arbiter</name>

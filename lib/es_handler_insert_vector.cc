@@ -35,6 +35,8 @@ es_handler_insert_vector::es_handler_insert_vector( ){
 //void es_handler_insert_vector::handler( pmt_t msg, void* buf ){
 void es_handler_insert_vector::handler( pmt_t msg, gr_vector_void_star buf ){
 
+    std::cout << "es_handler_insert_vector::handler\n";
+
 //    printf("INSERT VECTOR HANDLER RUNNING!\n");
     pmt_t vector = event_field( msg, pmt::intern("vector") );
  

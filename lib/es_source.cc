@@ -77,6 +77,8 @@ es_source::es_source (pmt_t _arb, es_queue_sptr _queue, gr_vector_int out_sig)
     arb(_arb),
     d_maxlen(ULLONG_MAX)
 {
+    throw std::runtime_error("es.source is deprecated - please use es.source2 instead");
+
     // register native event types
     event_queue->register_event_type( es::event_type_gen_vector );
     event_queue->register_event_type( es::event_type_gen_vector_f );
@@ -138,22 +140,21 @@ es_source::work (int noutput_items,
 
     int buffer_offset = eh->time() - d_time;
 
-    assert( pmt::is_msg_accepter( eh->handler ) );
+    pmt::print(eh->handler);
+    assert( pmt::is_any( eh->handler ) );
     
 /* 
-    DEBUG(printf("    assert( pmt_is_msg_accepter( eh_pair_handler( eh ) ) ) --- ok \n");)
     DEBUG(printf("event_length = %lld\n", eh->length());)
     DEBUG(printf("buffer_offset = %d\n", buffer_offset);)
     DEBUG(printf("buffer_max_needed = %lld\n", eh->length()+buffer_offset);)
     DEBUG(printf("buffer_max_len = %d\n", noutput_items);)
   */  
+    DEBUG(printf("buffer_offset = %d\n", buffer_offset);)
     int buffer_event_max = eh->length()+buffer_offset;
-    bool use_inplace_buffer = true;
-
+    bool use_inplace_buffer = !(buffer_event_max >= noutput_items);
     // If the event's max length will not fit in the buffer we will need to create a temporary one.
-    if(buffer_event_max >= noutput_items){
-        use_inplace_buffer = false;
-    }
+
+    DEBUG(printf("buffer_event_max = %d, noutput_items = %d, use_inplace_buffer = %d\n", buffer_event_max, noutput_items, use_inplace_buffer);)
     
     // Call the event handler with either an in-place or out-of-place buffer   
     if(use_inplace_buffer){   
@@ -164,7 +165,12 @@ es_source::work (int noutput_items,
             event_bufs.push_back( bufloc );
         }
 
-        pmt_t event = register_buffer( eh->event, event_bufs );
+        gr_vector_int sizes;
+        for(int i=0; i<output_items.size(); i++){
+            sizes.push_back(eh->length() * d_output_signature->sizeof_stream_item(i));
+        }
+        
+        pmt_t event = register_buffer( eh->event, event_bufs, sizes);
         DEBUG(event_print( event );)
 
         eh->event = event;
@@ -172,6 +178,7 @@ es_source::work (int noutput_items,
         eh->run();      
 
     } else {    // use_inplace_buffer = false
+        DEBUG(printf("using out-of-place buffer!!!\n");)
 
         // allocate temporary buffers.
         gr_vector_void_star bufs;
@@ -182,10 +189,16 @@ es_source::work (int noutput_items,
             DEBUG(printf("allocced buffer of size %d\n", bufsize );)
             }
 
+        // allocate size vector
+        gr_vector_int sizes;
+        for(int i=0; i<output_items.size(); i++){
+            sizes.push_back(eh->length() * d_output_signature->sizeof_stream_item(i));
+        }
+
         DEBUG(printf("using out of place buffer!!!\n");)
         
         // register buffers with eh pair and post 
-        pmt_t event = register_buffer( eh->event, bufs);
+        pmt_t event = register_buffer( eh->event, bufs, sizes);
         eh->event = event;
         DEBUG(event_print( event );)
 
@@ -208,12 +221,9 @@ es_source::work (int noutput_items,
                     usable_items * d_output_signature->sizeof_stream_item(i));
         }
 
-        // AAA update this 
         // copy second partition to new insertion event and add to queue
-        pmt_t buf1 = pmt::init_u8vector( d_output_signature->sizeof_stream_item(0) * leftover_items,  ((const uint8_t*) bufs[0]) + usable_items*d_output_signature->sizeof_stream_item(0) );
-        pmt_t leftover_buf_pmt = pmt::list1( buf1 );
-
-        for(int i=1; i<output_items.size(); i++){
+        pmt_t leftover_buf_pmt = pmt::PMT_NIL;
+        for(int i=0; i<output_items.size(); i++){
             pmt_t buf_n = pmt::init_u8vector( d_output_signature->sizeof_stream_item(i) * leftover_items,  ((const uint8_t*) bufs[i]) + usable_items*d_output_signature->sizeof_stream_item(i) );
             leftover_buf_pmt = pmt::list_add(leftover_buf_pmt, buf_n);
         }

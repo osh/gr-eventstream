@@ -47,7 +47,6 @@ es_handler_flowgraph::es_handler_flowgraph( es_pyhandler_def* _pyhd, int pool_si
 es_handler_flowgraph::~es_handler_flowgraph(){
 }
 void es_handler_flowgraph::handler( pmt_t msg, gr_vector_void_star buf ){
-
     // locals
     es_pyhandler* handler;
     int num_items = event_length(msg);
@@ -83,19 +82,19 @@ void es_handler_flowgraph::handler( pmt_t msg, gr_vector_void_star buf ){
 
     // copy vector contents to output buffer (for es.source handler)
     if(handler->sink.get() != NULL && handler->sink->shape().size() > 0){
-        printf("es_handler_flowgraph::handler() copying output buffer.\n");
+        //printf("es_handler_flowgraph::handler() copying output buffer.\n");
         gr_vector_const_void_star data = handler->sink->data();
         for(int i=0; i<data.size(); i++){
             int item_size = handler->sink->shape()[i];
-            printf("num_items = %d, itemsize = %d\n", num_items, item_size );
-            printf("buf[i] = %p\n", buf[i]);
-            printf("data[i] = %p, datalen = %d\n", data[i], handler->sink->data_len_items());
+            //printf("num_items = %d, itemsize = %d\n", num_items, item_size );
+            //printf("buf[i] = %p\n", buf[i]);
+            //printf("data[i] = %p, datalen = %d\n", data[i], handler->sink->data_len_items());
             if(handler->sink->data_len_items() > num_items){
-                printf("(sink.length = %d > evt_len = %d)\n",handler->sink->data_len_items(), num_items);
+                //printf("(sink.length = %d > evt_len = %d)\n",handler->sink->data_len_items(), num_items);
                 throw std::runtime_error("mismatch between flowgraph sink and evt length item counts");
             }
             int gen_items = handler->sink->data_len_items();
-            printf("(es_handler_flowgraph) producing (sink len) --- %d items, padding by %d\n", gen_items, num_items-gen_items);
+            //printf("(es_handler_flowgraph) producing (sink len) --- %d items, padding by %d\n", gen_items, num_items-gen_items);
             memcpy( buf[i], data[i], gen_items * item_size );
             memset( (void*)((uint64_t)buf[i] + gen_items*item_size), 0x00, (num_items-gen_items)*item_size );
         }

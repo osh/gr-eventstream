@@ -83,7 +83,9 @@ class EntryParam(InputParam):
         self._input.connect('changed', self._handle_changed)
         self.pack_start(self._input, True)
     def get_text(self): return self._input.get_text()
-    def set_color(self, color): self._input.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
+    def set_color(self, color):
+        self._input.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
+        self._input.modify_text(gtk.STATE_NORMAL, Colors.PARAM_ENTRY_TEXT_COLOR)
     def set_tooltip_text(self, text): self._input.set_tooltip_text(text)
 
 class EntryParamML(InputParam):
@@ -143,8 +145,10 @@ class EnumEntryParam(InputParam):
     def set_color(self, color):
         if self._input.get_active() == -1: #custom entry, use color
             self._input.get_child().modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-        else: #from enum, make white background
-            self._input.get_child().modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse('#ffffff'))
+            self._input.get_child().modify_text(gtk.STATE_NORMAL, Colors.PARAM_ENTRY_TEXT_COLOR)
+        else: #from enum, make pale background
+            self._input.get_child().modify_base(gtk.STATE_NORMAL, Colors.ENTRYENUM_CUSTOM_COLOR)
+            self._input.get_child().modify_text(gtk.STATE_NORMAL, Colors.PARAM_ENTRY_TEXT_COLOR)
 
 PARAM_MARKUP_TMPL="""\
 #set $foreground = $param.is_valid() and 'black' or 'red'
@@ -191,7 +195,8 @@ class Param(Element):
         An enum requires and combo parameter.
         A non-enum with options gets a combined entry/combo parameter.
         All others get a standard entry parameter.
-        @return gtk input class
+        Returns:
+            gtk input class
         """
         if self.is_enum(): return EnumParam(self, *args, **kwargs)
         if self.get_options(): return EnumEntryParam(self, *args, **kwargs)
@@ -201,6 +206,7 @@ class Param(Element):
     def get_markup(self):
         """
         Get the markup for this param.
-        @return a pango markup string
+        Returns:
+            a pango markup string
         """
         return Utils.parse_template(PARAM_MARKUP_TMPL, param=self)

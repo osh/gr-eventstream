@@ -1,4 +1,4 @@
-<!-- 
+<!--
 Copyright 2008 Free Software Foundation, Inc.
 This file is part of GNU Radio
 
@@ -14,21 +14,23 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA 
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 -->
 <!--
-	flow_graph.dtd 
-	Josh Blum
-	The document type definition for flow graph xml files.
+    flow_graph.dtd
+    Josh Blum
+    The document type definition for flow graph xml files.
  -->
 <!ELEMENT flow_graph (timestamp?, block*, connection*)> <!-- optional timestamp -->
 <!ELEMENT timestamp (#PCDATA)>
 <!-- Block -->
-<!ELEMENT block (key, param*, event_binding*)>
+<!ELEMENT block (key, param*, bus_sink?, bus_source?, event_binding?)>
 <!ELEMENT param (key, value)>
 <!ELEMENT event_binding (emitter, handler)>
 <!ELEMENT key (#PCDATA)>
 <!ELEMENT value (#PCDATA)>
+<!ELEMENT bus_sink (#PCDATA)>
+<!ELEMENT bus_source (#PCDATA)>
 <!ELEMENT emitter (#PCDATA)>
 <!ELEMENT handler (#PCDATA)>
 <!-- Connection -->

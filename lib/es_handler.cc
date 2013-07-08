@@ -45,7 +45,18 @@ es_handler::es_handler(std::string name)
 }
 
 void es_handler::handler_helper( pmt_t msg ){
-    handler( msg, get_buffer_ptr( event_field( msg, es::event_buffer ) ) );
+//    std::cout << "handler_helper\n";
+//    std::cout << "msg: ";
+//    pmt::print(msg);
+    
+    pmt::pmt_t buf_arg = event_field(msg, es::event_buffer);
+//    std::cout << "buf: ";
+//    pmt::print(buf_arg);
+
+    // calling handler
+//    std::cout << "calling handler ("<<this<<")...\n";
+    handler( msg, get_buffer_ptr(buf_arg) );
+//    std::cout << "calling handler... returned\n";
 }
 
 es_handler::~es_handler(){
@@ -54,6 +65,7 @@ es_handler::~es_handler(){
 
 gr_vector_void_star es_handler::get_buffer_ptr(pmt_t buffer_arg){
     int nvec = pmt::length(buffer_arg);
+//    std::cout << "es_handler::get_buffer_ptr - nvec = " << nvec << "\n";
     gr_vector_void_star outvec(nvec);
     for(int i=0; i<nvec; i++){
         pmt_t list_nth = pmt::nth(i,buffer_arg);

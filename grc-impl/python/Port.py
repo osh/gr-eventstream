@@ -1,5 +1,5 @@
 """
-Copyright 2008-2011 Free Software Foundation, Inc.
+Copyright 2008-2012 Free Software Foundation, Inc.
 This file is part of GNU Radio
 
 GNU Radio Companion is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@ import Constants
 def _get_source_from_virtual_sink_port(vsp):
     """
     Resolve the source port that is connected to the given virtual sink port.
-    Use the get source from virtual source to recursively resolve subsequent ports. 
+    Use the get source from virtual source to recursively resolve subsequent ports.
     """
     try: return _get_source_from_virtual_source_port(
         vsp.get_enabled_connections()[0].get_source())
@@ -50,25 +50,49 @@ def _get_source_from_virtual_source_port(vsp, traversed=[]):
     )
     except: raise Exception, 'Could not resolve source for virtual source port %s'%vsp
 
+def _get_sink_from_virtual_source_port(vsp):
+    """
+    Resolve the sink port that is connected to the given virtual source port.
+    Use the get sink from virtual sink to recursively resolve subsequent ports.
+    """
+    try: return _get_sink_from_virtual_sink_port(
+        vsp.get_enabled_connections()[0].get_sink())    # Could have many connections, but use first
+    except: raise Exception, 'Could not resolve source for virtual source port %s'%vsp
+
+def _get_sink_from_virtual_sink_port(vsp, traversed=[]):
+    """
+    Recursively resolve sink ports over the virtual connections.
+    Keep track of traversed sinks to avoid recursive loops.
+    """
+    if not vsp.get_parent().is_virtual_sink(): return vsp
+    if vsp in traversed: raise Exception, 'Loop found when resolving virtual sink %s'%vsp
+    try: return _get_sink_from_virtual_sink_port(
+        _get_sink_from_virtual_source_port(
+            filter(#get all virtual source with a matching stream id
+                lambda vs: vs.get_param('stream_id').get_value() == vsp.get_parent().get_param('stream_id').get_value(),
+                filter(#get all enabled blocks that are also virtual sinks
+                    lambda b: b.is_virtual_source(),
+                    vsp.get_parent().get_parent().get_enabled_blocks(),
+                ),
+            )[0].get_sources()[0]
+        ), traversed + [vsp],
+    )
+    except: raise Exception, 'Could not resolve source for virtual sink port %s'%vsp
+
 class Port(_Port, _GUIPort):
 
     def __init__(self, block, n, dir):
         """
         Make a new port from nested data.
-        @param block the parent element
-        @param n the nested odict
-        @param dir the direction
+        
+        Args:
+            block: the parent element
+            n: the nested odict
+            dir: the direction
         """
         self._n = n
-
-        #this logic determines the key for messages
-        if n['type'] == 'msg' and dir == 'sink':
-            self._old_msgq = not n.has_key('key')
-            n['key'] = 'msg'
-        if n['type'] == 'msg' and dir == 'source':
-            self._old_msgq = not n.has_key('key')
-            if self._old_msgq: n['key'] = 'msg'
-
+        if n['type'] == 'msg': n['key'] = 'msg'
+        if n['type'] == 'message': n['key'] = n['name']
         if dir == 'source' and not n.find('key'):
             n['key'] = str(block._source_count)
             block._source_count += 1
@@ -87,42 +111,31 @@ class Port(_Port, _GUIPort):
         self._vlen = n.find('vlen') or ''
         self._optional = bool(n.find('optional'))
 
-    def is_msgq(self):
-        """
-        Is this a message port for the old style message queue?
-        """
-        if self.get_type == 'msg': return self._old_msgq
-        return False
-
     def get_types(self): return Constants.TYPE_TO_SIZEOF.keys()
+
+    def is_type_empty(self): return not self._n['type']
 
     def validate(self):
         _Port.validate(self)
-
+        if not self.get_enabled_connections() and not self.get_optional():
+            self.add_error_message('Port is not connected.')
+        if not self.is_source() and (not self.get_type() == "message") and len(self.get_enabled_connections()) > 1:
+            self.add_error_message('Port has too many connections.')
         #message port logic
         if self.get_type() == 'msg':
-            if self.is_sink() and self.get_key() != 'msg':
-                self.add_error_message('A sink of type "msg" cannot have a key set to "%s".'%self.get_key())
             if self.get_nports():
                 self.add_error_message('A port of type "msg" cannot have "nports" set.')
             if self.get_vlen() != 1:
                 self.add_error_message('A port of type "msg" must have a "vlen" of 1.')
-
-        #check regular connections
-        else:
-            if not self.get_enabled_connections() and not self.get_optional():
-                self.add_error_message('Port is not connected.')
-            if not self.is_source() and (not self.get_type() == "message") and len(self.get_enabled_connections()) > 1:
-                self.add_error_message('Port has too many connections.')
 
     def rewrite(self):
         """
         Handle the port cloning for virtual blocks.
         """
         _Port.rewrite(self)
-        if self.get_parent().is_virtual_sink() or self.get_parent().is_virtual_source():
+        if self.is_type_empty():
             try: #clone type and vlen
-                source = self.resolve_virtual_source()
+                source = self.resolve_empty_type()
                 self._type = str(source.get_type())
                 self._vlen = str(source.get_vlen())
             except: #reset type and vlen
@@ -133,11 +146,29 @@ class Port(_Port, _GUIPort):
         if self.get_parent().is_virtual_sink(): return _get_source_from_virtual_sink_port(self)
         if self.get_parent().is_virtual_source(): return _get_source_from_virtual_source_port(self)
 
+    def resolve_empty_type(self):
+        if self.is_sink():
+            try:
+                src = _get_source_from_virtual_sink_port(self)
+                if not src.is_type_empty(): return src
+            except: pass
+            sink = _get_sink_from_virtual_sink_port(self)
+            if not sink.is_type_empty(): return sink
+        if self.is_source():
+            try:
+                src = _get_source_from_virtual_source_port(self)
+                if not src.is_type_empty(): return src
+            except: pass
+            sink = _get_sink_from_virtual_source_port(self)
+            if not sink.is_type_empty(): return sink
+
     def get_vlen(self):
         """
         Get the vector length.
         If the evaluation of vlen cannot be cast to an integer, return 1.
-        @return the vector length or 1
+        
+        Returns:
+            the vector length or 1
         """
         vlen = self.get_parent().resolve_dependencies(self._vlen)
         try: return int(self.get_parent().get_parent().evaluate(vlen))
@@ -148,7 +179,9 @@ class Port(_Port, _GUIPort):
         Get the number of ports.
         If already blank, return a blank
         If the evaluation of nports cannot be cast to an integer, return 1.
-        @return the number of ports or 1
+        
+        Returns:
+            the number of ports or 1
         """
         nports = self.get_parent().resolve_dependencies(self._nports)
         #return blank if nports is blank
@@ -164,7 +197,9 @@ class Port(_Port, _GUIPort):
         """
         Get the color that represents this port's type.
         Codes differ for ports where the vec length is 1 or greater than 1.
-        @return a hex color code.
+        
+        Returns:
+            a hex color code.
         """
         try:
             color = Constants.TYPE_TO_COLOR[self.get_type()]

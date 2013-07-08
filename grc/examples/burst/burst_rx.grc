@@ -1,6 +1,69 @@
 <?xml version='1.0' encoding='ASCII'?>
 <flow_graph>
-  <timestamp>Wed Nov 28 12:14:26 2012</timestamp>
+  <timestamp>Mon Jul  8 18:02:24 2013</timestamp>
+  <block>
+    <key>options</key>
+    <param>
+      <key>id</key>
+      <value>burst_rx</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>title</key>
+      <value>Burst QPSK Rx Handler</value>
+    </param>
+    <param>
+      <key>author</key>
+      <value>Tim O'Shea</value>
+    </param>
+    <param>
+      <key>description</key>
+      <value></value>
+    </param>
+    <param>
+      <key>window_size</key>
+      <value>1280, 1024</value>
+    </param>
+    <param>
+      <key>generate_options</key>
+      <value>evt</value>
+    </param>
+    <param>
+      <key>category</key>
+      <value>Custom</value>
+    </param>
+    <param>
+      <key>run_options</key>
+      <value>prompt</value>
+    </param>
+    <param>
+      <key>run</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>pre_hook</key>
+      <value>pre_hook</value>
+    </param>
+    <param>
+      <key>post_hook</key>
+      <value>post_hook</value>
+    </param>
+    <param>
+      <key>realtime_scheduling</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(10, 10)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+  </block>
   <block>
     <key>variable</key>
     <param>
@@ -18,41 +81,6 @@
     <param>
       <key>_coordinate</key>
       <value>(10, 191)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
-    <key>variable_es_pre_hook</key>
-    <param>
-      <key>id</key>
-      <value>pre_hook</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>""print "QPSK RX HANDLER RUNNING"  
-
-# get blocks reference
-blocks = val.handler.pb2();
-
-# clear vector sinks
-#blocks['vsink'].clear();
-blocks['vs2'].clear(); 
-  
-idx = es.event_time( val.msg );
-blocks['fsnk1'].open("/tmp/burst_%d.dat"%(idx));       
-blocks["fsnk0"].open("/tmp/burst_pre_%d.dat"%(idx));
-   ""</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(11, 259)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -119,42 +147,7 @@ blocks["fsnk0"].open("/tmp/burst_pre_%d.dat"%(idx));
     </param>
   </block>
   <block>
-    <key>pad_source</key>
-    <param>
-      <key>id</key>
-      <value>pad_source_0</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>label</key>
-      <value>in</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>complex</value>
-    </param>
-    <param>
-      <key>vlen</key>
-      <value>1</value>
-    </param>
-    <param>
-      <key>optional</key>
-      <value>False</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(129, 154)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
-    <key>gr_file_sink</key>
+    <key>blocks_file_sink</key>
     <param>
       <key>id</key>
       <value>fsnk0</value>
@@ -189,7 +182,7 @@ blocks["fsnk0"].open("/tmp/burst_pre_%d.dat"%(idx));
     </param>
   </block>
   <block>
-    <key>gr_file_sink</key>
+    <key>blocks_file_sink</key>
     <param>
       <key>id</key>
       <value>fsnk1</value>
@@ -224,37 +217,10 @@ blocks["fsnk0"].open("/tmp/burst_pre_%d.dat"%(idx));
     </param>
   </block>
   <block>
-    <key>gr_vector_sink_x</key>
+    <key>blocks_file_sink</key>
     <param>
       <key>id</key>
-      <value>vs2</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>byte</value>
-    </param>
-    <param>
-      <key>vlen</key>
-      <value>1</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(798, 507)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
-    <key>gr_file_sink</key>
-    <param>
-      <key>id</key>
-      <value>gr_file_sink_2</value>
+      <value>blocks_file_sink_2</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -378,10 +344,10 @@ blocks["fsnk0"].open("/tmp/burst_pre_%d.dat"%(idx));
     </param>
   </block>
   <block>
-    <key>gr_unpack_k_bits_bb</key>
+    <key>blocks_unpack_k_bits_bb</key>
     <param>
       <key>id</key>
-      <value>gr_unpack_k_bits_bb_0</value>
+      <value>blocks_unpack_k_bits_bb_0</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -424,10 +390,10 @@ blocks["fsnk0"].open("/tmp/burst_pre_%d.dat"%(idx));
     </param>
   </block>
   <block>
-    <key>gr_multiply_const_vxx</key>
+    <key>blocks_multiply_const_vxx</key>
     <param>
       <key>id</key>
-      <value>gr_multiply_const_vxx_0</value>
+      <value>blocks_multiply_const_vxx_0</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -536,69 +502,6 @@ blocks["fsnk0"].open("/tmp/burst_pre_%d.dat"%(idx));
     </param>
   </block>
   <block>
-    <key>options</key>
-    <param>
-      <key>id</key>
-      <value>burst_rx</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>title</key>
-      <value>Burst QPSK Rx Handler</value>
-    </param>
-    <param>
-      <key>author</key>
-      <value>Tim O'Shea</value>
-    </param>
-    <param>
-      <key>description</key>
-      <value></value>
-    </param>
-    <param>
-      <key>window_size</key>
-      <value>1280, 1024</value>
-    </param>
-    <param>
-      <key>generate_options</key>
-      <value>evt</value>
-    </param>
-    <param>
-      <key>category</key>
-      <value>Custom</value>
-    </param>
-    <param>
-      <key>run_options</key>
-      <value>prompt</value>
-    </param>
-    <param>
-      <key>run</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>pre_hook</key>
-      <value>pre_hook</value>
-    </param>
-    <param>
-      <key>post_hook</key>
-      <value>post_hook</value>
-    </param>
-    <param>
-      <key>realtime_scheduling</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(10, 10)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
     <key>variable_es_post_hook</key>
     <param>
       <key>id</key>
@@ -655,6 +558,103 @@ blocks["fsnk0"].close();    ""</value>
       <value>0</value>
     </param>
   </block>
+  <block>
+    <key>pad_source</key>
+    <param>
+      <key>id</key>
+      <value>pad_source_0</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>in</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>complex</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>optional</key>
+      <value>False</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(108, 190)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+  </block>
+  <block>
+    <key>blocks_vector_sink_x</key>
+    <param>
+      <key>id</key>
+      <value>vs2</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>byte</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(800, 509)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+  </block>
+  <block>
+    <key>variable_es_pre_hook</key>
+    <param>
+      <key>id</key>
+      <value>pre_hook</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>""print "QPSK RX HANDLER RUNNING"  
+
+# get blocks reference
+blocks = val.handler.pb2();
+
+# clear vector sinks
+#blocks['vsink'].reset();
+blocks['vs2'].reset(); 
+  
+idx = es.event_time( val.msg );
+blocks['fsnk1'].open("/tmp/burst_%d.dat"%(idx));       
+blocks["fsnk0"].open("/tmp/burst_pre_%d.dat"%(idx));
+    ""</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(11, 259)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+  </block>
   <connection>
     <source_block_id>pad_source_0</source_block_id>
     <sink_block_id>digital_mpsk_receiver_cc_0</sink_block_id>
@@ -663,19 +663,19 @@ blocks["fsnk0"].close();    ""</value>
   </connection>
   <connection>
     <source_block_id>digital_mpsk_receiver_cc_0</source_block_id>
-    <sink_block_id>gr_multiply_const_vxx_0</sink_block_id>
+    <sink_block_id>blocks_multiply_const_vxx_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>gr_unpack_k_bits_bb_0</source_block_id>
+    <source_block_id>blocks_unpack_k_bits_bb_0</source_block_id>
     <sink_block_id>vs2</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>gr_unpack_k_bits_bb_0</source_block_id>
-    <sink_block_id>gr_file_sink_2</sink_block_id>
+    <source_block_id>blocks_unpack_k_bits_bb_0</source_block_id>
+    <sink_block_id>blocks_file_sink_2</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -693,7 +693,7 @@ blocks["fsnk0"].close();    ""</value>
   </connection>
   <connection>
     <source_block_id>digital_map_bb_0_0</source_block_id>
-    <sink_block_id>gr_unpack_k_bits_bb_0</sink_block_id>
+    <sink_block_id>blocks_unpack_k_bits_bb_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -704,13 +704,13 @@ blocks["fsnk0"].close();    ""</value>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>gr_multiply_const_vxx_0</source_block_id>
+    <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
     <sink_block_id>fsnk1</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>gr_multiply_const_vxx_0</source_block_id>
+    <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
     <sink_block_id>digital_constellation_decoder_cb_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>

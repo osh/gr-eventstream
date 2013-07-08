@@ -69,7 +69,7 @@ pmt_t event_args_add( pmt_t evt, pmt_t arg_key, pmt_t arg_val );
 pmt_t eh_pair_event( pmt_t eh_pair );
 pmt_t eh_pair_handler( pmt_t eh_pair );
 
-void register_buffer( pmt_t event, gr_vector_void_star buf );
+//void register_buffer( pmt_t event, gr_vector_void_star buf );
 
 std::vector<unsigned char> string_to_vector(std::string);
 

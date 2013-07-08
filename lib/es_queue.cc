@@ -28,13 +28,14 @@
 #include <stdio.h>
 
 #define DEBUG(X) 
+//#define DEBUG(X)  X
 
-es_queue_sptr es_make_queue(){
-    return es_queue_sptr(new es_queue());
+es_queue_sptr es_make_queue(es_queue_early_behaviors eb){
+    return es_queue_sptr(new es_queue(eb));
 }
 
-es_queue::es_queue() :
-    d_early_behavior(DISCARD)
+es_queue::es_queue(es_queue_early_behaviors eb) :
+    d_early_behavior(eb)
 {
     bindings = pmt::make_dict();
 }
@@ -95,7 +96,11 @@ int es_queue::add_event(pmt_t evt){
 
     while(pmt::is_pair(handlers)){
         es_eh_pair* eh_pair = new es_eh_pair( evt, pmt::car(handlers) );
+        
         DEBUG(printf("created new eh_pair = %x\n", eh_pair);)
+        DEBUG(printf("evt = %s\n",  pmt::write_string(evt).c_str());)
+        DEBUG(printf("handler = %s\n", pmt::write_string(pmt::car(handlers)).c_str());)
+        DEBUG(printf("is any = %d, is ma = %d\n", pmt::is_any(pmt::car(handlers)), pmt::is_msg_accepter(pmt::car(handlers)));)
 
         // by default we add to queue
         bool append_pair = true;
@@ -194,7 +199,7 @@ void es_queue::bind_handler(std::string type, gr::basic_block_sptr handler){
     
     pmt_t type_pmt = pmt::intern(type);
 
-    DEBUG(printf("EVENTSTREAM_QUEUE::BIND_HANDLER (%s).\n",type.c_str());)
+    DEBUG(printf("EVENTSTREAM_QUEUE::BIND_HANDLER (%s, %x).\n",type.c_str(), handler.get());)
 
     assert(pmt::dict_has_key(bindings, type_pmt));
 
@@ -249,7 +254,8 @@ int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, e
             *eh = eh_test;
             return true;
         } else {
-            std::cout << "WARNING: skipping event that ends too late! evt:("<<eh_test->time()<<","<<eh_test->time() + eh_test->length() <<") buf:("<<min<<","<<max<<")\n";
+//            std::cout << "WARNING: skipping event that ends too late! evt:("<<eh_test->time()<<","<<eh_test->time() + eh_test->length() <<") buf:("<<min<<","<<max<<")\n";
+            // sinks should pick this up the next time through ... 
         }
     }
     queue_lock.unlock();

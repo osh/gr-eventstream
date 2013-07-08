@@ -35,6 +35,9 @@
 #include <gnuradio/io_signature.h>
 #include <stdio.h>
 
+#define DEBUG(X)
+//#define DEBUG(X) X
+
 /*
  * Create a new instance of es_sink and return
  * a boost shared_ptr.  This is effectively the public constructor.
@@ -123,6 +126,7 @@ es_sink::work (int noutput_items,
 //  printf("event_queue->fetch_next_event( %llu, %llu, &eh )\n", min_time, max_time );
   while( event_queue->fetch_next_event( min_time, max_time, &eh ) ){
 
+   DEBUG( printf("es::sink work() got event\n"); )
   //  int a = d_nevents;
  //   printf("incrementing d_nevents (%d->%d)\n", a, a+1);
     d_nevents++;
@@ -138,20 +142,18 @@ es_sink::work (int noutput_items,
     // loop over each input buffer copying contents into pmt_buffers to tag onto event
     for(int i=0; i<input_items.size(); i++){
 
+        //printf("copying buffer contents\n");
         // alocate a new pmt u8 vector to store buffer contents in.       
         pmt_t buf_i = pmt::init_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), (const uint8_t*) input_items[i] + (buffer_offset * d_input_signature->sizeof_stream_item(i)) );
 
         // build up a pmt list containing pmt_u8vectors with all the buffers
-        if(first_item){
-            buf_list = pmt::list1( buf_i );
-            first_item = false;
-        } else {
-            pmt::list_add(buf_list, buf_i);
-        }
-
+        buf_list = pmt::list_add(buf_list, buf_i);
     }
 
     // register the buffer in the event
+    DEBUG(printf("reg buffer: ");)
+    DEBUG(pmt::print(buf_list);)
+    DEBUG(printf("\n");)
     event = register_buffer( event, buf_list );
     eh->event = event;
 

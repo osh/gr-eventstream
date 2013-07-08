@@ -63,8 +63,9 @@ class Param(Element):
     def __init__(self, block, n):
         """
         Make a new param from nested data.
-        @param block the parent element
-        @param n the nested odict
+        Args:
+            block: the parent element
+            n: the nested odict
         """
         #grab the data
         self._name = n.find('name')
@@ -150,7 +151,8 @@ class Param(Element):
         Get the repr (nice string format) for this param.
         Just return the value (special case enum).
         Derived classes can handle complex formatting.
-        @return the string representation
+        Returns:
+            the string representation
         """
         if self.is_enum(): return self.get_option(self.get_value()).get_name()
         return self.get_value()
@@ -175,7 +177,8 @@ class Param(Element):
     def export_data(self):
         """
         Export this param's key/value.
-        @return a nested data odict
+        Returns:
+            a nested data odict
         """
         n = odict()
         n['key'] = self.get_key()

@@ -51,9 +51,7 @@ void es_event::print(){
         //printf("   * i = %d\n", i);
         pmt_t key = pmt::nth(i, keys);
         pmt_t val = pmt::dict_ref(args, key, key);
-
         printf("   * %s = %s\n", pmt::symbol_to_string(key).c_str(), pmt::write_string(val).c_str() );
-
     }
 
 }

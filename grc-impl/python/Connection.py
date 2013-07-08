@@ -28,16 +28,14 @@ class Connection(_Connection, _GUIConnection):
         _Connection.__init__(self, **kwargs)
         _GUIConnection.__init__(self)
 
-    def is_msgq(self):
-        return (self.get_source().get_type() == self.get_sink().get_type() == 'msg') and \
-            self.get_source().is_msgq() and self.get_sink().is_msgq()
+    def is_msg(self):
+        return self.get_source().get_type() == self.get_sink().get_type() == 'msg'
 
     def is_message(self):
-        return self.get_source().get_type() == self.get_sink().get_type() == 'message';
+        return self.get_source().get_type() == self.get_sink().get_type() == 'message'
 
-    def is_msg(self):
-        return (self.get_source().get_type() == self.get_sink().get_type() == 'msg') and \
-            not self.get_source().is_msgq() and not self.get_sink().is_msgq()
+    def is_bus(self):
+        return self.get_source().get_type() == self.get_sink().get_type() == 'bus'
 
     def validate(self):
         """
