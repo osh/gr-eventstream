@@ -1,3 +1,44 @@
+################################################################################
+# Function definitions.
+################################################################################
+
+# Find unique paths in a list of files.
+MACRO(getUniquePaths uPaths fileList)
+    set(${uPaths})
+    FOREACH(f ${${fileList}})
+        GET_FILENAME_COMPONENT(currentFilePath $ENV{DESTDIR}${f} PATH)
+        LIST(FIND ${uPaths} ${currentFilePath} foundUniquePath)
+        IF(${foundUniquePath} LESS 0)
+            LIST(APPEND ${uPaths} ${currentFilePath})
+        ENDIF()
+    ENDFOREACH()
+ENDMACRO(getUniquePaths)
+
+# Get a list of files within a directory.
+#
+# dirFiles contains a list of all files found within the directory fromDir.
+# dirFiles will be empty if fromDir contains anything that isn't a file or
+# at least something that points to a file.
+MACRO(getDirFiles dirFiles fromDir)
+    FILE(GLOB children ${fromDir} ${fromDir}/*)
+    set(dirList)
+    FOREACH(child ${children})
+        IF(NOT ${child} STREQUAL ${fromDir})
+            IF(IS_DIRECTORY ${child})
+                set(dirList "")
+                break()
+            ELSE()
+                LIST(APPEND dirList ${child})
+            ENDIF()
+        ENDIF()
+    ENDFOREACH()
+    set(${dirFiles} ${dirList})
+ENDMACRO(getDirFiles)
+################################################################################
+# End Function definitions.
+################################################################################
+
+
 # http://www.vtk.org/Wiki/CMake_FAQ#Can_I_do_.22make_uninstall.22_with_CMake.3F
 
 IF(NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
@@ -6,27 +47,108 @@ ENDIF(NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
 
 FILE(READ "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt" files)
 STRING(REGEX REPLACE "\n" ";" files "${files}")
+CMAKE_POLICY(SET CMP0007 OLD)
+LIST(REMOVE_DUPLICATES files)
+LIST(REMOVE_ITEM files "")
+
+################################################################################
+# Attempt to remove directories instead of individual files.
+#
+# For each unique path in the installed files, if all of the files within the
+# path are to be removed, then remove the directory instead of the files.
+################################################################################
+getUniquePaths(uniquePaths files)
+
+MESSAGE(STATUS "Unique manifest paths: ${uniquePaths}.")
+
+# For each unique path, verify that all files in the directory pointed to
+# by the path are in the manifest. Be careful, DO THIS FOR DIRECTORIES
+# CONTAINING ONLY FILES. Directories containing subdirectories may have files
+# in those subdirectories that are not to be removed. It is possible to perform
+# recursion to determine if the directory should be removed, but for now, this
+# will do and the speed-up is significant without recursion.
+set(cannotRemovePaths)
+FOREACH(uniquePath ${uniquePaths})
+    getDirFiles(uniquePathFiles ${uniquePath})
+    LIST(LENGTH uniquePathFiles numFiles)
+    IF(${numFiles} EQUAL 0)
+        LIST(APPEND cannotRemovePaths ${uniquePath})
+    ELSE()
+        # If the name of a file returned is not in the manifest, then we cannot
+        # remove the directory.
+        FOREACH(uniquePathFile ${uniquePathFiles})
+            IF(uniquePathFile)
+                LIST(FIND files ${uniquePathFile} foundFileIndex)
+                IF(${foundFileIndex} LESS 0)
+                    # We found a file that is not in the manifest, this uniquePath
+                    # cannot be removed as a directory. Add it to the paths that
+                    # cannot be removed.
+                    LIST(APPEND cannotRemovePaths ${uniquePath})
+                    break()
+                ENDIF()
+            ENDIF()
+        ENDFOREACH()
+    ENDIF()
+ENDFOREACH()
+
+MESSAGE(STATUS "Cannot remove manifest paths: ${cannotRemovePaths}")
+
+# Remove uniquePaths that are not found in the cannotRemovePaths list.
+set(removedPaths)
+FOREACH(pathToRemove ${uniquePaths})
+    LIST(FIND cannotRemovePaths ${pathToRemove} pathIndex)
+    IF(${pathIndex} LESS 0)
+        # This path can be removed - it was not found in the cannotRemovePaths
+        # list.
+        EXEC_PROGRAM(
+            "@CMAKE_COMMAND@" ARGS "-E remove_directory \"${pathToRemove}\""
+            OUTPUT_VARIABLE rm_out
+            RETURN_VALUE rm_retval
+        )
+        IF(NOT "${rm_retval}" STREQUAL 0)
+            MESSAGE(FATAL_ERROR "Problem when removing dir \"${pathToRemove\"")
+        ENDIF(NOT "${rm_retval}" STREQUAL 0)
+
+        # Remember that this path was removed for reference when removing
+        # individual files.
+        LIST(APPEND removedPaths ${pathToRemove})
+    ENDIF()
+ENDFOREACH()
+
+MESSAGE(STATUS "Manifest paths removed: ${removedPaths}")
+
+################################################################################
+# Remove any files that are left over.
+################################################################################
 FOREACH(file ${files})
-  MESSAGE(STATUS "Uninstalling \"$ENV{DESTDIR}${file}\"")
-  IF(EXISTS "$ENV{DESTDIR}${file}")
-    EXEC_PROGRAM(
-      "@CMAKE_COMMAND@" ARGS "-E remove \"$ENV{DESTDIR}${file}\""
-      OUTPUT_VARIABLE rm_out
-      RETURN_VALUE rm_retval
-      )
-    IF(NOT "${rm_retval}" STREQUAL 0)
-      MESSAGE(FATAL_ERROR "Problem when removing \"$ENV{DESTDIR}${file}\"")
-    ENDIF(NOT "${rm_retval}" STREQUAL 0)
-  ELSEIF(IS_SYMLINK "$ENV{DESTDIR}${file}")
-    EXEC_PROGRAM(
-      "@CMAKE_COMMAND@" ARGS "-E remove \"$ENV{DESTDIR}${file}\""
-      OUTPUT_VARIABLE rm_out
-      RETURN_VALUE rm_retval
-      )
-    IF(NOT "${rm_retval}" STREQUAL 0)
-      MESSAGE(FATAL_ERROR "Problem when removing \"$ENV{DESTDIR}${file}\"")
-    ENDIF(NOT "${rm_retval}" STREQUAL 0)
-  ELSE(EXISTS "$ENV{DESTDIR}${file}")
-    MESSAGE(STATUS "File \"$ENV{DESTDIR}${file}\" does not exist.")
-  ENDIF(EXISTS "$ENV{DESTDIR}${file}")
+  GET_FILENAME_COMPONENT(pathOfFileToRemove $ENV{DESTDIR}${file} PATH)
+  LIST(FIND removedPaths ${pathOfFileToRemove} removedIndex)
+  IF(${removedIndex} GREATER 0 OR ${removedIndex} EQUAL 0)
+    MESSAGE(STATUS "*Uninstalling \"$ENV{DESTDIR}${file}\"")
+  ELSE()
+    MESSAGE(STATUS "Uninstalling \"$ENV{DESTDIR}${file}\"")
+    IF(EXISTS "$ENV{DESTDIR}${file}")
+      EXEC_PROGRAM(
+        "@CMAKE_COMMAND@" ARGS "-E remove \"$ENV{DESTDIR}${file}\""
+        OUTPUT_VARIABLE rm_out
+        RETURN_VALUE rm_retval
+        )
+      IF(NOT "${rm_retval}" STREQUAL 0)
+        MESSAGE(FATAL_ERROR "Problem when removing \"$ENV{DESTDIR}${file}\"")
+      ENDIF(NOT "${rm_retval}" STREQUAL 0)
+    ELSEIF(IS_SYMLINK "$ENV{DESTDIR}${file}")
+      EXEC_PROGRAM(
+        "@CMAKE_COMMAND@" ARGS "-E remove \"$ENV{DESTDIR}${file}\""
+        OUTPUT_VARIABLE rm_out
+        RETURN_VALUE rm_retval
+        )
+      IF(NOT "${rm_retval}" STREQUAL 0)
+        MESSAGE(FATAL_ERROR "Problem when removing \"$ENV{DESTDIR}${file}\"")
+      ENDIF(NOT "${rm_retval}" STREQUAL 0)
+    ELSE(EXISTS "$ENV{DESTDIR}${file}")
+      MESSAGE(STATUS "File \"$ENV{DESTDIR}${file}\" does not exist.")
+    ENDIF(EXISTS "$ENV{DESTDIR}${file}")
+  ENDIF()
 ENDFOREACH(file)
+
+MESSAGE(STATUS "* = Removed by directory delete.")

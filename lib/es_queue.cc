@@ -1,19 +1,19 @@
 /* -*- c++ -*- */
 /*
  * Copyright 2011 Free Software Foundation, Inc.
- * 
+ *
  * This file is part of gr-eventstream
- * 
+ *
  * gr-eventstream is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3, or (at your option)
  * any later version.
- * 
+ *
  * gr-eventstream is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with gr-eventstream; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street,
@@ -27,7 +27,7 @@
 #include <limits.h>
 #include <stdio.h>
 
-#define DEBUG(X) 
+#define DEBUG(X)
 //#define DEBUG(X)  X
 
 es_queue_sptr es_make_queue(es_queue_early_behaviors eb){
@@ -35,7 +35,9 @@ es_queue_sptr es_make_queue(es_queue_early_behaviors eb){
 }
 
 es_queue::es_queue(es_queue_early_behaviors eb) :
-    d_early_behavior(eb)
+    d_early_behavior(eb), d_num_discarded(0), d_num_asap(0),
+    d_num_events_added(0), d_num_events_removed(0), d_event_time(0),
+    d_num_soon(0)
 {
     bindings = pmt::make_dict();
 }
@@ -57,7 +59,7 @@ int es_queue::add_event(pmt_t evt){
 //    DEBUG(printf("es_queue::add_event...\n");)
 
     std::map< std::string, std::vector<pmt_t> >::iterator it;
-    
+
 //    printf("add_event of type :: %s\n", event_type(evt).c_str() );
 
     bool found = pmt::dict_has_key(bindings, pmt::intern(event_type(evt)));
@@ -71,18 +73,18 @@ int es_queue::add_event(pmt_t evt){
     while(pmt::is_pair(keys)){
 //        printf("entry: %s\n", pmt_symbol_to_string(pmt_car(keys)).c_str() );
 //        int a = pmt_eqv( pmt_car(keys), event_type_pmt(evt) );
-//        printf("pmt_eqv = %d\n", a); 
+//        printf("pmt_eqv = %d\n", a);
         keys = pmt::cdr(keys);
         }
 
     pmt_t handlers = pmt::dict_ref(bindings, event_type_pmt(evt), PMT_NIL);
 //    printf("handlers.size() = %d\n", (int)pmt_length(handlers));
 
-    // TODO: We may not really want to check this at runtime ... 
+    // TODO: We may not really want to check this at runtime ...
     if(pmt::length(handlers) == 0){
         printf("WARNING: attempted to add event to queue for which no handler is defined!\n");
         }
-    
+
     if(event_time(evt) == ULLONG_MAX){
         fprintf(stderr, "WARNING: event recieved with unset time. (%s)\n", event_type(evt).c_str());
     }
@@ -96,7 +98,7 @@ int es_queue::add_event(pmt_t evt){
 
     while(pmt::is_pair(handlers)){
         es_eh_pair* eh_pair = new es_eh_pair( evt, pmt::car(handlers) );
-        
+
         DEBUG(printf("created new eh_pair = %x\n", eh_pair);)
         DEBUG(printf("evt = %s\n",  pmt::write_string(evt).c_str());)
         DEBUG(printf("handler = %s\n", pmt::write_string(pmt::car(handlers)).c_str());)
@@ -118,7 +120,8 @@ int es_queue::add_event(pmt_t evt){
 
         // conditionally add the eh pair to the queue
         if(append_pair){
-            event_queue.insert(event_queue.begin()+idx, eh_pair); 
+            event_queue.insert(event_queue.begin()+idx, eh_pair);
+            d_num_events_added++;
         }
 
         // iterate to next handler
@@ -126,7 +129,7 @@ int es_queue::add_event(pmt_t evt){
 
     }
     queue_lock.unlock();
-    
+
 }
 
 
@@ -135,7 +138,7 @@ void es_queue::print_queue(bool already_holding){
     printf("EVENTSTREAM_BINDINGS...\n");
 
     std::map<std::string, std::vector< pmt_t> >::iterator it;
-    
+
 /*    //iterate over all keys in bindings
     for(it = bindings.begin(); it != bindings.end(); it++){
         printf(" * EVENT: (%s) # Handlers = %d\n", (*it).first.c_str(), (*it).second.size());
@@ -164,7 +167,7 @@ void es_queue::print_queue(bool already_holding){
 int es_queue::register_event_type(pmt_t type){
     register_event_type( pmt::symbol_to_string(type) );
 }
-    
+
 int es_queue::register_event_type(std::string type){
 
     pmt_t type_pmt = pmt::intern(type);
@@ -174,8 +177,8 @@ int es_queue::register_event_type(std::string type){
     if(it != bindings.end() ){
         printf("WARNING: type already registered (%s)\n", type.c_str());
         return -1;
-    } 
-    
+    }
+
     std::vector<pmt_t> emptylist;
     bindings[type] =  emptylist; */
     bool already_reg = pmt::dict_has_key(bindings, type_pmt);
@@ -196,7 +199,7 @@ void es_queue::bind_handler(std::string type, gr::basic_block_sptr handler){
 
     es_handler_sptr h = boost::dynamic_pointer_cast<es_handler>(handler);
     pmt_t handler_pmt = pmt::make_any( (es_handler*) h.get() );
-    
+
     pmt_t type_pmt = pmt::intern(type);
 
     DEBUG(printf("EVENTSTREAM_QUEUE::BIND_HANDLER (%s, %x).\n",type.c_str(), handler.get());)
@@ -221,14 +224,17 @@ int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, e
         return false;
     }
     //if(event_time(eh_pair_event(event_queue[0])) < min){
+    d_event_time = event_queue[0]->time();
     if(event_queue[0]->time() < min){
         switch(d_early_behavior){
             // discard event
             case DISCARD:
+                d_num_discarded++;
                 printf("**WARNING** discarding bad event\n");
                 printf("function call mandates min=%llu & max=%llu\n", min, max);
                 printf("however event[0] start = %llu, end = %llu\n", event_queue[0]->time(), event_queue[0]->time() + event_queue[0]->length());
                 event_queue.erase(event_queue.begin());
+                d_num_events_removed++;
                 queue_lock.unlock();
                 goto fstart;
             // throw an assertion
@@ -242,7 +248,8 @@ int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, e
             // schedule as soon as possible
             case ASAP:
                 // update event time to be as soon as possible
-                event_queue[0]->event = event_args_add(event_queue[0]->event, pmt::intern("es::event_time") , pmt::from_uint64(min));      
+                d_num_asap++;
+                event_queue[0]->event = event_args_add(event_queue[0]->event, pmt::intern("es::event_time") , pmt::from_uint64(min));
                 //event_print( event_queue[0] );
         }
     }
@@ -250,12 +257,14 @@ int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, e
         es_eh_pair *eh_test = event_queue[i];
         if(eh_test->time() + eh_test->length() < max){
             event_queue.erase(event_queue.begin()+i);
+            d_num_events_removed++;
             queue_lock.unlock();
             *eh = eh_test;
             return true;
         } else {
+            d_num_soon++;
 //            std::cout << "WARNING: skipping event that ends too late! evt:("<<eh_test->time()<<","<<eh_test->time() + eh_test->length() <<") buf:("<<min<<","<<max<<")\n";
-            // sinks should pick this up the next time through ... 
+            // sinks should pick this up the next time through ...
         }
     }
     queue_lock.unlock();
@@ -273,11 +282,13 @@ int es_queue::fetch_next_event2(unsigned long long min, unsigned long long max, 
         printf("early behavior = %d\n", d_early_behavior);
         switch(d_early_behavior){
             case DISCARD:
+                d_num_discarded++;
                 printf("**WARNING** discarding bad event\n");
                 printf("function call mandates min=%llu & max=%llu\n", min, max);
                 printf("however event[0] start = %llu, end = %llu\n", event_queue[0]->time(), event_queue[0]->time() + event_queue[0]->length());
                 //print();
                 event_queue.erase(event_queue.begin());
+                d_num_events_removed++;
                 queue_lock.unlock();
                 goto fstart2;
             case BALK:
@@ -288,7 +299,8 @@ int es_queue::fetch_next_event2(unsigned long long min, unsigned long long max, 
                 throw EarlyEventException("event arrived scheduled before allowed buffer!");
                 break;
             case ASAP:
-                event_queue[0]->event = event_args_add(event_queue[0]->event, pmt::intern("es::event_time") , pmt::from_uint64(min));      
+                d_num_asap++;
+                event_queue[0]->event = event_args_add(event_queue[0]->event, pmt::intern("es::event_time") , pmt::from_uint64(min));
 //                event_print( event_queue[0]->event );
                 break;
             default:
@@ -304,22 +316,19 @@ int es_queue::fetch_next_event2(unsigned long long min, unsigned long long max, 
         es_eh_pair* eh_test = event_queue[i];
         if(eh_test->time() < max){
             event_queue.erase(event_queue.begin()+i);
+            d_num_events_removed++;
             queue_lock.unlock();
             *eh = eh_test;
             DEBUG(printf("es_queue::fetch_next_event2() returning true!! es_eh_pair = %x\n", *eh);)
             DEBUG(printf("es_queue::fetch_next_event2() pair.handler = %x\n", &(*((*eh)->handler)) );)
             return true;
-        }   
+        }
+        else{
+            d_num_soon++;
+        }
     }
-       
+
     queue_lock.unlock();
     return false;
-  
+
 }
-
-
-
-
-
-
-

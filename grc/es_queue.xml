@@ -22,14 +22,19 @@ import pmt;</import>
     <value></value>
     <type>enum</type>
     <option>
+        <name>DISCARD</name>
+        <key>discard</key>
+        <opt>raw:0</opt>
+    </option>
+    <option>
         <name>BALK</name>
         <key>balk</key>
-        <opt>raw:0</opt>
+        <opt>raw:1</opt>
     </option>
     <option>
         <name>ASAP</name>
         <key>asap</key>
-        <opt>raw:1</opt>
+        <opt>raw:2</opt>
     </option>
 
   </param>
@@ -44,7 +49,7 @@ import pmt;</import>
 
         ASAP - schedules events at the earliest possible next time
                 useful for opportunistic best-effort timing
-                
+
   </doc>
 
 </block>

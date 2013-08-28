@@ -1,19 +1,19 @@
 /* -*- c++ -*- */
 /*
  * Copyright 2011 Free Software Foundation, Inc.
- * 
+ *
  * This file is part of gr-eventstream
- * 
+ *
  * gr-eventstream is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3, or (at your option)
  * any later version.
- * 
+ *
  * gr-eventstream is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with gr-eventstream; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street,
@@ -46,8 +46,8 @@ es_queue_sptr es_make_queue(enum es_queue_early_behaviors = DISCARD);
 class es_eh_queue;
 
 class es_queue {
- 
-   
+
+
     public:
 
 
@@ -60,7 +60,7 @@ class es_queue {
         //int fetch_next_event(unsigned long long min, unsigned long long max, pmt_t &eh);
         //int fetch_next_event2(unsigned long long min, unsigned long long max, pmt_t &eh);
 
-              
+
         void bind_handler(std::string type, gr::basic_block_sptr handler);
         void bind_handler(pmt_t type, gr::basic_block_sptr handler);
 
@@ -70,6 +70,8 @@ class es_queue {
         int register_event_type(pmt_t type);
 
         int d_early_behavior;
+        uint64_t d_num_asap, d_num_discarded, d_num_events_added, d_num_events_removed;
+        uint64_t d_event_time, d_num_soon;
         int length();
 
         // set behavior when an item exists before the requested region (BALK or ASAP)
@@ -87,6 +89,7 @@ class es_queue {
 
         std::vector< es_handler_sptr > protected_handler;
         std::vector< boost::function< bool (es_eh_pair**) > > cb_list;
+
 
 };
 

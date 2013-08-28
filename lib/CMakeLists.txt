@@ -45,12 +45,11 @@ list(APPEND eventstream_sources
 
 list(APPEND test_eventstream_sources
     qa_es.cc
-    qa_es_common.cc 
+    qa_es_common.cc
     qa_es_source.cc
     qa_es_sink.cc
     qa_es_trigger.cc
 )
-
 
 add_library(eventstream SHARED ${eventstream_sources})
 target_link_libraries(eventstream ${eventstream_libs})

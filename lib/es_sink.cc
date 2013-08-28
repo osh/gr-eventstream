@@ -1,19 +1,19 @@
 /* -*- c++ -*- */
 /*
  * Copyright 2011 Free Software Foundation, Inc.
- * 
+ *
  * This file is part of gr-eventstream
- * 
+ *
  * gr-eventstream is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3, or (at your option)
  * any later version.
- * 
+ *
  * gr-eventstream is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with gr-eventstream; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street,
@@ -42,7 +42,15 @@
  * Create a new instance of es_sink and return
  * a boost shared_ptr.  This is effectively the public constructor.
  */
-es_sink_sptr 
+es_sink_sptr
+es_make_sink (pmt_t arb, es_queue_sptr queue, gr_vector_int insig, int n_threads,
+		int sample_history_in_kilosamples)
+{
+  return es_sink_sptr (new es_sink (arb,queue,insig,n_threads,sample_history_in_kilosamples));
+}
+
+// This one is to maintain compatibility with existing projects and "qa_..." tests.
+es_sink_sptr
 es_make_sink (pmt_t arb, es_queue_sptr queue, gr_vector_int insig, int n_threads)
 {
   return es_sink_sptr (new es_sink (arb,queue,insig,n_threads));
@@ -61,14 +69,40 @@ static const int MIN_OUT = 0;	// minimum number of output streams
 static const int MAX_OUT = 0;	// maximum number of output streams
 
 /*
- * The private constructor
+ * The private constructor - NEW, with user-configurable sample history.
  */
-es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_vector_int insig, int _n_threads) 
+es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_vector_int insig, int _n_threads, int _sample_history_in_kilosamples)
+  : gr::sync_block ("es_sink",
+           es_make_io_signature(insig.size(), insig),
+		   gr::io_signature::make (MIN_OUT, MAX_OUT, 0)), event_queue(_queue), arb(_arb), n_threads(_n_threads),
+    d_nevents(0), sample_history_in_kilosamples(_sample_history_in_kilosamples),
+    qq(100), dq(100), d_num_running_handlers(0),
+    d_avg_ratio(tag::rolling_window::window_size=50),
+    d_avg_thread_utilization(tag::rolling_window::window_size=50)
+{
+    d_time = 0;
+    d_history = 1024*sample_history_in_kilosamples;
+    set_history(d_history);
+
+    // instantiate the threadpool workers
+    for(int i=0; i<n_threads; i++){
+        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(arb, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers) );
+        threadpool.push_back( th );
+    }
+//    set_output_multiple(100000);
+}
+
+/*
+ * The private constructor - PREVIOUS, with sample history set to 64 Ksamples.
+ */
+es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_vector_int insig, int _n_threads)
   : gr::sync_block ("es_sink",
            es_make_io_signature(insig.size(), insig),
 		   gr::io_signature::make (MIN_OUT, MAX_OUT, 0)), event_queue(_queue), arb(_arb), n_threads(_n_threads),
     d_nevents(0),
-    qq(100), dq(100)
+    qq(100), dq(100), d_num_running_handlers(0),
+    d_avg_ratio(tag::rolling_window::window_size=50),
+    d_avg_thread_utilization(tag::rolling_window::window_size=50)
 {
     d_time = 0;
     d_history = 1024*64;
@@ -76,12 +110,11 @@ es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_vector_int insig, int _n_
 
     // instantiate the threadpool workers
     for(int i=0; i<n_threads; i++){
-        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(arb, event_queue, &qq, &dq, &qq_cond, &d_nevents) );
+        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(arb, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers) );
         threadpool.push_back( th );
     }
 //    set_output_multiple(100000);
 }
-
 /*
  * Our virtual destructor.
  */
@@ -98,23 +131,237 @@ es_sink::~es_sink ()
     }
 }
 
+void
+es_sink::setup_rpc()
+{
+#ifdef GR_CTRLPORT
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, int>(
+            alias(), "nevents ready_running",
+            &es_sink::num_events,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "count", "Num events ready/running.", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
 
-int 
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, uint64_t>(
+            alias(), "nevents discarded",
+            &es_sink::num_discarded,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "count", "Num events discarded (event time < min buffer time).", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
+
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, uint64_t>(
+            alias(), "nevents ASAP",
+            &es_sink::num_asap,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "count", "Num events handled ASAP (event time < min buffer time).", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
+
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, uint64_t>(
+            alias(), "nevents soon",
+            &es_sink::num_soon,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "count", "Num events received too soon (event time + duration > max buffer time).", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
+
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, uint64_t>(
+            alias(), "nevents added",
+            &es_sink::num_events_added,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "count", "Num events added to event_queue.", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
+
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, uint64_t>(
+            alias(), "nevents removed",
+            &es_sink::num_events_removed,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "count", "Num events removed from event_queue.", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
+
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, uint64_t>(
+            alias(), "time in buff window",
+            &es_sink::buffer_window_size,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "num samples", "Size of history buffer.", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
+
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, uint64_t>(
+            alias(), "time of curr event",
+            &es_sink::event_time,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "sample num", "Current event time.", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
+
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, uint64_t>(
+            alias(), "nevent hndls run",
+            &es_sink::num_running_handlers,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "count", "Num event handlers running.", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
+
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, uint64_t>(
+            alias(), "nevents event_queue",
+            &es_sink::event_queue_size,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "count", "Size of event_queue (num events not yet ready/running).", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
+
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, double>(
+            alias(), "eventAvgRunRatio",
+            &es_sink::event_run_ratio,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "%", "Avg Ratio of running events to total ready/running events.", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
+
+    add_rpc_variable(
+        rpcbasic_sptr(new rpcbasic_register_get<es_sink, double>(
+            alias(), "eventAvgThreadUtilization",
+            &es_sink::event_thread_utilization,
+            pmt::mp(0.0f), pmt::mp(0.0f), pmt::mp(0.0f),
+            "%", "Avg Ratio of running threads to total threads.", RPC_PRIVLVL_MIN,
+            DISPTIME | DISPOPTSTRIP)
+        )
+    );
+#endif
+}
+
+int
+es_sink::num_events()
+{
+    return (int)d_nevents;
+}
+
+uint64_t
+es_sink::num_discarded()
+{
+    return event_queue->d_num_discarded;
+}
+
+uint64_t
+es_sink::num_asap()
+{
+    return event_queue->d_num_asap;
+}
+
+uint64_t
+es_sink::num_events_added()
+{
+    return event_queue->d_num_events_added;
+}
+
+uint64_t
+es_sink::num_events_removed()
+{
+    return event_queue->d_num_events_removed;
+}
+
+uint64_t
+es_sink::event_time()
+{
+    return event_queue->d_event_time;
+}
+
+uint64_t
+es_sink::buffer_window_size()
+{
+    return d_buffer_window_size;
+}
+
+uint64_t
+es_sink::num_soon()
+{
+    return event_queue->d_num_soon;
+}
+
+uint64_t
+es_sink::num_running_handlers()
+{
+    return (uint64_t)d_num_running_handlers;
+}
+
+uint64_t
+es_sink::event_queue_size()
+{
+    return (uint64_t)event_queue->length();
+}
+
+double
+es_sink::event_run_ratio()
+{
+    double ret = 0.0;
+
+    if (d_nevents > 0)
+    {
+        ret = (double)((double) d_num_running_handlers / d_nevents) * 100.0;
+    }
+    d_avg_ratio(ret);
+    return rolling_mean(d_avg_ratio);
+}
+
+double
+es_sink::event_thread_utilization()
+{
+    double ret = 0.0;
+
+    if (n_threads > 0)
+    {
+        ret = (double)((double) d_num_running_handlers / n_threads) * 100.0;
+    }
+    d_avg_thread_utilization(ret);
+    return rolling_mean(d_avg_thread_utilization);
+}
+
+int
 es_sink::work (int noutput_items,
 			gr_vector_const_void_star &input_items,
 			gr_vector_void_star &output_items)
 {
   char *in = (char*) input_items[0];
- 
+
   //printf("entered es_sink::work()\n");
   // compute the min and max sample times currently accessible in the buffer
   unsigned long long max_time = d_time + noutput_items;
   unsigned long long min_time = (d_history > d_time)?0:d_time-d_history;
 
+  d_buffer_window_size = max_time - min_time;
+
   // generate an empty event sptr
   es_eh_pair *eh = NULL;
-  
-  unsigned long long delete_index;
+
+  unsigned long long delete_index = 0;
+
   //while( dq.pop(&delete_index) ){
   while( dq.pop(delete_index) ){
 //    printf(" removing live_time %llu \n", delete_index);
@@ -143,7 +390,7 @@ es_sink::work (int noutput_items,
     for(int i=0; i<input_items.size(); i++){
 
         //printf("copying buffer contents\n");
-        // alocate a new pmt u8 vector to store buffer contents in.       
+        // alocate a new pmt u8 vector to store buffer contents in.
         pmt_t buf_i = pmt::init_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), (const uint8_t*) input_items[i] + (buffer_offset * d_input_signature->sizeof_stream_item(i)) );
 
         // build up a pmt list containing pmt_u8vectors with all the buffers
@@ -157,7 +404,7 @@ es_sink::work (int noutput_items,
     event = register_buffer( event, buf_list );
     eh->event = event;
 
-    // post the event to the event-loop input queue  
+    // post the event to the event-loop input queue
     //printf("es_sink::work()::posting event to event loop queue (qq) with buffer.\n");
 
     qq.push(eh);

@@ -40,6 +40,14 @@ if(NOT CPPUNIT_FOUND)
     message(FATAL_ERROR "CPPUNIT NOT FOUND!")
 endif(NOT CPPUNIT_FOUND)
 
+find_package(ICE)
+if (NOT ICE_FOUND)
+    message(STATUS "ICE not found, GR_CTRLPORT will not be enabled.")
+else()
+    message(STATUS "ICE found, enabling GR_CTRLPORT.")
+    add_definitions(-DGR_CTRLPORT)
+endif()
+
 # locate python
 include(FindPythonLibs)
 
@@ -111,9 +119,9 @@ install(
 install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/include/es
     DESTINATION include COMPONENT "eventstream_devel"
-    FILES_MATCHING 
-    PATTERN "*.h" 
-    PATTERN "*.hh" 
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hh"
 )
 
 SET(EVENTSTREAM_INCLUDE_DIRS
@@ -158,5 +166,3 @@ add_subdirectory(grc-impl)
 ########################################################################
 GR_PRINT_COMPONENT_SUMMARY()
 message(STATUS "Using install prefix: ${CMAKE_INSTALL_PREFIX}")
-
-
