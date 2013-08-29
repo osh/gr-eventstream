@@ -34,6 +34,7 @@ typedef boost::shared_ptr<es_queue> es_queue_sptr;
 #include <es/es_eh_pair.hh>
 #include <es/es_event.h>
 #include <es/es_handler.h>
+#include <es/es_common.h>
 
 enum es_queue_early_behaviors {
             DISCARD,
@@ -81,6 +82,10 @@ class es_queue {
         void set_append_callback( boost::function<bool (es_eh_pair**)> _cb){
             cb_list.push_back(_cb);
             }
+
+
+        bool empty(){ return event_queue.empty(); }
+        uint64_t min_time(){ return empty()?0: ::event_time(event_queue[0]->event); }
 
     private:
         std::vector<es_eh_pair*> event_queue;
