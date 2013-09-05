@@ -387,6 +387,7 @@ es_sink::work (int noutput_items,
 
 //    printf("es_sink::work()::fetched event successfully (%llu --> %llu)\n",min_time,max_time);
     pmt_t event = eh->event;
+    uint64_t etime = ::event_time(eh->event);
 
     // compute the local buffer offset of the event
     int buffer_offset = eh->time() - d_time + d_history - 1;
@@ -417,14 +418,13 @@ es_sink::work (int noutput_items,
     qq.push(eh);
 
     // insert event time in an ordered list of live events
-    uint64_t this_event_time = ::event_time(eh->event);
     int live_event_times_insert_offset = 0;
     while(live_event_times_insert_offset < live_event_times.size()){
-        if(live_event_times[live_event_times_insert_offset] > this_event_time)
+        if(live_event_times[live_event_times_insert_offset] > etime)
             break;
         live_event_times_insert_offset++;
         }
-    live_event_times.insert(live_event_times.begin() + live_event_times_insert_offset, (::event_time(eh->event)));
+    live_event_times.insert(live_event_times.begin() + live_event_times_insert_offset, etime);
 //    printf("adding live event time %lu\n", ::event_time(eh->event));
     qq_cond.notify_one();
 
@@ -437,11 +437,9 @@ es_sink::work (int noutput_items,
                         live_event_times.size()==0?
                             noutput_items : 
                             (uint64_t)(live_event_times[0] - min_time),
-                            //(uint64_t)(live_event_times[0] - nitems_read(0)),
                         event_queue->empty()?
                             noutput_items :
                             (uint64_t)(event_queue->min_time() - min_time)
-                            //(uint64_t)(event_queue->min_time() - nitems_read(0))
                         )
                     );
  
@@ -449,22 +447,6 @@ es_sink::work (int noutput_items,
   if(nconsume != noutput_items)
     qq_cond.notify_one();
 
-/*
-  if(!event_queue->empty()){
-        if(event_queue->min_time() < min_time){
-            throw std::runtime_error("event in the queue is less than current min window!");
-            }
-        }
-  if(live_event_times.size() > 0){
-        if(live_event_times[0] < min_time){
-            throw std::runtime_error("event in the live_times_list is less than current min window!");
-            }
-        }
-
-  uint64_t min_live =  live_event_times.size()==0?0:live_event_times[0];
-  uint64_t min_sched = event_queue->empty()?0:event_queue->min_time();
-  printf("live events %d - min live event %lu - min sched %lu - read %lu min_time %lu consuming %d\n", live_event_times.size(), min_live, min_sched, nitems_read(0), min_time, nconsume);
-*/
   // if we can not consume any more while waiting for the next event - yield so handler can finish
   if(nconsume == 0)
 	boost::this_thread::yield();
