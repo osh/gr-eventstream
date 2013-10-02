@@ -24,7 +24,9 @@ GR_SWIG_BLOCK_MAGIC(es,source);
 %include "std_string.i"
 %include "std_vector.i"
 
-es_source_sptr es_make_source (pmt_t arb, es_queue_sptr queue, std::vector<int> out_sig);
+
+
+es_source_sptr es_make_source (pmt_t arb, es_queue_sptr queue, std::vector<int> out_sig, int nthreads);
 
 class es_source : public gr::sync_block
 {
@@ -33,5 +35,5 @@ public:
   unsigned long long time();
 
 private:
-  es_source (pmt_t arb, es_queue_sptr queue, std::vector<int> out_sig);
+  es_source (pmt_t arb, es_queue_sptr queue, std::vector<int> out_sig, int nthreads);
 };

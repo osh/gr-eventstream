@@ -25,20 +25,25 @@
 #include <gnuradio/sync_block.h>
 #include <pmt/pmt.h>
 #include <es/es_queue.h>
+#include <es/es_source_thread.hh>
+#include <functional>
+#include <boost/function.hpp>
+#include <boost/lockfree/queue.hpp>
+
 
 class es_source;
 using namespace pmt;
 
 typedef boost::shared_ptr<es_source> es_source_sptr;
 
-es_source_sptr es_make_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig);
+es_source_sptr es_make_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig, int nthreads=1);
 
 class es_source : public gr::sync_block
 {
 private:
-  friend es_source_sptr es_make_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig);
+  friend es_source_sptr es_make_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig, int nthreads);
 
-  es_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig);  	// private constructor
+  es_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig, int nthreads=1);  	// private constructor
 
  // TODO: implement internal write-ahead buffer for over-size block writes
 
@@ -51,6 +56,22 @@ private:
 
   void set_max(unsigned long long maxlen);
 
+  boost::condition qq_cond;
+
+  boost::lockfree::queue<es_eh_pair*> qq;        // work items to start
+  boost::lockfree::queue<unsigned long long> dq; // finished time indexes
+
+  boost::mutex lin_mut;
+  std::vector<pmt_t> readylist;
+
+  std::vector<boost::shared_ptr<es_source_thread> > threadpool;
+//  std::vector<unsigned long long> live_event_times;
+
+  //bool cb(es_eh_pair** eh){ return false; }
+  bool cb(es_eh_pair** eh);
+ 
+  int n_threads;   
+
   pmt_t arb;
   es_queue_sptr event_queue;
   unsigned long long d_maxlen;
@@ -60,4 +81,4 @@ private:
   unsigned long long time();
 };
 
-#endif /* INCLUDED_EVENTSTREAM_SQUARE2_FF_H */
+#endif /* INCLUDED_EVENTSTREAM_SQUARE_FF_H */

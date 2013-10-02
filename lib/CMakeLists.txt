@@ -30,7 +30,6 @@ list(APPEND eventstream_sources
     es_queue.cc
     es_sink.cc
     es_source.cc
-    es_source2.cc
     es_vector_source.cc
     es_vector_sink.cc
     es_gen_vector.cc

@@ -153,7 +153,6 @@ set(GR_PKG_LIBEXEC_DIR ${GR_PYTHON_DIR}/es/)
 set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_INSTALL_PREFIX}/bin/)
 set(GR_RUNTIME_DIR ${CMAKE_INSTALL_PREFIX}/bin/)
 set(GR_PKG_CONF_DIR lib${LIB_SUFFIX}/pkgconfig)
-add_subdirectory(grc-impl)
 
 ########################################################################
 # And the utility apps
@@ -164,5 +163,5 @@ add_subdirectory(grc-impl)
 ########################################################################
 # Print summary
 ########################################################################
-GR_PRINT_COMPONENT_SUMMARY()
+#GR_PRINT_COMPONENT_SUMMARY()
 message(STATUS "Using install prefix: ${CMAKE_INSTALL_PREFIX}")

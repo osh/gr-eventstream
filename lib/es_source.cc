@@ -31,12 +31,13 @@
 
 #include <es/es_source.h>
 #include <es/es_common.h>
-#include <es/es_exceptions.h>
+#include <es/es_queue.h>
 #include <es/es.h>
 #include <gnuradio/io_signature.h>
 #include <stdio.h>
 #include <string.h>
 
+#define __STDC_FORMAT_MACROS
 //#define DEBUG(x) x
 #define DEBUG(x)
 
@@ -45,9 +46,9 @@
  * a boost shared_ptr.  This is effectively the public constructor.
  */
 es_source_sptr 
-es_make_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig)
+es_make_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig, int nthreads)
 {
-  return es_source_sptr (new es_source (arb,queue,out_sig));
+  return es_source_sptr (new es_source (arb,queue,out_sig, nthreads));
 }
 
 /*
@@ -69,32 +70,45 @@ unsigned long long es_source::time(){
 /*
  * The private constructor
  */
-es_source::es_source (pmt_t _arb, es_queue_sptr _queue, gr_vector_int out_sig)
+es_source::es_source (pmt_t _arb, es_queue_sptr _queue, gr_vector_int out_sig, int nthreads)
   : gr::sync_block ("es_source",
     gr::io_signature::make (MIN_IN, MAX_IN, 0),
     es_make_io_signature (out_sig.size(), out_sig) ),
     event_queue(_queue), 
     arb(_arb),
-    d_maxlen(ULLONG_MAX)
+    d_maxlen(ULLONG_MAX),
+    d_time(0),
+    n_threads(nthreads), // poke this through as a constructor arg
+    qq(100), dq(100)
 {
-    throw std::runtime_error("es.source is deprecated - please use es.source2 instead");
+    //event_queue->set_append_callback( self );
+    // create and dispatch handler threads
+    for(int i=0; i<n_threads; i++){
+        boost::shared_ptr<es_source_thread> th( new es_source_thread(arb, event_queue, &qq, &lin_mut, &readylist, &qq_cond, out_sig) );
+        threadpool.push_back( th );
+    }
 
-    // register native event types
-    event_queue->register_event_type( es::event_type_gen_vector );
-    event_queue->register_event_type( es::event_type_gen_vector_f );
-    event_queue->register_event_type( es::event_type_gen_vector_c );
-
-    // bind a handler for hold over events
-//    pmt_t handler = make_handler_pmt( new es_handler_insert_vector() );
-    es_handler_sptr handler = es_make_handler_insert_vector();
-
-    // bind handlers for native event types
-    event_queue->bind_handler( es::event_type_gen_vector, handler );
-    event_queue->bind_handler( es::event_type_gen_vector_f, handler );
-    event_queue->bind_handler( es::event_type_gen_vector_c, handler );
-
-    d_time = 0;
+    // bind event_queue->append() callback function
+    boost::function< bool(es_eh_pair**) > f;
+    f = std::bind1st(std::mem_fun(&es_source::cb), this);
+    event_queue->set_append_callback( f );
 }
+
+
+// callback bound to the es_queue add_item routine (executed for each new eh pair)
+bool es_source::cb(es_eh_pair** eh){
+    
+    DEBUG(printf("es_source::cb() executing.\n");)
+
+    // pass eh pair to lockfree fifos (out to threads)
+    es_eh_pair * tp = *eh;
+    qq.push(tp);
+    qq_cond.notify_one(); // notify one of the sleeping threads (if any)
+    
+    // we dont need this event anymore in the main queue
+    return false;
+}
+
 
 // set a maximum number of items to produce (otherwise we will run forever and never mark finished)
 void es_source::set_max(unsigned long long maxlen){
@@ -106,6 +120,11 @@ void es_source::set_max(unsigned long long maxlen){
  */
 es_source::~es_source ()
 {
+    // TODO: move this to stop() instead?
+    //shutdown threads
+    for(int i=0; i<n_threads; i++){
+        threadpool[i]->stop();
+    }
 }
 
 int 
@@ -114,138 +133,186 @@ es_source::work (int noutput_items,
 			gr_vector_void_star &output_items)
 {
   char *out = (char *) output_items[0];
-   
+  DEBUG(printf("entered work.\n");)
+  DEBUG(printf("d_time = %llu, noutput_items = %d\n", d_time, noutput_items);  )
+  
+
   unsigned long long max_time = d_time + noutput_items;
   unsigned long long min_time = d_time;
 
-
-//  printf("es_source::work()\n");
-
-  es_eh_pair* eh = NULL;
-  
-  // zero our output buffers before doing anything to them
-  //memset( out, 0x00, noutput_items*itemsize );
-  for(int i=0; i<output_items.size(); i++ ){
-    memset( output_items[i], 0x00, noutput_items*d_output_signature->sizeof_stream_item(i) );
+  // zero the output buffers
+  for(int j=0; j<output_items.size();j++){
+      int itemsize = d_output_signature->sizeof_stream_item(j);
+      memset(output_items[j], 0x00, noutput_items*itemsize);
   }
+  
+  // acquire the readylist lock
+  lin_mut.lock();
 
-  while( event_queue->fetch_next_event2( min_time, max_time, &eh )){
-
-    //printf("es_source::got event back -- \n");
-    //event_print(eh->event);
-
-    if(eh == NULL){ 
-        throw std::runtime_error("eh == NULL");
-    }
-
-    int buffer_offset = eh->time() - d_time;
-
-    pmt::print(eh->handler);
-    assert( pmt::is_any( eh->handler ) );
+  // grab serialized buffers from thread output
+  //        copy buffers into work output buffer
+  
+  std::vector<pmt_t>::iterator it;
+  //for(it = readylist.begin(); it != readylist.end(); ){
+  for(int i = 0; i<readylist.size(); i++){
+    DEBUG(printf("readylist[%d] = %p\n", i, readylist[i].get());)
+    pmt_t evt = readylist[i];
+//    std::cout << "iterating over ready list (i=" << i << ", evt_time = "<<event_time(evt)<<")\n";
+//    std::cout << " got reference ("<<event_time(evt)<<","<<event_length(evt),")\n";
     
-/* 
-    DEBUG(printf("event_length = %lld\n", eh->length());)
-    DEBUG(printf("buffer_offset = %d\n", buffer_offset);)
-    DEBUG(printf("buffer_max_needed = %lld\n", eh->length()+buffer_offset);)
-    DEBUG(printf("buffer_max_len = %d\n", noutput_items);)
-  */  
-    DEBUG(printf("buffer_offset = %d\n", buffer_offset);)
-    int buffer_event_max = eh->length()+buffer_offset;
-    bool use_inplace_buffer = !(buffer_event_max >= noutput_items);
-    // If the event's max length will not fit in the buffer we will need to create a temporary one.
-
-    DEBUG(printf("buffer_event_max = %d, noutput_items = %d, use_inplace_buffer = %d\n", buffer_event_max, noutput_items, use_inplace_buffer);)
+    uint64_t e_time = event_time(evt);
+    uint64_t e_length = event_length(evt);
     
-    // Call the event handler with either an in-place or out-of-place buffer   
-    if(use_inplace_buffer){   
-        DEBUG(printf("using in place buffer!!!\n");)
-        gr_vector_void_star event_bufs;
-        for(int i=0; i<output_items.size(); i++ ){
-            void* bufloc = (void*) ((uint64_t)output_items[i] + (d_output_signature->sizeof_stream_item(i) * buffer_offset));
-            event_bufs.push_back( bufloc );
-        }
 
-        gr_vector_int sizes;
-        for(int i=0; i<output_items.size(); i++){
-            sizes.push_back(eh->length() * d_output_signature->sizeof_stream_item(i));
-        }
-        
-        pmt_t event = register_buffer( eh->event, event_bufs, sizes);
-        DEBUG(event_print( event );)
-
-        eh->event = event;
-        // run the event handler
-        eh->run();      
-
-    } else {    // use_inplace_buffer = false
-        DEBUG(printf("using out-of-place buffer!!!\n");)
-
-        // allocate temporary buffers.
-        gr_vector_void_star bufs;
-        for(int i=0; i<output_items.size(); i++ ){
-            int itemsize = d_output_signature->sizeof_stream_item(i);
-            int bufsize = itemsize * eh->length();
-            bufs.push_back( (void*) new uint8_t[bufsize ] );
-            DEBUG(printf("allocced buffer of size %d\n", bufsize );)
+    if(e_time >= d_time + noutput_items){ // event starts after our current buffer area save for later
+        break; // if event is in the future do nothing with it (since they are time ordered - we are done here)
+    } else { // event starts in our buffer, or in the past
+        if(e_time < d_time){ // if event starts in the past handle the behavior appropriately
+            switch(event_queue->d_early_behavior){
+                case BALK:
+                    printf("source event arrived at the source work function late (evt=%lu, time=%llu)!\n",e_time, d_time);
+                    perror("");
+                    break;
+                case ASAP:
+                    // update event time to be as soon as possible
+                    evt = event_args_add(evt, pmt::intern("es::event_time") , pmt::from_uint64(d_time));
+                    e_time = event_time(evt);
+                    printf("updating event time.\n");
             }
+        }
+        // remove the event we are handling
+        readylist.erase(readylist.begin()+i);
+        i--;
 
-        // allocate size vector
-        gr_vector_int sizes;
-        for(int i=0; i<output_items.size(); i++){
-            sizes.push_back(eh->length() * d_output_signature->sizeof_stream_item(i));
+        // if we reach this point, we will be generating output from this event
+        // compute portion of event to output
+        int space_avail = d_time + noutput_items - e_time;
+        int item_copy = (space_avail >= e_length ? e_length : space_avail); //TODO: this may cause issues for large events
+
+        // compute copy offsets
+        int output_offset = 0;
+        int input_offset = 0;
+        if(e_time >= d_time){
+            // event starts at non zero offset in buffer
+            output_offset = e_time - d_time;
+            DEBUG(printf("output_offset = %d\n", output_offset);)
+        } else {
+            // event starts in the past (copy only the end region)
+            input_offset = d_time - e_time;
+            DEBUG(printf("input_offset = %d\n", input_offset);)
         }
 
-        DEBUG(printf("using out of place buffer!!!\n");)
-        
-        // register buffers with eh pair and post 
-        pmt_t event = register_buffer( eh->event, bufs, sizes);
-        eh->event = event;
-        DEBUG(event_print( event );)
+//        DEBUG(printf("space_avail = %d, e_length = %d, item_copy = %d -- ", space_avail, e_length, item_copy);)
+//        DEBUG(printf("output_offset = %d, input_offset = %d ", output_offset, input_offset);)
+//        DEBUG(printf("d_time = %llu, e_time = %llu, noutput_items = %d\n", d_time, e_time, noutput_items);)
 
-        DEBUG(printf("run() with out of place buffer firing.\n");)
+        // (*it) == event
+        // TODO: error checking on this ?
+        DEBUG(printf("making sure buffer list arg exists\n");)
+        if( !event_has_field( (evt), es::event_buffer ) ){
+            perror("malformed event");
+            }
+        DEBUG(printf("getting buffer list element\n");)
 
-        // run the event handler
-        eh->run();
+        // buf_list is a pmt_list of pmt_blobs containing buffers for N output ports
+        pmt_t buf_list = event_field( (evt), es::event_buffer ); 
+        //printf("buf has %d elements.\n", pmt_length(buf_list) );
 
-        DEBUG(printf("run returned.\n");)
-
-        // divide output buffer into partitions
-        int usable_items = noutput_items - buffer_offset;
-        int leftover_items = eh->length() - usable_items;
-
-        // copy first partition to output
-        for(int i=0; i<output_items.size(); i++){
-//            printf("es.source producing %d items on stream %d\n", usable_items, i );
-            memcpy( (void*)((uint64_t)output_items[i] + (buffer_offset * d_output_signature->sizeof_stream_item(i) )),
-                    bufs[i],
-                    usable_items * d_output_signature->sizeof_stream_item(i));
+        // sanity checking
+        if( (!(item_copy <= input_offset+noutput_items)) || (!(input_offset >= 0)) ){
+            perror("insane offsets\n");
         }
 
-        // copy second partition to new insertion event and add to queue
-        pmt_t leftover_buf_pmt = pmt::PMT_NIL;
-        for(int i=0; i<output_items.size(); i++){
-            pmt_t buf_n = pmt::init_u8vector( d_output_signature->sizeof_stream_item(i) * leftover_items,  ((const uint8_t*) bufs[i]) + usable_items*d_output_signature->sizeof_stream_item(i) );
-            leftover_buf_pmt = pmt::list_add(leftover_buf_pmt, buf_n);
+        // copy to output buffer (iterate over number of output ports)
+        for(int j=0; j<output_items.size();j++){
+            DEBUG(printf("getting %d'th buffer\n", j);)
+            pmt_t buf = pmt::nth(j, buf_list);           
+
+            DEBUG(printf("got buf\n");)
+
+            // get reference to buffer stored in the event
+            const char* ii = (const char*) pmt::blob_data(buf);
+
+            // get reference to the output buffer
+            char* oo = (char*) output_items[j];
+            int itemsize = d_output_signature->sizeof_stream_item(j);
+
+            DEBUG(printf("calling memcpy\n");)
+            // copy memory from event args to output buffer
+            DEBUG(printf("calling memcpy from ii=%p to oo=%p\n", ii, oo);)
+            DEBUG(printf("memcpy length = %d\n", item_copy*itemsize);)
+            DEBUG(printf("output_offset = %d, input_offset = %d\n", output_offset, input_offset);)
+            memcpy( &oo[output_offset*itemsize], &ii[input_offset*itemsize], item_copy*itemsize );
+            DEBUG(printf("memcpy returned\n");)
         }
 
-        DEBUG(printf("spawning holdover event ***\n");)
-        //pmt_t new_event = event_create_gen_vector(max_time, leftover_buf_pmt, d_output_signature);
-        pmt_t new_event = event_create_gen_vector(eh->time() + usable_items, leftover_buf_pmt, d_output_signature);
-        event_queue->add_event(new_event);
+//        std::cout << "e_length = " << e_length << ", item_copy = " << item_copy << "\n";
+
+        // if we have leftovers to store (from previous work executions)
+        if(e_length > item_copy){
+
+            DEBUG(printf("generating continuation event for next time.\n");)
+
+            // generate a new event to represent the remaining contents which have not yet been output
+            pmt_t evt_c = event_create( "CONTINUATION", e_time + item_copy, e_length - item_copy );
+            pmt_t outbuf_list = pmt::PMT_NIL;
+
+            // populate the event with remaining buffer contents
+            // create a pmt_list with pointers to existing buffers
+            // no new mallocing should happen here
+            for(int j=0; j<output_items.size();j++){ //iterate over number of output ports
+                int itemsize = d_output_signature->sizeof_stream_item(j);
+
+                // get a reference to our blob of interest in the blob list
+                pmt_t buf = pmt::nth(j, buf_list);           
+                const char* base_srcptr = (const char*) pmt::blob_data(buf);
+
+                // make a new blob pointing to a portion of the old blob
+                pmt_t newblob = pmt::make_blob( base_srcptr + itemsize * item_copy, itemsize*(event_length(evt)-item_copy));
+                outbuf_list = pmt::list_add( outbuf_list, newblob );
+            }
+ 
+            // tag the new buffers onto the event
+            DEBUG(printf("register buffer.\n");a)
+            evt_c = register_buffer( evt_c, outbuf_list );
+
+            // the original buffers are saved to make sure we reserve the pmt_blobs allocation!           
+            static const pmt_t ORIG_FLAG(pmt::intern("SAVE_ORIG_BUFS"));
+            if(event_has_field(evt, ORIG_FLAG)){
+                evt_c = event_args_add( evt_c, ORIG_FLAG, event_field( evt, ORIG_FLAG ) );
+            } else {
+                evt_c = event_args_add( evt_c, ORIG_FLAG, event_field( evt, es::event_buffer ) );
+            }
+ 
+            DEBUG(printf("inserting into readylist (readylist.size() = %lu).\n",readylist.size());)
+            // insert the new event into our readylist
+            for(int k=0; k<=readylist.size(); k++){
+                if(k == readylist.size()){
+                    readylist.insert( readylist.begin()+k, evt_c );
+//                    std::cout << "inserting into end of readylist (" <<  event_time(evt_c) << ", " << event_length(evt_c) << ")\n";
+                    break;
+                } else if( event_time(evt_c) < event_time(readylist[k]) ){
+                    readylist.insert( readylist.begin()+k, evt_c );
+                    DEBUG(printf("inserting into %d of readylist.\n",k);)
+                    break;
+                } else {
+                    DEBUG(printf("insert failed!\n");)
+                }
+                
+            } // done inserting
+        } // done leftover exists conditional
+    } // done time range if()
+//    std::cout << "e { time: " << e_time << ", length: " << e_length << "}\n";
+    } // done outer loop over readylist contents
 
 
-        // get rid of temporary buffers.
-        for(int i=0; i<output_items.size(); i++ ){
-            delete (char*)bufs[i];
-        }
-
-    } 
-   
-  } // end while
-
-  // Tell runtime system how many output items we produced.
-  noutput_items = (unsigned int) std::min((unsigned long long)noutput_items, d_maxlen - d_time);
-  d_time += noutput_items;
-  DEBUG(if(noutput_items == 0){ printf("es_source::work() d_time = %llu returning 0 in source block.\n", d_time); })
-  return noutput_items;
+  lin_mut.unlock();
+ 
+  
+  // determine number to be produced
+//  printf("d_maxlen = %llu, d_time = %llu, noutput_items = %d\n", d_maxlen, d_time, noutput_items);
+  int produced = (d_maxlen < d_time + noutput_items)?d_maxlen - d_time:noutput_items;
+//  std::cout << "*** produced = " << produced << "\n";
+  d_time += produced; // step time ptr along
+  return produced;
 }
