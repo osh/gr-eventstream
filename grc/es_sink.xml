@@ -4,21 +4,7 @@
     <key>es_sink</key>
     <category>EVENTSTREAM</category>
     <import>import es</import>
-    <make>es.sink($arb,$queue,$num_streams*[$type.size],$nthreads,$samplehistory)</make>
-
-    <param>
-      <name>Arbiter</name>
-      <key>arb</key>
-      <value></value>
-      <type>raw</type>
-    </param>
-
-    <param>
-      <name>Event Queue</name>
-      <key>queue</key>
-      <value></value>
-      <type>raw</type>
-    </param>
+    <make>es.sink($num_streams*[$type.size],$nthreads,$samplehistory)</make>
 
       <param>
         <name>IO Type</name>
@@ -55,7 +41,7 @@
     <param>
         <name>Num Streams</name>
         <key>num_streams</key>
-        <value>2</value>
+        <value>1</value>
         <type>int</type>
     </param>
 

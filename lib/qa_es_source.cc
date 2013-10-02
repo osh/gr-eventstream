@@ -33,21 +33,19 @@ qa_es_source::t1()
 {
     printf("t1\n");
 
-    es_queue_sptr q = es_make_queue();
-    pmt_t arb = es_make_arbiter();
     gr_vector_int outsig(1);
     outsig[0] = sizeof(float);
-    es_source_sptr s = es_make_source(arb,q, outsig);
+    es_source_sptr s = es_make_source(outsig);
  
     pmt_t e1 = event_create( es::event_type_1, 1, 4 );
     pmt_t e2 = event_create( es::event_type_1, 10, 4 );
     pmt_t e3 = event_create( es::event_type_1, 20, 4 );
  
-    q->add_event(e1);
-    q->add_event(e2);
-    q->add_event(e3);
+    //q->add_event(e1);
+    //q->add_event(e2);
+    //q->add_event(e3);
  
-    q->print_queue();
+    //q->print_queue();
      
 }
 
@@ -61,12 +59,10 @@ qa_es_source::t2()
 {
 
     printf("QA_ES_SOURCE::t2\n");
-    es_queue_sptr q = es_make_queue();
-    pmt_t arb = es_make_arbiter();
 
     gr_vector_int outsig(1);
     outsig[0] = sizeof(float);
-    es_source_sptr s = es_make_source(arb,q,outsig);
+    es_source_sptr s = es_make_source(outsig);
 
     s->set_max(10);
  
@@ -96,7 +92,7 @@ qa_es_source::t2()
 //    q->bind_handler( e1->type(), h2 );
 
     // manually add event to queue
-    q->add_event(e1);
+    //q->add_event(e1);
     
     printf("QA_ES_SOURCE::t200CMT BARRIER\n");
 

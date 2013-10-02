@@ -36,16 +36,15 @@ using namespace pmt;
 
 typedef boost::shared_ptr<es_source> es_source_sptr;
 
-es_source_sptr es_make_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig, int nthreads=1);
+es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads=1);
 
 class es_source : public gr::sync_block
 {
 private:
-  friend es_source_sptr es_make_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig, int nthreads);
+  friend es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads);
 
-  es_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig, int nthreads=1);  	// private constructor
+  es_source (gr_vector_int out_sig, int nthreads=1);  	// private constructor
 
- // TODO: implement internal write-ahead buffer for over-size block writes
 
  public:
   ~es_source ();	// public destructor
@@ -72,7 +71,6 @@ private:
  
   int n_threads;   
 
-  pmt_t arb;
   es_queue_sptr event_queue;
   unsigned long long d_maxlen;
   unsigned long long d_time;

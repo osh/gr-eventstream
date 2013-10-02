@@ -46,9 +46,9 @@
  * a boost shared_ptr.  This is effectively the public constructor.
  */
 es_source_sptr 
-es_make_source (pmt_t arb, es_queue_sptr queue, gr_vector_int out_sig, int nthreads)
+es_make_source (gr_vector_int out_sig, int nthreads)
 {
-  return es_source_sptr (new es_source (arb,queue,out_sig, nthreads));
+  return es_source_sptr (new es_source (out_sig, nthreads));
 }
 
 /*
@@ -70,12 +70,11 @@ unsigned long long es_source::time(){
 /*
  * The private constructor
  */
-es_source::es_source (pmt_t _arb, es_queue_sptr _queue, gr_vector_int out_sig, int nthreads)
+es_source::es_source (gr_vector_int out_sig, int nthreads)
   : gr::sync_block ("es_source",
     gr::io_signature::make (MIN_IN, MAX_IN, 0),
     es_make_io_signature (out_sig.size(), out_sig) ),
-    event_queue(_queue), 
-    arb(_arb),
+    event_queue(es_make_queue()), 
     d_maxlen(ULLONG_MAX),
     d_time(0),
     n_threads(nthreads), // poke this through as a constructor arg
@@ -84,7 +83,7 @@ es_source::es_source (pmt_t _arb, es_queue_sptr _queue, gr_vector_int out_sig, i
     //event_queue->set_append_callback( self );
     // create and dispatch handler threads
     for(int i=0; i<n_threads; i++){
-        boost::shared_ptr<es_source_thread> th( new es_source_thread(arb, event_queue, &qq, &lin_mut, &readylist, &qq_cond, out_sig) );
+        boost::shared_ptr<es_source_thread> th( new es_source_thread(pmt::PMT_NIL, event_queue, &qq, &lin_mut, &readylist, &qq_cond, out_sig) );
         threadpool.push_back( th );
     }
 

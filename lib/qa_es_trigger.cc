@@ -60,27 +60,26 @@ qa_es_trigger::t1()
 
     gr_vector_int insig(1);
     insig[0] = sizeof(float);
-    es_sink_sptr snk = es_make_sink( arb, queue, insig, 1 );
-//    es_sink_sptr snk = es_make_sink( arb, queue, sizeof(float) );
+    es_sink_sptr snk = es_make_sink( insig, 1 );
 
-    es_trigger_edge_f_sptr trig = es_make_trigger_edge_f(arb, queue, 0.1, 4, 1, sizeof(char),1, "EDGE_TRIGGER_EVENT");
+//    es_trigger_edge_f_sptr trig = es_make_trigger_edge_f(0.1, 4, 1, sizeof(char),1, "EDGE_TRIGGER_EVENT");
 
     // connect traditional flowgraph portion
-    tb->connect( src, 0, trig, 0 );
-    tb->connect( trig, 0, snk, 0 );
+//    tb->connect( src, 0, trig, 0 );
+//    tb->connect( trig, 0, snk, 0 );
     
     // create the event handler, just a print handler in this case   
     //pmt_t h1 = make_handler_pmt( new es_handler_print(es_handler_print::TYPE_F32) );
-    es_handler_sptr h1 = es_make_handler_print(es_handler_print::TYPE_F32);
+//    es_handler_sptr h1 = es_make_handler_print(es_handler_print::TYPE_F32);
     
     // register the trigger blocks event type as a known event type handled by this queue
-    queue->register_event_type( trig->event_type(0) );
+//    queue->register_event_type( trig->event_type(0) );
 
     // bind a handler to the trigger block's first output event type
-    queue->bind_handler( trig->event_type(0), h1 );
+//    queue->bind_handler( trig->event_type(0), h1 );
 
     // run the waveform
-    tb->run();
+//    tb->run();
 
     printf(" *** END QA_ES_TRIGGER_T1\n");
 }

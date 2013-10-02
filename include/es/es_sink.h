@@ -44,25 +44,18 @@ using namespace boost::accumulators;
 typedef accumulator_set<double, stats<tag::rolling_mean> > acc_avg_t;
 typedef boost::shared_ptr<es_sink> es_sink_sptr;
 
-es_sink_sptr es_make_sink (pmt_t arb, es_queue_sptr queue, gr_vector_int insig, int n_threads,
-		int sample_history_in_kilosamples);
-// Original - for API compatibility.
-es_sink_sptr es_make_sink (pmt_t arb, es_queue_sptr queue, gr_vector_int insig, int n_threads);
+es_sink_sptr es_make_sink (gr_vector_int insig, int n_threads,
+		int sample_history_in_kilosamples=64);
 
 class es_sink : public gr::sync_block
 {
 private:
 
   //New constructor with user-selectable sample history.
-  friend es_sink_sptr es_make_sink (pmt_t arb, es_queue_sptr queue, gr_vector_int insig, int n_threads,
+  friend es_sink_sptr es_make_sink (gr_vector_int insig, int n_threads,
 		  int sample_history_in_kilosamples);
-  es_sink (pmt_t arb, es_queue_sptr queue, gr_vector_int insig, int n_threads,
-		  int sample_history_in_kilosamples);  	// private constructor
-
-  //Previous constructor for API compatibility.
-  friend es_sink_sptr es_make_sink (pmt_t arb, es_queue_sptr queue, gr_vector_int insig, int n_threads);
-  es_sink (pmt_t arb, es_queue_sptr queue, gr_vector_int insig, int n_threads);  	// private constructor
-
+  es_sink (gr_vector_int insig, int n_threads,
+		  int sample_history_in_kilosamples=64);  	// private constructor
 
  public:
   ~es_sink ();	// public destructor
@@ -85,7 +78,6 @@ private:
   double event_run_ratio();
   double event_thread_utilization();
 
-  pmt_t arb;
   es_queue_sptr event_queue;
   unsigned long long d_time;
   unsigned int d_history;

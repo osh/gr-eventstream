@@ -51,8 +51,6 @@ qa_es_sink::t1()
     vec.push_back(0);
     
     // create eventstream control objects
-    pmt_t arb = es_make_arb();
-    es_queue_sptr queue = es_make_queue();
     
     // build gnu radio blocks
     gr::top_block_sptr tb = gr::make_top_block("qa_es_sink_t1_top");
@@ -60,7 +58,7 @@ qa_es_sink::t1()
     
     gr_vector_int insig(1);
     insig[0] = sizeof(float);
-    es_sink_sptr snk = es_make_sink( arb, queue, insig, 1 );
+    es_sink_sptr snk = es_make_sink( insig, 1 );
     
     // connect traditional flowgraph portion
     tb->connect( src, 0, snk, 0 );
@@ -72,18 +70,18 @@ qa_es_sink::t1()
     es_handler_sptr h1 = es_make_handler_print(es_handler_print::TYPE_F32);
     
     // register the NEW_EVT_TYPE as a known event type handled by this queue
-    queue->register_event_type( event_type( evt1 ) );
+//    queue->register_event_type( event_type( evt1 ) );
 
     // bind a handler to the NEW_EVT_TYPE
-    queue->bind_handler( event_type( evt1 ), h1 );
+//    queue->bind_handler( event_type( evt1 ), h1 );
 
     // to define this event type and not discard it run ...
 //    queue->register_event_type( event_type( evt2 ) );
 //    queue->bind_handler( event_type( evt2 ), h1 );
 
     // add the two events to the queue
-    queue->add_event(evt1);
-    queue->add_event(evt2);
+//    queue->add_event(evt1);
+//    queue->add_event(evt2);
  
     printf("tb->run()\n");
       

@@ -43,17 +43,10 @@
  * a boost shared_ptr.  This is effectively the public constructor.
  */
 es_sink_sptr
-es_make_sink (pmt_t arb, es_queue_sptr queue, gr_vector_int insig, int n_threads,
+es_make_sink (gr_vector_int insig, int n_threads,
 		int sample_history_in_kilosamples)
 {
-  return es_sink_sptr (new es_sink (arb,queue,insig,n_threads,sample_history_in_kilosamples));
-}
-
-// This one is to maintain compatibility with existing projects and "qa_..." tests.
-es_sink_sptr
-es_make_sink (pmt_t arb, es_queue_sptr queue, gr_vector_int insig, int n_threads)
-{
-  return es_sink_sptr (new es_sink (arb,queue,insig,n_threads));
+  return es_sink_sptr (new es_sink (insig,n_threads,sample_history_in_kilosamples));
 }
 
 /*
@@ -71,10 +64,10 @@ static const int MAX_OUT = 0;	// maximum number of output streams
 /*
  * The private constructor - NEW, with user-configurable sample history.
  */
-es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_vector_int insig, int _n_threads, int _sample_history_in_kilosamples)
+es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_kilosamples)
   : gr::sync_block ("es_sink",
            es_make_io_signature(insig.size(), insig),
-		   gr::io_signature::make (MIN_OUT, MAX_OUT, 0)), event_queue(_queue), arb(_arb), n_threads(_n_threads),
+		   gr::io_signature::make (MIN_OUT, MAX_OUT, 0)), event_queue(es_make_queue()), n_threads(_n_threads),
     d_nevents(0), sample_history_in_kilosamples(_sample_history_in_kilosamples),
     qq(100), dq(100), d_num_running_handlers(0),
     d_avg_ratio(tag::rolling_window::window_size=50),
@@ -86,35 +79,12 @@ es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_vector_int insig, int _n_
 
     // instantiate the threadpool workers
     for(int i=0; i<n_threads; i++){
-        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(arb, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers) );
+        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(pmt::PMT_NIL, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers) );
         threadpool.push_back( th );
     }
 //    set_output_multiple(100000);
 }
 
-/*
- * The private constructor - PREVIOUS, with sample history set to 64 Ksamples.
- */
-es_sink::es_sink (pmt_t _arb, es_queue_sptr _queue, gr_vector_int insig, int _n_threads)
-  : gr::sync_block ("es_sink",
-           es_make_io_signature(insig.size(), insig),
-		   gr::io_signature::make (MIN_OUT, MAX_OUT, 0)), event_queue(_queue), arb(_arb), n_threads(_n_threads),
-    d_nevents(0),
-    qq(100), dq(100), d_num_running_handlers(0),
-    d_avg_ratio(tag::rolling_window::window_size=50),
-    d_avg_thread_utilization(tag::rolling_window::window_size=50)
-{
-    d_time = 0;
-    d_history = 1024*64;
-    set_history(d_history);
-
-    // instantiate the threadpool workers
-    for(int i=0; i<n_threads; i++){
-        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(arb, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers) );
-        threadpool.push_back( th );
-    }
-//    set_output_multiple(100000);
-}
 /*
  * Our virtual destructor.
  */
