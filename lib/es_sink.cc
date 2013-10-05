@@ -67,7 +67,7 @@ static const int MAX_OUT = 0;	// maximum number of output streams
 es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_kilosamples)
   : gr::sync_block ("es_sink",
            es_make_io_signature(insig.size(), insig),
-		   gr::io_signature::make (MIN_OUT, MAX_OUT, 0)), event_queue(es_make_queue()), n_threads(_n_threads),
+		   gr::io_signature::make (MIN_OUT, MAX_OUT, 0)), n_threads(_n_threads),
     d_nevents(0), sample_history_in_kilosamples(_sample_history_in_kilosamples),
     qq(100), dq(100), d_num_running_handlers(0),
     d_avg_ratio(tag::rolling_window::window_size=50),

@@ -40,6 +40,7 @@ list(APPEND eventstream_sources
     es_pyhandler_def.cc
     es_patterned_interleaver.cc
     es_exceptions.cc
+    es_event_acceptor.cc
 )
 
 list(APPEND test_eventstream_sources

@@ -30,18 +30,12 @@ pmt_t pmt_complex_vector( std::vector< gr_complex > vec ){
     return pmt::init_c32vector(vec.size(), &vec[0]);
 }
 
-es_handler::es_handler()
-    : gr::basic_block("handler", 
-        gr::io_signature::make(0,0,0),
-        gr::io_signature::make(0,0,0))
-{
-}
-
 es_handler::es_handler(std::string name)
-    : gr::basic_block(name, 
+    : gr::block(name, 
         gr::io_signature::make(0,0,0),
         gr::io_signature::make(0,0,0))
 {
+    message_port_register_in(pmt::mp("handle_event"));
 }
 
 void es_handler::handler_helper( pmt_t msg ){

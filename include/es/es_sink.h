@@ -28,6 +28,7 @@
 #include <es/es_queue.h>
 #include <es/es_event_loop_thread.hh>
 #include <es/es_eh_pair.hh>
+#include <es/es_event_acceptor.h>
 #include <boost/lockfree/queue.hpp>
 #include <semaphore.h>
 
@@ -47,7 +48,7 @@ typedef boost::shared_ptr<es_sink> es_sink_sptr;
 es_sink_sptr es_make_sink (gr_vector_int insig, int n_threads,
 		int sample_history_in_kilosamples=64);
 
-class es_sink : public gr::sync_block
+class es_sink :  public virtual gr::sync_block, public es_event_acceptor
 {
 private:
 
@@ -78,7 +79,6 @@ private:
   double event_run_ratio();
   double event_thread_utilization();
 
-  es_queue_sptr event_queue;
   unsigned long long d_time;
   unsigned int d_history;
   int n_threads;

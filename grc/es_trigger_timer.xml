@@ -5,16 +5,8 @@
   <category>EVENTSTREAM</category>
   <import>import es</import>
   <make>#slurp
-es.es_trigger_timer($queue, "TIMER_EXPIRED_EVENT", $length, $delay, $iterations);
-self.$(id).start();</make>
+es.es_trigger_timer("TIMER_EXPIRED_EVENT", $length, $delay, $iterations); </make>
   
-  <param>
-    <name>Eventstream Queue</name>
-    <key>queue</key>
-    <value>variable_es_queue_0</value>
-    <type>raw</type>
-  </param>
-
   <param>
     <name>Event Length</name>
     <key>length</key>
@@ -36,6 +28,18 @@ self.$(id).start();</make>
     <type>int</type>
   </param>
 
+  <source>
+    <name>which_stream</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+
+  <source>
+    <name>timer_handler</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+
   <doc>
     This block generates events on timer expiration
     
@@ -43,7 +47,5 @@ self.$(id).start();</make>
 
     iterations - number of iterations before stopping, -1 for infinite
   </doc>
-
-  <event_emit>TIMER_EXPIRED_EVENT</event_emit>
 
 </block>

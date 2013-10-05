@@ -20,6 +20,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
+%include <block.i>
+
 %{
 #include <es_handler.h>
 %}

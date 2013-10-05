@@ -26,6 +26,7 @@
 #include <pmt/pmt.h>
 #include <es/es_queue.h>
 #include <es/es_source_thread.hh>
+#include <es/es_event_acceptor.h>
 #include <functional>
 #include <boost/function.hpp>
 #include <boost/lockfree/queue.hpp>
@@ -38,13 +39,12 @@ typedef boost::shared_ptr<es_source> es_source_sptr;
 
 es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads=1);
 
-class es_source : public gr::sync_block
+class es_source : public virtual gr::sync_block, public es_event_acceptor
 {
 private:
   friend es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads);
 
   es_source (gr_vector_int out_sig, int nthreads=1);  	// private constructor
-
 
  public:
   ~es_source ();	// public destructor
@@ -71,7 +71,6 @@ private:
  
   int n_threads;   
 
-  es_queue_sptr event_queue;
   unsigned long long d_maxlen;
   unsigned long long d_time;
   unsigned int d_history;

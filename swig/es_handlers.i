@@ -20,6 +20,9 @@
  * Boston, MA 02110-1301, USA.
  */
 
+%include <es_handler.i>
+%template(es_handler_sptr) boost::shared_ptr<es_handler>;
+
 pmt_t pmt_float_vector( std::vector< float > vec );
 pmt_t pmt_complex_vector( std::vector< gr_complex > vec );
 

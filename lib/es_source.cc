@@ -74,7 +74,6 @@ es_source::es_source (gr_vector_int out_sig, int nthreads)
   : gr::sync_block ("es_source",
     gr::io_signature::make (MIN_IN, MAX_IN, 0),
     es_make_io_signature (out_sig.size(), out_sig) ),
-    event_queue(es_make_queue()), 
     d_maxlen(ULLONG_MAX),
     d_time(0),
     n_threads(nthreads), // poke this through as a constructor arg
@@ -91,6 +90,9 @@ es_source::es_source (gr_vector_int out_sig, int nthreads)
     boost::function< bool(es_eh_pair**) > f;
     f = std::bind1st(std::mem_fun(&es_source::cb), this);
     event_queue->set_append_callback( f );
+
+    // listen for handler set up
+    message_port_register_in(pmt::mp("schedule_event"));
 }
 
 

@@ -33,11 +33,10 @@ class es_handler;
 
 typedef boost::shared_ptr<es_handler> es_handler_sptr;
 
-class es_handler : public gr::basic_block
+class es_handler : public gr::block
 {
     public:
-        es_handler();
-        es_handler(std::string name);
+        es_handler(std::string name = std::string("es_handler"));
         gr_vector_void_star get_buffer_ptr(pmt_t buffer_pmt);
         void handler_helper( pmt_t msg );
         virtual void handler(pmt_t msg, gr_vector_void_star buf);

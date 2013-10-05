@@ -20,10 +20,14 @@
     </option>
   </param>
 
+  <sink>
+    <name>handle_event</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+
   <doc>
     This handler simply prints events to STDOUT
   </doc>
-
-  <event_handle>Debug Print</event_handle>
 
 </block>
