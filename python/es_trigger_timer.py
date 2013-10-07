@@ -11,13 +11,13 @@ import time;
 
 class es_trigger_timer(gr.sync_block):
     def __init__(self, evt_type, evt_length, delay, count=-1):
-        gr.sync_block.__init__(self,"test",[],[])
+        gr.sync_block.__init__(self,"timer_event",[],[])
 
-        self.message_port_register_out(pmt.intern("timer_handler"));
+        self.message_port_register_out(pmt.intern("timer_event"));
         self.message_port_register_out(pmt.intern("which_stream"));
 
         self.count_init = count;
-        self.d_type = evt_type;
+        self.d_type = pmt.intern("timer_event");
         self.count = count;
         self.delay = delay;
         self.evt_length = evt_length;
@@ -27,9 +27,9 @@ class es_trigger_timer(gr.sync_block):
     def start(self):
         self.count = self.count_init;
         self.thread.start();
-        reg = pmt.cons(pmt.intern("timer_handler"), self.message_subscribers(pmt.intern("timer_handler")));
+        reg = pmt.cons(pmt.intern("timer_event"), self.message_subscribers(pmt.intern("timer_event")));
         reg_msg = pmt.cons(pmt.intern("ES_REGISTER_HANDLER"), reg);
-        print "subscribers: %s"%(str(self.message_subscribers(pmt.intern("timer_handler"))));
+        print "subscribers: %s"%(str(self.message_subscribers(pmt.intern("timer_event"))));
         print "registration message: %s"%(str(reg_msg))
         self.message_port_pub(pmt.intern("which_stream"), reg_msg);
 

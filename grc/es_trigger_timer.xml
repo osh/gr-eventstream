@@ -35,7 +35,7 @@ es.es_trigger_timer("TIMER_EXPIRED_EVENT", $length, $delay, $iterations); </make
   </source>
 
   <source>
-    <name>timer_handler</name>
+    <name>timer_event</name>
     <type>message</type>
     <optional>1</optional>
   </source>
