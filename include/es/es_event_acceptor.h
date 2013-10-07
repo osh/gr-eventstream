@@ -7,8 +7,8 @@
 class es_event_acceptor : public virtual gr::sync_block {
     public:
         es_queue_sptr event_queue;
-        es_event_acceptor()  :
-            event_queue(es_make_queue())
+        es_event_acceptor(enum es_queue_early_behaviors eb= DISCARD)  :
+            event_queue(es_make_queue(eb))
             {
             // listen for events
             message_port_register_in(pmt::mp("schedule_event"));

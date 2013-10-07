@@ -44,9 +44,9 @@
  */
 es_sink_sptr
 es_make_sink (gr_vector_int insig, int n_threads,
-		int sample_history_in_kilosamples)
+		int sample_history_in_kilosamples, enum es_queue_early_behaviors eb)
 {
-  return es_sink_sptr (new es_sink (insig,n_threads,sample_history_in_kilosamples));
+  return es_sink_sptr (new es_sink (insig,n_threads,sample_history_in_kilosamples,eb));
 }
 
 /*
@@ -64,14 +64,15 @@ static const int MAX_OUT = 0;	// maximum number of output streams
 /*
  * The private constructor - NEW, with user-configurable sample history.
  */
-es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_kilosamples)
+es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_kilosamples, enum es_queue_early_behaviors eb)
   : gr::sync_block ("es_sink",
            es_make_io_signature(insig.size(), insig),
 		   gr::io_signature::make (MIN_OUT, MAX_OUT, 0)), n_threads(_n_threads),
     d_nevents(0), sample_history_in_kilosamples(_sample_history_in_kilosamples),
     qq(100), dq(100), d_num_running_handlers(0),
     d_avg_ratio(tag::rolling_window::window_size=50),
-    d_avg_thread_utilization(tag::rolling_window::window_size=50)
+    d_avg_thread_utilization(tag::rolling_window::window_size=50),
+    es_event_acceptor(eb)
 {
     d_time = 0;
     d_history = 1024*sample_history_in_kilosamples;

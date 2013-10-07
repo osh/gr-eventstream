@@ -38,17 +38,17 @@
 #include <string.h>
 
 #define __STDC_FORMAT_MACROS
-//#define DEBUG(x) x
-#define DEBUG(x)
+#define DEBUG(x) x
+//#define DEBUG(x)
 
 /*
  * Create a new instance of es_source and return
  * a boost shared_ptr.  This is effectively the public constructor.
  */
 es_source_sptr 
-es_make_source (gr_vector_int out_sig, int nthreads)
+es_make_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_behaviors eb)
 {
-  return es_source_sptr (new es_source (out_sig, nthreads));
+  return es_source_sptr (new es_source (out_sig, nthreads, eb));
 }
 
 /*
@@ -70,14 +70,15 @@ unsigned long long es_source::time(){
 /*
  * The private constructor
  */
-es_source::es_source (gr_vector_int out_sig, int nthreads)
+es_source::es_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_behaviors eb)
   : gr::sync_block ("es_source",
     gr::io_signature::make (MIN_IN, MAX_IN, 0),
     es_make_io_signature (out_sig.size(), out_sig) ),
     d_maxlen(ULLONG_MAX),
     d_time(0),
     n_threads(nthreads), // poke this through as a constructor arg
-    qq(100), dq(100)
+    qq(100), dq(100),
+    es_event_acceptor(eb)
 {
     //event_queue->set_append_callback( self );
     // create and dispatch handler threads
@@ -91,8 +92,6 @@ es_source::es_source (gr_vector_int out_sig, int nthreads)
     f = std::bind1st(std::mem_fun(&es_source::cb), this);
     event_queue->set_append_callback( f );
 
-    // listen for handler set up
-    message_port_register_in(pmt::mp("schedule_event"));
 }
 
 
@@ -200,7 +199,7 @@ es_source::work (int noutput_items,
         } else {
             // event starts in the past (copy only the end region)
             input_offset = d_time - e_time;
-            DEBUG(printf("input_offset = %d\n", input_offset);)
+            DEBUG(printf("input_offset = %d (e_time = %lu, dtime = %lu)\n", input_offset, e_time, d_time);)
         }
 
 //        DEBUG(printf("space_avail = %d, e_length = %d, item_copy = %d -- ", space_avail, e_length, item_copy);)
@@ -274,7 +273,7 @@ es_source::work (int noutput_items,
             }
  
             // tag the new buffers onto the event
-            DEBUG(printf("register buffer.\n");a)
+            DEBUG(printf("register buffer.\n");)
             evt_c = register_buffer( evt_c, outbuf_list );
 
             // the original buffers are saved to make sure we reserve the pmt_blobs allocation!           

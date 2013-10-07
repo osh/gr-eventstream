@@ -49,7 +49,6 @@ namespace std {
 
 %include "es_handler.i"
 %include "es_event.i"
-%include "es_queue.i"
 %include "es_source.i"
 %include "es_sink.i"
 %include "es_common.i"

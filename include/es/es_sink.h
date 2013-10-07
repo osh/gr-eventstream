@@ -46,7 +46,7 @@ typedef accumulator_set<double, stats<tag::rolling_mean> > acc_avg_t;
 typedef boost::shared_ptr<es_sink> es_sink_sptr;
 
 es_sink_sptr es_make_sink (gr_vector_int insig, int n_threads,
-		int sample_history_in_kilosamples=64);
+		int sample_history_in_kilosamples=64, enum es_queue_early_behaviors = DISCARD);
 
 class es_sink :  public virtual gr::sync_block, public es_event_acceptor
 {
@@ -54,9 +54,9 @@ private:
 
   //New constructor with user-selectable sample history.
   friend es_sink_sptr es_make_sink (gr_vector_int insig, int n_threads,
-		  int sample_history_in_kilosamples);
+		  int sample_history_in_kilosamples, enum es_queue_early_behaviors);
   es_sink (gr_vector_int insig, int n_threads,
-		  int sample_history_in_kilosamples=64);  	// private constructor
+		  int sample_history_in_kilosamples=64, enum es_queue_early_behaviors = DISCARD);  	// private constructor
 
  public:
   ~es_sink ();	// public destructor

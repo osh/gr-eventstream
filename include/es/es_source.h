@@ -37,14 +37,14 @@ using namespace pmt;
 
 typedef boost::shared_ptr<es_source> es_source_sptr;
 
-es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads=1);
+es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads=1, enum es_queue_early_behaviors = DISCARD);
 
 class es_source : public virtual gr::sync_block, public es_event_acceptor
 {
 private:
-  friend es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads);
+  friend es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_behaviors);
 
-  es_source (gr_vector_int out_sig, int nthreads=1);  	// private constructor
+  es_source (gr_vector_int out_sig, int nthreads=1, enum es_queue_early_behaviors = DISCARD);  	// private constructor
 
  public:
   ~es_source ();	// public destructor
