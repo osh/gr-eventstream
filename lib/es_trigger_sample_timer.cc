@@ -40,8 +40,8 @@
  * a boost shared_ptr.  This is effectively the public constructor.
  */
 es_trigger_sample_timer_sptr 
-es_make_trigger_sample_timer (es_queue_sptr queue, std::string event_type, int itemsize, int period, int shift, int sched_dist, int event_length){
-  return es_trigger_sample_timer_sptr (new es_trigger_sample_timer (queue,event_type,itemsize,period,shift,sched_dist,event_length));
+es_make_trigger_sample_timer (int itemsize, int period, int shift, int sched_dist, int event_length){
+  return es_trigger_sample_timer_sptr (new es_trigger_sample_timer (itemsize,period,shift,sched_dist,event_length));
 }
 
 /*
@@ -58,14 +58,15 @@ static const int MAX_IN = 1;	// maximum number of input streams
 static const int MIN_OUT = 0;	// minimum number of output streams
 static const int MAX_OUT = 1;	// maximum number of output streams
 
-es_trigger_sample_timer::es_trigger_sample_timer (es_queue_sptr queue, std::string event_type, int itemsize, int period, int shift, int sched_dist, int event_length)
-  : d_period(period), d_shift(shift), d_queue(queue), d_evt_type(pmt::intern(event_type)),
+es_trigger_sample_timer::es_trigger_sample_timer (int itemsize, int period, int shift, int sched_dist, int event_length)
+  : d_period(period), d_shift(shift),
     d_time(0), d_evt_time(shift), d_evt_len(event_length), d_sched_dist(sched_dist),
     d_enabled(true),
-    gr::sync_block ( "es_trigger_sample_timer",
+    es_trigger ( "es_trigger_sample_timer",
         gr::io_signature::make(MIN_IN, MAX_IN,  itemsize),
         gr::io_signature::make(MIN_OUT,MAX_OUT, itemsize))
 {
+    register_handler("sample_timer_event");
 }
 
 es_trigger_sample_timer::~es_trigger_sample_timer ()
@@ -88,8 +89,8 @@ es_trigger_sample_timer::work (int noutput_items,
   while(d_evt_time < d_time + noutput_items + d_sched_dist){
     d_evt_time += d_period;
     if(d_enabled){
-        pmt_t evt = event_create( d_evt_type, d_evt_time, d_evt_len );
-        d_queue->add_event(evt);
+        pmt_t evt = event_create( pmt::mp("sample_timer_event"), d_evt_time, d_evt_len );
+        message_port_pub(pmt::mp("which_stream"), evt);
         }
     }  
   

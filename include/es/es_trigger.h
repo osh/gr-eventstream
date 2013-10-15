@@ -40,7 +40,7 @@ private:
 //  friend es_trigger_sptr es_make_trigger (pmt_t arb, es_queue_sptr queue, int itemsize, std::string type);
 
  protected:
-  es_trigger (pmt_t arb, es_queue_sptr queue, std::string type, gr::io_signature::sptr in_sig, gr::io_signature::sptr out_sig);  	// private constructor
+  es_trigger (std::string type, gr::io_signature::sptr in_sig, gr::io_signature::sptr out_sig);  	// private constructor
 
 
  public:
@@ -49,7 +49,24 @@ private:
   virtual int work (int noutput_items,
 	    gr_vector_const_void_star &input_items,
 	    gr_vector_void_star &output_items);
-    
+ 
+  
+  void register_handler(std::string name){
+//    std::cout << "Register_handler: " << name << "\n";
+    event_types.push_back(pmt::mp(name));
+    message_port_register_out(pmt::intern(name));
+    }
+
+  virtual bool start(){
+//        std::cout << "es_trigger::start() << " << name() << "\n";
+        for(int i=0; i< event_types.size(); i++){
+            pmt::pmt_t reg = pmt::cons(event_types[i], message_subscribers(event_types[i]));
+            reg = pmt::cons(pmt::mp("ES_REGISTER_HANDLER"), reg);
+            message_port_pub(pmt::mp("which_stream"), reg);
+//            std::cout << "sent registeration message: " << reg << "\n";
+            }
+        }
+  
   std::vector<pmt_t> event_types;
   pmt_t event_type(int idx);
   pmt_t arb;

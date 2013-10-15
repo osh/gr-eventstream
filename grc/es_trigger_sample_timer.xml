@@ -4,14 +4,8 @@
   <key>es_trigger_sample_timer</key>
   <category>EVENTSTREAM</category>
   <import>import es</import>
-  <make>es.trigger_sample_timer($queue, "SAMPLE_TIMER_EVENT", $type.size, $period, $shift, $sched_dist, $length )</make>
+  <make>es.trigger_sample_timer($type.size, $period, $shift, $sched_dist, $length )</make>
   
-  <param>
-    <name>Eventstream Queue</name>
-    <key>queue</key>
-    <value>variable_es_queue_0</value>
-    <type>raw</type>
-  </param>
   <param>
     <name>Event Length (samples)</name>
     <key>length</key>
@@ -80,7 +74,16 @@
     <optional>1</optional>
   </source>
 
-  <event_emit>SAMPLE_TIMER_EVENT</event_emit>
+  <source>
+    <name>which_stream</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
 
-
+  <source>
+    <name>sample_timer_event</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+  
 </block>

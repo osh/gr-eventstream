@@ -21,39 +21,37 @@
  */
 
 #include <es/es.h>
-//#include <es/es_handler_print.h>
+#include <es/es_handler_pdu.h>
 #include <stdio.h>
 
-es_handler_sptr es_make_handler_print(es_handler_print::DATATYPE type){
-    return es_handler_sptr(new es_handler_print(type));
+es_handler_sptr es_make_handler_pdu(es_handler_pdu::DATATYPE type){
+    return es_handler_sptr(new es_handler_pdu(type));
 }
 
-es_handler_print::es_handler_print( DATATYPE type ){
+es_handler_pdu::es_handler_pdu( DATATYPE type ){
+    message_port_register_out(pmt::mp("pdus_out"));
     d_type = type;
 }
 
-//void es_handler_print::handler( pmt_t msg, void* buf ){
-void es_handler_print::handler( pmt_t msg, gr_vector_void_star buf ){
-    event_print(msg);
+void es_handler_pdu::handler( pmt_t msg, gr_vector_void_star buf ){
+    if(!is_event(msg))
+        throw std::runtime_error("input to es_handler_pdu::handler(msg ...) msg must be an event!");
+    pmt::pmt_t meta = pmt::tuple_ref(msg,1);
     switch(d_type){
         case TYPE_F32:
             {
-            printf(" vector_contents = [");
             float* fbuf = (float*) buf[0];
-            for(int i=0; i<event_length(msg); i++){
-                printf("%f, ", fbuf[i]);
-                }
-            printf("]\n");
+            pmt::pmt_t vec = pmt::init_f32vector( event_length(msg), fbuf );
+            pmt::pmt_t pdu = pmt::cons( meta, vec );
+            message_port_pub(pmt::mp("pdus_out"), pdu);
             break;
             }
         case TYPE_C32:
             {
-            printf(" vector_contents = [");
-            gr_complex* fbuf = (gr_complex*) buf[0];
-            for(int i=0; i<event_length(msg); i++){
-                printf("%f+%fj, ", fbuf[i].real(), fbuf[i].imag());
-                }
-            printf("]\n");
+            gr_complex* cbuf = (gr_complex*) buf[0];
+            pmt::pmt_t vec = pmt::init_c32vector( event_length(msg), cbuf );
+            pmt::pmt_t pdu = pmt::cons( meta, vec );
+            message_port_pub(pmt::mp("pdus_out"), pdu);
             break;
             }
         default:

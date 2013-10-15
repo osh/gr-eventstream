@@ -32,14 +32,14 @@ using namespace pmt;
 
 typedef boost::shared_ptr<es_trigger_edge_f> es_trigger_edge_f_sptr;
 
-es_trigger_edge_f_sptr es_make_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback, int itemsize, int guard=1, std::string evt_type="EDGE_TRIGGER_EVENT");
+es_trigger_edge_f_sptr es_make_trigger_edge_f (float thresh, int length, int lookback, int itemsize, int guard=1);
 
 class es_trigger_edge_f : public es_trigger
 {
 private:
-  friend es_trigger_edge_f_sptr es_make_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback, int itemsize, int guard, std::string evt_type);
+  friend es_trigger_edge_f_sptr es_make_trigger_edge_f (float thresh, int length, int lookback, int itemsize, int guard);
 
-  es_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback, int itemsize, int guard=1, std::string evt_type="EDGE_TRIGGER_EVENT");  	// private constructor
+  es_trigger_edge_f (float thresh, int length, int lookback, int itemsize, int guard=1);  	// private constructor
   int d_guard;
   uint64_t d_lasttrigger;
 

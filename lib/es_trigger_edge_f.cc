@@ -39,8 +39,8 @@
  * a boost shared_ptr.  This is effectively the public constructor.
  */
 es_trigger_edge_f_sptr 
-es_make_trigger_edge_f (pmt_t arb, es_queue_sptr queue, float thresh, int length, int lookback, int itemsize, int guard, std::string evt_type) {
-  return es_trigger_edge_f_sptr (new es_trigger_edge_f (arb,queue,thresh,length,lookback,itemsize,guard,evt_type));
+es_make_trigger_edge_f (float thresh, int length, int lookback, int itemsize, int guard) {
+  return es_trigger_edge_f_sptr (new es_trigger_edge_f (thresh,length,lookback,itemsize,guard));
 
 }
 
@@ -58,22 +58,19 @@ static const int MAX_IN = 2;	// maximum number of input streams
 static const int MIN_OUT = 0;	// minimum number of output streams
 static const int MAX_OUT = 1;	// maximum number of output streams
 
-es_trigger_edge_f::es_trigger_edge_f (pmt_t _arb, es_queue_sptr _queue, float thresh, int length, int lookback, int itemsize, int guard, std::string evt_type)
+es_trigger_edge_f::es_trigger_edge_f (float thresh, int length, int lookback, int itemsize, int guard)
   : 
     d_guard(guard),
     d_lasttrigger(0),
     d_thresh(thresh), 
-    es_trigger (_arb, _queue, "es_trigger_edge_f",
+    es_trigger ("es_trigger_edge_f",
         gr::io_signature::make2(MIN_IN, MAX_IN, sizeof(float), itemsize),
         gr::io_signature::make(MIN_OUT,MAX_OUT, itemsize))
 {
-    printf("num event_types = %lu\n", event_types.size());
-    //event_types[0] = pmt_intern("EDGE_TRIGGER_EVENT");
-    event_types[0] = pmt::intern(evt_type);
+    message_port_register_out(pmt::intern("edge_event"));
     d_time = 0;
     d_length = length;
     d_lookback = lookback;
-
 }
 
 es_trigger_edge_f::~es_trigger_edge_f ()
@@ -117,7 +114,7 @@ es_trigger_edge_f::work (int noutput_items,
         std::cout << "creating event @ time " << event_time << ", length = " << d_length << "\n";
     
         // add event to our queue
-        event_queue->add_event(e1);
+        message_port_pub(pmt::mp("edge_event"), e1);
 
         // record our last trigger
         d_lasttrigger = event_time;

@@ -53,15 +53,13 @@ es_make_trigger (pmt_t arb, es_queue_sptr queue, int itemsize, std::string blkna
  * are connected to this block.  In this case, we accept
  * only 1 input and 1 output.
  */
-es_trigger::es_trigger (pmt_t _arb, es_queue_sptr _queue, std::string blkname, gr::io_signature::sptr in_sig, gr::io_signature::sptr out_sig)
+es_trigger::es_trigger (std::string blkname, gr::io_signature::sptr in_sig, gr::io_signature::sptr out_sig)
   : gr::sync_block (blkname.append("_trigger"),
 		   in_sig,
 		   out_sig),
-    arb(_arb), event_queue(_queue), d_time(0), d_length(1), d_lookback(0)
+    d_time(0), d_length(1), d_lookback(0)
 {
-    event_types.push_back( pmt::intern( "default_trigger_event" ) );
-    event_queue->print_queue();
-    //printf("done printing evt queue\n");
+    message_port_register_out(pmt::intern("which_stream"));
 }
 
 es_trigger::~es_trigger ()

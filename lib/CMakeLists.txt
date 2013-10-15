@@ -27,6 +27,7 @@ list(APPEND eventstream_sources
     es_handler.cc
     es_handler_flowgraph.cc
     es_handler_print.cc
+    es_handler_pdu.cc
     es_queue.cc
     es_sink.cc
     es_source.cc

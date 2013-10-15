@@ -23,19 +23,17 @@
 GR_SWIG_BLOCK_MAGIC(es,trigger_sample_timer);
 
 
-es_trigger_sample_timer_sptr es_make_trigger_sample_timer (es_queue_sptr queue, std::string event_type, int itemsize, int period, int shift, int sched_dist, int event_length);
+es_trigger_sample_timer_sptr es_make_trigger_sample_timer ( int itemsize, int period, int shift, int sched_dist, int event_length);
 
 class es_trigger_sample_timer : public gr::sync_block
 {
 private:
-  es_trigger_sample_timer (es_queue_sptr queue, std::string event_type, int itemsize, int period, int shift, int sched_dist, int event_length);
+  es_trigger_sample_timer ( int itemsize, int period, int shift, int sched_dist, int event_length);
 public:
-  es_queue_sptr d_queue;
   int d_period;
   int d_itemsize;
   int d_shift;
   int d_sched_dist;
-  pmt_t d_evt_type;
   int d_evt_len;
   uint64_t d_evt_time;
   uint64_t d_time;

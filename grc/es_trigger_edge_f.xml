@@ -4,27 +4,8 @@
   <key>es_trigger_edge_f</key>
   <category>EVENTSTREAM</category>
   <import>import es</import>
-  <make>es.trigger_edge_f($arb,$queue,$thresh,$length,$lookback,$type.size,$guard,$evtype)</make>
+  <make>es.trigger_edge_f($thresh,$length,$lookback,$type.size,$guard)</make>
   
-  <param>
-    <name>Event Type</name>
-    <key>evtype</key>
-    <value>trigger_1</value>
-    <type>string</type>
-  </param>
-
-  <param>
-    <name>Eventstream Arbiter</name>
-    <key>arb</key>
-    <value>variable_es_arb_0</value>
-    <type>raw</type>
-  </param>
-  <param>
-    <name>Eventstream Queue</name>
-    <key>queue</key>
-    <value>variable_es_queue_0</value>
-    <type>raw</type>
-  </param>
   <param>
     <name>Trigger Threshold</name>
     <key>thresh</key>
@@ -100,6 +81,10 @@
     <optional>1</optional>
   </source>
 
-  <event_emit>$evtype</event_emit>
+  <source>
+    <name>edge_event</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
 
 </block>

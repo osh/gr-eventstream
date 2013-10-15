@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<block>
+  <name>Handler to PDU</name>
+  <key>es_handler_pdu</key>
+  <category>EVENTSTREAM</category>
+  <import>import es</import>
+  <make>es.es_make_handler_pdu($dt)</make>
+  
+  <param>
+    <name>Data Type</name>
+    <key>dt</key>
+    <type>enum</type>
+    <option>
+        <name>Float 32</name>
+        <key>es.es_handler_print.TYPE_F32</key>
+    </option>
+    <option>
+        <name>Complex Float (2x32)</name>
+        <key>es.es_handler_print.TYPE_C32</key>
+    </option>
+  </param>
+
+  <sink>
+    <name>handle_event</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+
+  <source>
+    <name>pdus_out</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+
+  <doc>
+    This handler converts stream events into PDUs
+  </doc>
+
+</block>

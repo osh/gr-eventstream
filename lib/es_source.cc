@@ -199,7 +199,7 @@ es_source::work (int noutput_items,
         } else {
             // event starts in the past (copy only the end region)
             input_offset = d_time - e_time;
-            DEBUG(printf("input_offset = %d (e_time = %lu, dtime = %lu)\n", input_offset, e_time, d_time);)
+            DEBUG(printf("input_offset = %d (e_time = %lu, dtime = %llu)\n", input_offset, e_time, d_time);)
         }
 
 //        DEBUG(printf("space_avail = %d, e_length = %d, item_copy = %d -- ", space_avail, e_length, item_copy);)
