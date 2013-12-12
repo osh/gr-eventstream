@@ -79,6 +79,7 @@
     <type>message</type>
     <optional>1</optional>
   </sink>
+
   <source>
       <name>out</name>
       <type>$type</type>
@@ -86,5 +87,10 @@
       <nports>$num_streams</nports>
   </source>
 
+  <source>
+      <name>nproduced</name>
+      <type>message</type>
+      <optional>1</optional>
+  </source>
 
 </block>

@@ -98,6 +98,10 @@ es_source::es_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_b
     event_queue->register_event_type(pmt::mp("pdu_event"));
     ih = es_make_handler_insert_vector();
     event_queue->bind_handler( pmt::mp("pdu_event"), ih->to_basic_block() );
+
+    // message port that tracks the production rate
+    // for upstream schedulers
+    message_port_register_out(pmt::mp("nproduced"));
 }
 
 
@@ -332,5 +336,6 @@ es_source::work (int noutput_items,
   int produced = (d_maxlen < d_time + noutput_items)?d_maxlen - d_time:noutput_items;
 //  std::cout << "*** produced = " << produced << "\n";
   d_time += produced; // step time ptr along
+  message_port_pub(pmt::mp("nproduced"), pmt::mp(d_time));
   return produced;
 }
