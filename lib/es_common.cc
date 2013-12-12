@@ -109,14 +109,18 @@ void event_print( pmt_t event ){
 }
 
 bool is_event( pmt_t event ){
-    assert( pmt::is_tuple( event) );
+    if(!pmt::is_tuple(event))
+        return false;
+//    assert( pmt::is_tuple( event) );
 
     // get the tuple values out
     pmt_t msg_type = pmt::tuple_ref(event, 0);
     pmt_t msg_hash = pmt::tuple_ref(event, 1);
 
     // make sure the first tuple val identifies us as an es_event
-    assert(pmt::eq( msg_type, es::type_es_event) );
+    if(!pmt::eq(msg_type, es::type_es_event) )
+        return false;
+//    assert(pmt::eq( msg_type, es::type_es_event) );
     return true;
 }
 
@@ -129,9 +133,9 @@ pmt_t event_field( pmt_t event, pmt_t field ){
     assert(is_event(event));
     pmt_t msg_hash = pmt::tuple_ref(event, 1);
     pmt_t val = pmt::dict_ref( msg_hash, field, PMT_NIL );
-//    printf("event_field(%s) got val. <-- %s\n", pmt_write_string(field).c_str(), pmt_write_string(val).c_str() );
+//    printf("event_field(%s) got val. <-- %s\n", pmt::write_string(field).c_str(), pmt::write_string(val).c_str() );
     if( pmt::eq( PMT_NIL, val ) ){
-        printf("event_field(%s) got val. <-- %s\n", pmt::write_string(field).c_str(), pmt::write_string(val).c_str() );
+//        printf("event_field(%s) got val. <-- %s\n", pmt::write_string(field).c_str(), pmt::write_string(val).c_str() );
         event_print(event);
     }
     if( pmt::eq(PMT_NIL, val) ){

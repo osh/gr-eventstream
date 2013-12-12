@@ -44,13 +44,9 @@ void es_handler::handler_helper( pmt_t msg ){
 //    pmt::print(msg);
     
     pmt::pmt_t buf_arg = event_field(msg, es::event_buffer);
-//    std::cout << "buf: ";
-//    pmt::print(buf_arg);
 
     // calling handler
-//    std::cout << "calling handler ("<<this<<")...\n";
     handler( msg, get_buffer_ptr(buf_arg) );
-//    std::cout << "calling handler... returned\n";
 }
 
 es_handler::~es_handler(){

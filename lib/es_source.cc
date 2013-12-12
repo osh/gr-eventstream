@@ -33,13 +33,15 @@
 #include <es/es_common.h>
 #include <es/es_queue.h>
 #include <es/es.h>
+#include <es/es_handler_insert_vector.h>
 #include <gnuradio/io_signature.h>
+#include <boost/format.hpp>
 #include <stdio.h>
 #include <string.h>
 
 #define __STDC_FORMAT_MACROS
-#define DEBUG(x) x
-//#define DEBUG(x)
+//#define DEBUG(x) x
+#define DEBUG(x)
 
 /*
  * Create a new instance of es_source and return
@@ -92,6 +94,10 @@ es_source::es_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_b
     f = std::bind1st(std::mem_fun(&es_source::cb), this);
     event_queue->set_append_callback( f );
 
+    // bind event handler for standard inserters
+    event_queue->register_event_type(pmt::mp("pdu_event"));
+    ih = es_make_handler_insert_vector();
+    event_queue->bind_handler( pmt::mp("pdu_event"), ih->to_basic_block() );
 }
 
 
@@ -167,22 +173,33 @@ es_source::work (int noutput_items,
     if(e_time >= d_time + noutput_items){ // event starts after our current buffer area save for later
         break; // if event is in the future do nothing with it (since they are time ordered - we are done here)
     } else { // event starts in our buffer, or in the past
-        if(e_time < d_time){ // if event starts in the past handle the behavior appropriately
-            switch(event_queue->d_early_behavior){
-                case BALK:
-                    printf("source event arrived at the source work function late (evt=%lu, time=%llu)!\n",e_time, d_time);
-                    perror("");
-                    break;
-                case ASAP:
-                    // update event time to be as soon as possible
-                    evt = event_args_add(evt, pmt::intern("es::event_time") , pmt::from_uint64(d_time));
-                    e_time = event_time(evt);
-                    printf("updating event time.\n");
-            }
-        }
-        // remove the event we are handling
+
+        // remove the event from the queue we are handling it
         readylist.erase(readylist.begin()+i);
         i--;
+
+        if(e_time < d_time){ // if event starts in the past handle the behavior appropriately
+//            printf("e_time(%d) < d_time(%d)\n", e_time, d_time);
+//            printf("values { DISCARD: %d, BALK: %d, ASAP: %d }\n", DISCARD, BALK, ASAP);
+            switch(event_queue->d_early_behavior){
+                case DISCARD:
+                    // discard this event
+                    continue; //goto next queued event
+                case BALK:
+                    // throw an error
+                    throw std::runtime_error((boost::format("source event arrived at the source work function late (evt=%lu, time=%llu)!")%e_time%d_time).str());
+                case ASAP:
+                    // update event time to be as soon as possible
+                    //printf("ADDING TIME TO EVT!! %lu\n", d_time);
+                    evt = event_args_add(evt, pmt::intern("es::event_time") , pmt::from_uint64(d_time));
+                    e_time = event_time(evt);
+                    //printf("updating event time.\n");
+                    break;
+                default:
+                    std::cout <<  event_queue->d_early_behavior << "\n";
+                    throw std::runtime_error("unknown value for event_queue->d_early_behavior");
+            }
+        }
 
         // if we reach this point, we will be generating output from this event
         // compute portion of event to output
@@ -232,6 +249,7 @@ es_source::work (int noutput_items,
 
             // get reference to buffer stored in the event
             const char* ii = (const char*) pmt::blob_data(buf);
+            //printf("blob len = %d\n", pmt::blob_length(buf));
 
             // get reference to the output buffer
             char* oo = (char*) output_items[j];

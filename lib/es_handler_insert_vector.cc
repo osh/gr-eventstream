@@ -35,7 +35,7 @@ es_handler_insert_vector::es_handler_insert_vector( ){
 //void es_handler_insert_vector::handler( pmt_t msg, void* buf ){
 void es_handler_insert_vector::handler( pmt_t msg, gr_vector_void_star buf ){
 
-    std::cout << "es_handler_insert_vector::handler\n";
+//    std::cout << "es_handler_insert_vector::handler\n";
 
 //    printf("INSERT VECTOR HANDLER RUNNING!\n");
     pmt_t vector = event_field( msg, pmt::intern("vector") );
@@ -48,7 +48,7 @@ void es_handler_insert_vector::handler( pmt_t msg, gr_vector_void_star buf ){
 
     // Insert a 32 bit Floating Point single vector
     if( event_type_compare( msg, es::event_type_gen_vector_f ) ){
-        printf("handling vector_f event.\n");
+//        printf("handling vector_f event.\n");
         const float* data = pmt::f32vector_elements( vector, len );
         for(int j=0; j<buf.size(); j++){
             float* fbuf = (float*) buf[j];
@@ -61,7 +61,7 @@ void es_handler_insert_vector::handler( pmt_t msg, gr_vector_void_star buf ){
 
     // Insert a 32 bit Floating Point single COMPLEX vector
     if( event_type_compare( msg, es::event_type_gen_vector_c ) ){
-        printf("handling vector_c event.\n");
+//        printf("handling vector_c event.\n");
         const gr_complex* data = pmt::c32vector_elements( vector, len );
         for(int j=0; j<buf.size(); j++){
             gr_complex* cbuf = (gr_complex*) buf[j];
@@ -73,7 +73,7 @@ void es_handler_insert_vector::handler( pmt_t msg, gr_vector_void_star buf ){
     } else 
 
     if( event_type_compare( msg, es::event_type_gen_vector_b ) ){
-        printf("handling vector b event.\n");
+//        printf("handling vector b event.\n");
         const unsigned char* data = pmt::u8vector_elements( vector, len);
         for(int i=0; i<buf.size(); i++){
             memcpy( buf[i], data, len);
@@ -85,7 +85,8 @@ void es_handler_insert_vector::handler( pmt_t msg, gr_vector_void_star buf ){
     * this is the handler for n holdover bufs of different types
     * meanth for spanning multiple source buffers
     */
-    if( event_type_compare( msg, es::event_type_gen_vector ) ){
+    if( event_type_compare( msg, es::event_type_gen_vector ) ||
+        event_type_compare( msg, pmt::mp("pdu_event")) ){
         for(int i=0; i<buf.size(); i++){
             pmt_t buf_i = pmt::nth( i, vector );
             size_t blen = 0;

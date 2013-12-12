@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<block>
+  <name>Trigger PDU Event</name>
+  <key>es_pdu_trigger</key>
+  <category>EVENTSTREAM</category>
+  <import>import es</import>
+  <make>es.es_trigger_pdu()</make>
+  <sink>
+    <name>pdus</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  
+  <source>
+    <name>which_stream</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+
+  <source>
+    <name>pdu_event</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+
+
+  <doc>
+    This block generates events on pdu arrival
+  </doc>
+</block>

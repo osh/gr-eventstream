@@ -2,6 +2,7 @@
 #include <gnuradio/block_registry.h>
 
 void es_event_acceptor::schedule_event(pmt::pmt_t m){
+    //printf("schedule_event.\n");
 //    printf("es_event_acceptor::schedule_event() called with .,.. \n");
 //    pmt::print(m);
     if(pmt::is_pair(m) && (pmt::eqv(pmt::car(m), pmt::mp("ES_REGISTER_HANDLER")))){
@@ -9,8 +10,42 @@ void es_event_acceptor::schedule_event(pmt::pmt_t m){
         add_handlers(pmt::cdr(m));
         } else {
         // otherwise assume it is an event we are scheduling
-        event_queue->add_event(m);
+        if(is_event(m)){
+            event_queue->add_event(m);
+        } else {
+            // perform secondary check to see if it is a PDU we can work with
+            if(pmt::is_pair(m) &&
+                (pmt::is_uniform_vector(pmt::cdr(m)) && (pmt::is_null(pmt::car(m)) || pmt::is_dict(pmt::car(m)))) ){
+                    // we have a valid PDU
+
+                    // check for metadata keys "event_type" and "event_time" - default to "pdu_event" and 0UL
+                    pmt::pmt_t etype = pmt::is_dict(pmt::car(m))?
+                            pmt::dict_ref(pmt::car(m),pmt::mp("event_type"), pmt::mp("pdu_event"))
+                            :0UL;
+                    uint64_t time = pmt::is_dict(pmt::car(m))?
+                            pmt::to_uint64(pmt::dict_ref(pmt::car(m),pmt::mp("event_time"), pmt::from_uint64(0UL)))
+                            :0UL;
+                    uint64_t len = pmt::length(pmt::cdr(m));
+
+                    // create the event and register the vector with it
+                    pmt::pmt_t evt = event_create( etype, time, len );
+                    //pmt::pmt_t buf = pmt::make_u8vector(len*sizeof(gr_complex), 0x00);
+                    //pmt::pmt_t buf = pmt::cdr(m);
+                    pmt::pmt_t buf = pmt::make_blob( pmt::blob_data(pmt::cdr(m)) , len*sizeof(gr_complex) );
+                    pmt::pmt_t buf_list = pmt::list_add(pmt::PMT_NIL, buf);
+                    //printf("made blob - len = %d\n", len*sizeof(gr_complex));
+                    //evt = register_buffer( evt, buf_list );
+                    evt = event_args_add(evt, pmt::mp("vector"), buf_list);
+
+                    // post o the queue
+                    event_queue->add_event(evt);
+                    
+                } else {
+                    printf("es_event_acceptor received non event! discarding!\n");
+                }
+            }
         }
+    //printf("schedule_event done.\n");
     }
 
 // register a new event handler based on a recieved registration message

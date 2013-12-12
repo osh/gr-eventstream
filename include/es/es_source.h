@@ -46,6 +46,8 @@ private:
 
   es_source (gr_vector_int out_sig, int nthreads=1, enum es_queue_early_behaviors = DISCARD);  	// private constructor
 
+  es_handler_sptr ih;
+
  public:
   ~es_source ();	// public destructor
 
