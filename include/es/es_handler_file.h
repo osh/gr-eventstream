@@ -19,34 +19,31 @@
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
  */
+#ifndef EVENTSTREAM_HANDLER_FILE_H
+#define EVENTSTREAM_HANDLER_FILE_H
 
-%include <es_handler.i>
-// %template(es_handler_sptr) boost::shared_ptr<es_handler>;
+#include <pmt/pmt.h>
+#include <gnuradio/block.h>
 
-pmt_t pmt_float_vector( std::vector< float > vec );
-pmt_t pmt_complex_vector( std::vector< gr_complex > vec );
+using namespace pmt;
 
-pmt_t event_create_gen_vector_f ( unsigned long long time, pmt_t float_list );
-pmt_t event_create_gen_vector_c ( unsigned long long time, pmt_t cpx_list );
+#include <es/es_handler.h>
 
-class es_handler_insert_vector : public es_handler {
+
+class es_handler_file : public es_handler {
     public:
-        es_handler_insert_vector();
+        enum DATATYPE {   
+                      TYPE_F32,
+                      TYPE_C32
+            };
+        std::string d_path, d_desc;
+        es_handler_file( DATATYPE type, std::string path, std::string desc );   
         void handler( pmt_t msg, gr_vector_void_star buf );
+        DATATYPE d_type;
 };
 
-%include <es_handler_print.h>
-%include <es_handler_file.h>
+es_handler_sptr es_make_handler_file(es_handler_file::DATATYPE type, std::string path, std::string desc);
 
-es_handler_sptr es_make_handler_flowgraph(es_pyhandler_def* _pyhd, int pool_size);
-class es_handler_flowgraph : public es_handler {
-    public:
-        es_handler_flowgraph( es_pyhandler_def* _pyhd, int pool_size );
-        void handler( pmt_t msg, gr_vector_void_star buf );
-};
-
-
-
-
+#endif
 
 

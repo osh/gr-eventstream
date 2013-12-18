@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<block>
+  <name>Handler File</name>
+  <key>es_handler_file</key>
+  <category>EVENTSTREAM</category>
+  <import>import es</import>
+  <make>es.es_make_handler_file($dt, $path, $desc)</make>
+  
+  <param>
+    <name>Data Type</name>
+    <key>dt</key>
+    <type>enum</type>
+    <option>
+        <name>Float 32</name>
+        <key>es.es_handler_file.TYPE_F32</key>
+    </option>
+    <option>
+        <name>Complex Float (2x32)</name>
+        <key>es.es_handler_file.TYPE_C32</key>
+    </option>
+  </param>
+
+  <param>
+    <name>Base Path</name>
+    <key>path</key>
+    <value>/tmp</value>
+    <type>string</type>
+  </param>
+
+  <param>
+    <name>Descrption</name>
+    <key>desc</key>
+    <value>burst</value>
+    <type>string</type>
+  </param>
+
+  <sink>
+    <name>handle_event</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+
+  <doc>
+    This handler saves event data to files
+  </doc>
+
+</block>

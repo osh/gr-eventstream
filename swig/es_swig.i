@@ -37,6 +37,7 @@ namespace std {
 #include "es/es_handler.h"
 #include "es/es_handler_insert_vector.h"
 #include "es/es_handler_print.h"
+#include "es/es_handler_file.h"
 #include "es/es_handler_pdu.h"
 #include "es/es_handler_flowgraph.h"
 #include "es/es_trigger.h"
