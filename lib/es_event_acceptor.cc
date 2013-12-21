@@ -1,5 +1,6 @@
 #include <es/es_event_acceptor.h>
 #include <gnuradio/block_registry.h>
+#include <stdio.h>
 
 void es_event_acceptor::schedule_event(pmt::pmt_t m){
     //printf("schedule_event.\n");
