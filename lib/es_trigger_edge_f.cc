@@ -67,7 +67,7 @@ es_trigger_edge_f::es_trigger_edge_f (float thresh, int length, int lookback, in
         gr::io_signature::make2(MIN_IN, MAX_IN, sizeof(float), itemsize),
         gr::io_signature::make(MIN_OUT,MAX_OUT, itemsize))
 {
-    message_port_register_out(pmt::intern("edge_event"));
+    register_handler("edge_event");
     d_time = 0;
     d_length = length;
     d_lookback = lookback;
@@ -110,11 +110,11 @@ es_trigger_edge_f::work (int noutput_items,
         }
         //pmt_t e1 = event_create( event_type(0), d_time-d_lookback, d_length );
         uint64_t event_time = (i+d_time)>d_lookback?i+d_time-d_lookback:0;
-        pmt_t e1 = event_create( event_type(0), event_time, d_length );
+        pmt_t e1 = event_create( pmt::mp("edge_event"), event_time, d_length );
         std::cout << "creating event @ time " << event_time << ", length = " << d_length << "\n";
     
         // add event to our queue
-        message_port_pub(pmt::mp("edge_event"), e1);
+        message_port_pub(pmt::mp("which_stream"), e1);
 
         // record our last trigger
         d_lasttrigger = event_time;

@@ -21,7 +21,7 @@
   <param>
     <name>Event Lookback (samples)</name>
     <key>lookback</key>
-    <value>-10</value>
+    <value>0</value>
     <type>int</type>
   </param>
   <param>
@@ -78,6 +78,12 @@
   <source>
     <name>passthru_out</name>
     <type>$type</type>
+    <optional>1</optional>
+  </source>
+
+  <source>
+    <name>which_stream</name>
+    <type>message</type>
     <optional>1</optional>
   </source>
 
