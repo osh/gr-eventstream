@@ -1,4 +1,4 @@
 
-class es_trigger_edge_f : public gr::sync_block {
+class es_trigger : public gr::sync_block {
 
 };
