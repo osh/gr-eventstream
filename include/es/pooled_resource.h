@@ -10,6 +10,12 @@
 #include <map>
 #include <vector>
 
+/* 
+ * this class pools a single resource type
+ * providing the items from the pool when available
+ * and NULL if all the pool items have been claimed
+ * it does no allocation for you
+ */
 template <class T>
 class pooled_resource {
     public:
@@ -42,9 +48,23 @@ class pooled_resource {
         boost::mutex _populate_lock;
 };
 
+/*
+ * This class establishes a map of resource pools indexed by IDX
+ * it takes a factory boost::function argument to a function that will produce one of
+ * the pool items in a boost::shared_ptr for you
+ * and then allows arbitrarying querying of n types of items that will be allocated for you on demand
+ */
 template <class T, class IDX=int>
 class managed_resource_pool {
     public:
+ managed_resource_pool(int max_size=8, int initial_size=0, std::vector<IDX> pre_alloc_list = std::vector<IDX>() ) :
+    d_factory(boost::bind(&managed_resource_pool<T,IDX>::default_factory, this, _1)),
+    d_initial(initial_size),
+    d_max(max_size)
+    {
+        ensure_allocated(pre_alloc_list);
+        _map_lock.unlock();
+    }
  managed_resource_pool(boost::function<boost::shared_ptr<T> (IDX) > factory, int max_size=8, int initial_size=0, std::vector<IDX> pre_alloc_list = std::vector<IDX>() ) :
     d_factory(factory),
     d_initial(initial_size),     
@@ -87,4 +107,15 @@ class managed_resource_pool {
     int d_max;
 };
 
+/*
+ * This provides an interface to using managed resource pools where you do not need to write your own
+ * factory function, presuming the constructor for the pooled objects takes IDX directly as an argument
+ */
+template <class T, class IDX=int>
+class managed_resource_pool_nofactory : public managed_resource_pool<T,IDX> {
+ public:
+  managed_resource_pool_nofactory(int max_size=8, int initial_size=0, std::vector<IDX> pre_alloc_list = std::vector<IDX>() ) :
+    managed_resource_pool<T,IDX>( boost::bind( &managed_resource_pool_nofactory::default_factory, this, _1), max_size, initial_size, pre_alloc_list ) { }
+    boost::shared_ptr<T> default_factory(IDX i){ return boost::shared_ptr<T>(new T(i)); }
+};
 #endif
