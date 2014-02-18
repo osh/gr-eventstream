@@ -42,7 +42,7 @@ private:
 //  friend es_trigger_sptr es_make_trigger (pmt_t arb, es_queue_sptr queue, int itemsize, std::string type);
 
  protected:
-  es_trigger (std::string type, gr::io_signature::sptr in_sig, gr::io_signature::sptr out_sig);  	// private constructor
+  es_trigger (std::string type, gr::io_signature::sptr in_sig = gr::io_signature::make(0,0,0), gr::io_signature::sptr out_sig = gr::io_signature::make(0,0,0));  	// private constructor
 
 
  public:
