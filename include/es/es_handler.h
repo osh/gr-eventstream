@@ -24,7 +24,7 @@
 
 #include <pmt/pmt.h>
 #include <gnuradio/msg_accepter.h>
-#include <gnuradio/block.h>
+#include <gnuradio/sync_block.h>
 
 using namespace pmt;
 
@@ -33,14 +33,18 @@ class es_handler;
 
 typedef boost::shared_ptr<es_handler> es_handler_sptr;
 
-class es_handler : public gr::block
+class es_handler : public gr::sync_block
 {
     public:
-        es_handler(std::string name = std::string("es_handler"));
+        es_handler(std::string name = std::string("es_handler"), gr::io_signature::sptr in_sig = gr::io_signature::make(0,0,0), gr::io_signature::sptr out_sig = gr::io_signature::make(0,0,0));
         gr_vector_void_star get_buffer_ptr(pmt_t buffer_pmt);
         void handler_helper( pmt_t msg );
         virtual void handler(pmt_t msg, gr_vector_void_star buf);
         ~es_handler();
+        virtual int work (int noutput_items,
+            gr_vector_const_void_star &input_items,
+            gr_vector_void_star &output_items);
+
 };
 
 #endif

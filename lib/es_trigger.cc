@@ -54,7 +54,7 @@ es_make_trigger (pmt_t arb, es_queue_sptr queue, int itemsize, std::string blkna
  * only 1 input and 1 output.
  */
 es_trigger::es_trigger (std::string blkname, gr::io_signature::sptr in_sig, gr::io_signature::sptr out_sig)
-  : gr::sync_block (blkname.append("_trigger"),
+  : es_handler (blkname.append("_trigger"),
 		   in_sig,
 		   out_sig),
     d_time(0), d_length(1), d_lookback(0)
@@ -72,8 +72,7 @@ es_trigger::work (int noutput_items,
 			gr_vector_void_star &output_items)
 {
     // never call the base class directly
-    printf("es_trigger::work() accessed directly (should be derived instead!)\n");
-    assert(0);
+    throw std::runtime_error("es_trigger::general_work() accessed directly, please override!\n");
 }
 
 pmt_t es_trigger::event_type(int idx){

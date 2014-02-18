@@ -30,10 +30,10 @@ pmt_t pmt_complex_vector( std::vector< gr_complex > vec ){
     return pmt::init_c32vector(vec.size(), &vec[0]);
 }
 
-es_handler::es_handler(std::string name)
-    : gr::block(name, 
-        gr::io_signature::make(0,0,0),
-        gr::io_signature::make(0,0,0))
+es_handler::es_handler(std::string name,  gr::io_signature::sptr in_sig, gr::io_signature::sptr out_sig)
+    : gr::sync_block(name, 
+        in_sig,
+        out_sig)
 {
     message_port_register_in(pmt::mp("handle_event"));
 }
@@ -52,6 +52,17 @@ void es_handler::handler_helper( pmt_t msg ){
 es_handler::~es_handler(){
 //    printf("Handler Base Class destructing (%x)!\n",this);
 }
+
+// default work implementation -- 
+int
+es_handler::work (int noutput_items,
+            gr_vector_const_void_star &input_items,
+            gr_vector_void_star &output_items)
+{
+    // never call the base class directly
+    throw std::runtime_error("es_handler::general_work() accessed directly, please override if using stream ports for anything!\n");
+}
+
 
 gr_vector_void_star es_handler::get_buffer_ptr(pmt_t buffer_arg){
     int nvec = pmt::length(buffer_arg);

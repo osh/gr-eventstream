@@ -25,6 +25,7 @@
 #include <gnuradio/sync_block.h>
 #include <pmt/pmt.h>
 #include <es/es_queue.h>
+#include <es/es_handler.h>
 #include <string>
 
 class es_trigger;
@@ -34,7 +35,8 @@ using namespace pmt;
 
 //es_trigger_sptr es_make_trigger (pmt_t arb, es_queue_sptr queue, int itemsize, std::string type);
 
-class es_trigger : public gr::sync_block
+//class es_trigger : public gr::sync_block
+class es_trigger : public es_handler
 {
 private:
 //  friend es_trigger_sptr es_make_trigger (pmt_t arb, es_queue_sptr queue, int itemsize, std::string type);
