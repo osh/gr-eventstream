@@ -82,16 +82,16 @@
   </param>
 
   <sink>
+    <name>in</name>
+    <type>$type</type>
+    <vlen>1</vlen>
+    <nports>$num_streams</nports>
+  </sink>
+
+  <sink>
     <name>schedule_event</name>
     <type>message</type>
     <optional>1</optional>
   </sink>
-    <sink>
-      <name>in</name>
-      <type>$type</type>
-      <vlen>1</vlen>
-      <nports>$num_streams</nports>
-    </sink>
-
 
 </block>
