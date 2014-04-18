@@ -232,7 +232,7 @@ int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, e
                 d_num_discarded++;
                 printf("**WARNING** discarding bad event\n");
                 printf("function call mandates min=%llu & max=%llu\n", min, max);
-                printf("however event[0] start = %llu, end = %llu\n", event_queue[0]->time(), event_queue[0]->time() + event_queue[0]->length());
+                printf("however event[0] start = %llu, end = %llu, type = %s\n", event_queue[0]->time(), event_queue[0]->time() + event_queue[0]->length(), event_type(event_queue[0]->event).c_str());
                 event_queue.erase(event_queue.begin());
                 d_num_events_removed++;
                 queue_lock.unlock();
