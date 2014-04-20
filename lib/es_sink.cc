@@ -83,7 +83,10 @@ es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_ki
         boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(pmt::PMT_NIL, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers) );
         threadpool.push_back( th );
     }
-//    set_output_multiple(100000);
+
+    // message port that tracks the production rate
+    // for upstream schedulers
+    message_port_register_out(pmt::mp("nconsumed"));
 }
 
 /*
@@ -424,6 +427,7 @@ es_sink::work (int noutput_items,
 //    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 
   d_time += nconsume;
+  message_port_pub(pmt::mp("nconsumed"), pmt::mp(d_time));
   return nconsume;
 }
 

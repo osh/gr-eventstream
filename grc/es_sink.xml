@@ -31,6 +31,11 @@
             <opt>size:gr.sizeof_short</opt>
         </option>
         <option>
+            <name>Complex Short</name>
+            <key>sc16</key>
+            <opt>size:2*gr.sizeof_short</opt>
+        </option>
+        <option>
             <name>Byte</name>
             <key>byte</key>
             <opt>size:gr.sizeof_char</opt>
@@ -93,5 +98,11 @@
     <type>message</type>
     <optional>1</optional>
   </sink>
+
+  <source>
+    <name>nconsumed</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
 
 </block>
