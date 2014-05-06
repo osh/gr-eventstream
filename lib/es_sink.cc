@@ -67,13 +67,15 @@ static const int MAX_OUT = 0;	// maximum number of output streams
 es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_kilosamples, enum es_queue_early_behaviors eb)
   : gr::sync_block ("es_sink",
            es_make_io_signature(insig.size(), insig),
-		   gr::io_signature::make (MIN_OUT, MAX_OUT, 0)), n_threads(_n_threads),
+		   gr::io_signature::make (MIN_OUT, MAX_OUT, 0)), 
+    n_threads(_n_threads),
     d_nevents(0), sample_history_in_kilosamples(_sample_history_in_kilosamples),
     qq(100), dq(100), d_num_running_handlers(0),
     d_avg_ratio(tag::rolling_window::window_size=50),
-    d_avg_thread_utilization(tag::rolling_window::window_size=50),
-    es_event_acceptor(eb)
+    d_avg_thread_utilization(tag::rolling_window::window_size=50)
 {
+    event_acceptor_setup(eb);
+
     d_time = 0;
     d_history = 1024*sample_history_in_kilosamples;
     set_history(d_history);
@@ -87,8 +89,13 @@ es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_ki
     // message port that tracks the production rate
     // for upstream schedulers
     message_port_register_out(pmt::mp("nconsumed"));
-}
+    message_port_register_out(pmt::mp("pdu_event"));
 
+    // set up our special pdu handler
+    event_queue->register_event_type("pdu_event");
+    event_queue->bind_handler("pdu_event", this);
+}
+ 
 /*
  * Our virtual destructor.
  */
@@ -104,6 +111,33 @@ es_sink::~es_sink ()
         threadpool[i]->stop();
     }
 }
+
+
+void 
+es_sink::handler(pmt_t msg, gr_vector_void_star buf){
+
+    pmt::pmt_t meta = pmt::tuple_ref(msg, 1);
+    pmt::pmt_t vec = pmt::make_u8vector(100, 1);
+
+    int len = event_length(msg);
+
+    if(buf.size() < 1 || buf.size() > 1){
+        throw std::runtime_error("TODO: update es_sink to handle bufs != 1");
+        }
+
+    switch(input_signature()->sizeof_stream_item(0)){
+        case sizeof(std::complex<int16_t>):
+            vec = pmt::init_s16vector(len*2, (const int16_t*) buf[0]);
+            break;
+        case sizeof(std::complex<float>):
+            vec = pmt::init_c32vector(len, (const gr_complex*) buf[0]);
+            break;
+        default:
+            throw std::runtime_error("TODO: update es_sink for unknown item size to pdu");
+        }
+
+    message_port_pub(pmt::mp("pdu_event"), pmt::cons(meta, vec));
+    }
 
 void
 es_sink::setup_rpc()

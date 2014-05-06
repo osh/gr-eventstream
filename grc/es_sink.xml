@@ -104,5 +104,11 @@
     <type>message</type>
     <optional>1</optional>
   </source>
+  <source>
+    <name>pdu_event</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+
 
 </block>

@@ -28,7 +28,11 @@ es_handler_sptr es_make_handler_pdu(es_handler_pdu::DATATYPE type){
     return es_handler_sptr(new es_handler_pdu(type));
 }
 
-es_handler_pdu::es_handler_pdu( DATATYPE type ){
+es_handler_pdu::es_handler_pdu( DATATYPE type ) :
+    gr::sync_block ("es_sink",
+            gr::io_signature::make(0,0,0),
+            gr::io_signature::make(0,0,0))
+{ 
     message_port_register_out(pmt::mp("pdus_out"));
     d_type = type;
 }
@@ -57,7 +61,6 @@ void es_handler_pdu::handler( pmt_t msg, gr_vector_void_star buf ){
         default:
             printf("unknown vector content type.\n");
         }
-
 }
 
 

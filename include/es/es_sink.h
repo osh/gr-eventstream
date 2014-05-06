@@ -48,7 +48,8 @@ typedef boost::shared_ptr<es_sink> es_sink_sptr;
 es_sink_sptr es_make_sink (gr_vector_int insig, int n_threads,
 		int sample_history_in_kilosamples=64, enum es_queue_early_behaviors = DISCARD);
 
-class es_sink :  public virtual gr::sync_block, public es_event_acceptor
+//class es_sink :  public virtual gr::sync_block, public es_event_acceptor
+class es_sink :  public virtual es_handler, public virtual es_event_acceptor
 {
 private:
 
@@ -57,6 +58,7 @@ private:
 		  int sample_history_in_kilosamples, enum es_queue_early_behaviors);
   es_sink (gr_vector_int insig, int n_threads,
 		  int sample_history_in_kilosamples=64, enum es_queue_early_behaviors = DISCARD);  	// private constructor
+  void handler(pmt_t msg, gr_vector_void_star buf);
 
  public:
   ~es_sink ();	// public destructor

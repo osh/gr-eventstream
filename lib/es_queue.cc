@@ -194,23 +194,26 @@ void es_queue::bind_handler(pmt_t type, gr::basic_block_sptr handler){
     bind_handler( pmt::symbol_to_string(type), handler);
     }
 
-void es_queue::bind_handler(std::string type, gr::basic_block_sptr handler){
-
-
-    es_handler_sptr h = boost::dynamic_pointer_cast<es_handler>(handler);
-    pmt_t handler_pmt = pmt::make_any( (es_handler*) h.get() );
+void es_queue::bind_handler(std::string type, es_handler* handler){
+    pmt_t handler_pmt = pmt::make_any( handler );
 
     pmt_t type_pmt = pmt::intern(type);
 
     DEBUG(printf("EVENTSTREAM_QUEUE::BIND_HANDLER (%s, %x).\n",type.c_str(), handler.get());)
 
-    assert(pmt::dict_has_key(bindings, type_pmt));
+    if(not pmt::dict_has_key(bindings, type_pmt))
+        throw std::runtime_error("attempt to bind handler for unregistered event type");
 
     DEBUG(printf("Registering new handler for evt type %s\n", type.c_str());)
     pmt_t handler_list = pmt::dict_ref(bindings, type_pmt, PMT_NIL);
     handler_list = pmt::list_add(handler_list, handler_pmt);
     bindings = pmt::dict_add(bindings, type_pmt, handler_list);
 
+    }
+
+void es_queue::bind_handler(std::string type, gr::basic_block_sptr handler){
+    es_handler_sptr h = boost::dynamic_pointer_cast<es_handler>(handler);
+    bind_handler(type, (es_handler*) h.get() );
 }
 
 

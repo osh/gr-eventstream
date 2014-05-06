@@ -63,6 +63,7 @@ class es_queue {
 
 
         void bind_handler(std::string type, gr::basic_block_sptr handler);
+        void bind_handler(std::string type, es_handler* handler);
         void bind_handler(pmt_t type, gr::basic_block_sptr handler);
 
         void protect_handler(es_handler_sptr h){ protected_handler.push_back(h); }
