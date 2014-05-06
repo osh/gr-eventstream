@@ -20,38 +20,43 @@ void es_event_acceptor::schedule_event(pmt::pmt_t m){
                 (pmt::is_null(pmt::car(m)) || pmt::is_dict(pmt::car(m))) ){
                     // we have a PDUish thing
 
-                    if(pmt::is_uniform_vector(pmt::cdr(m))){
-                    // we have a pdu with data
+                    pmt::pmt_t etype = pmt::dict_ref(pmt::car(m),pmt::mp("event_type"), pmt::mp("pdu_event"));
+                    uint64_t time = pmt::to_uint64(pmt::dict_ref(pmt::car(m),pmt::mp("event_time"), pmt::from_uint64(0UL)));
+                    uint64_t len;
+                    pmt::pmt_t buf_list;
 
-                    // check for metadata keys "event_type" and "event_time" - default to "pdu_event" and 0UL
-                    pmt::pmt_t etype = pmt::is_dict(pmt::car(m))?
-                            pmt::dict_ref(pmt::car(m),pmt::mp("event_type"), pmt::mp("pdu_event"))
-                            :0UL;
-                    uint64_t time = pmt::is_dict(pmt::car(m))?
-                            pmt::to_uint64(pmt::dict_ref(pmt::car(m),pmt::mp("event_time"), pmt::from_uint64(0UL)))
-                            :0UL;
-                    uint64_t len = pmt::length(pmt::cdr(m));
-
-                    // create the event and register the vector with it
-                    pmt::pmt_t evt = event_create( etype, time, len );
-                    pmt::pmt_t buf = pmt::make_blob( pmt::blob_data(pmt::cdr(m)) , len*sizeof(gr_complex) );
-                    pmt::pmt_t buf_list = pmt::list_add(pmt::PMT_NIL, buf);
-                    evt = event_args_add(evt, pmt::mp("vector"), buf_list);
-
-                    // post to the queue
-                    event_queue->add_event(evt);
-
-                    } else if(pmt::is_null(pmt::cdr(m))) {
-                    // this must be a sink event (metadata pdu with null vector)
-                        pmt::pmt_t etype = pmt::dict_ref(pmt::car(m),pmt::mp("event_type"), pmt::mp("pdu_event"));
-                        uint64_t time = pmt::to_uint64(pmt::dict_ref(pmt::car(m),pmt::mp("event_time"), pmt::from_uint64(0UL)));
-                        uint64_t len = pmt::to_uint64(pmt::dict_ref(pmt::car(m),pmt::mp("event_length"), pmt::from_uint64(0UL)));
-                        pmt::pmt_t evt = event_create( etype, time, len );
-                        event_queue->add_event(evt);
-
+                    if(pmt::is_uniform_vector(pmt::cdr(m))){    // often a source event
+                        len = pmt::length(pmt::cdr(m));
+                        // create the event and register the vector with it
+                        pmt::pmt_t buf = pmt::make_blob( pmt::blob_data(pmt::cdr(m)) , len*sizeof(gr_complex) );
+                        buf_list = pmt::list_add(pmt::PMT_NIL, buf);
+                    } else if(pmt::is_null(pmt::cdr(m))) {      // often a sink event
+                        // this must be a sink event (metadata pdu with null vector)
+                        len = pmt::to_uint64(pmt::dict_ref(pmt::car(m),pmt::mp("event_length"), pmt::from_uint64(0UL)));
                     } else {
                         printf("es_event_acceptor received an almost-pdu! discarding!\n");
+                        return;
                     }
+
+                    // create the event
+                    pmt::pmt_t evt = event_create( etype, time, len );
+
+                    //register buffer if we have one
+                    if(buf_list.get())
+                        evt = event_args_add(evt, pmt::mp("vector"), buf_list);
+
+                    // copy any other keys in by default
+                    pmt::pmt_t keys = pmt::dict_keys(pmt::car(m));
+                    while(pmt::is_pair(keys)){
+                        // skip known keys
+                        if(pmt::eqv(keys,pmt::mp("event_time")) || pmt::eqv(keys,pmt::mp("event_length")) || pmt::eqv(keys,pmt::mp("event_type")))
+                            continue;
+                        evt = event_args_add(evt, pmt::car(keys), pmt::dict_ref(pmt::car(m),pmt::car(keys),pmt::PMT_NIL));
+                        keys = pmt::cdr(keys);
+                        }
+
+                    // add to the queue
+                    event_queue->add_event(evt);
                     
                 } else {
                     printf("es_event_acceptor received non event! discarding!\n");
