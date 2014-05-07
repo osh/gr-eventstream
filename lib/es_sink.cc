@@ -72,7 +72,8 @@ es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_ki
     d_nevents(0), sample_history_in_kilosamples(_sample_history_in_kilosamples),
     qq(100), dq(100), d_num_running_handlers(0),
     d_avg_ratio(tag::rolling_window::window_size=50),
-    d_avg_thread_utilization(tag::rolling_window::window_size=50)
+    d_avg_thread_utilization(tag::rolling_window::window_size=50),
+    latest_tags(pmt::make_dict())
 {
     event_acceptor_setup(eb);
 
@@ -356,6 +357,13 @@ es_sink::work (int noutput_items,
 			gr_vector_const_void_star &input_items,
 			gr_vector_void_star &output_items)
 {
+  // keep up with the latest tags
+  std::vector <gr::tag_t> v;
+  get_tags_in_range(v,0,nitems_read(0),nitems_read(0)+noutput_items);
+  for(int i=0; i<v.size(); i++){
+    latest_tags = pmt::dict_add(latest_tags, v[i].key, v[i].value);
+    }
+
   char *in = (char*) input_items[0];
 
   //printf("entered es_sink::work()\n");
@@ -395,6 +403,7 @@ es_sink::work (int noutput_items,
 
 //    printf("es_sink::work()::fetched event successfully (%llu --> %llu)\n",min_time,max_time);
     pmt_t event = eh->event;
+    event = pmt::make_tuple( es::type_es_event, pmt::dict_update( pmt::tuple_ref( event, 1), latest_tags ) );
     uint64_t etime = ::event_time(eh->event);
 
     // compute the local buffer offset of the event

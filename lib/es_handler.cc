@@ -35,7 +35,7 @@ es_handler::es_handler(std::string name,  gr::io_signature::sptr in_sig, gr::io_
         in_sig,
         out_sig)
 {
-    printf("es_handler constructor running (this = %x)\n",this);
+    //printf("es_handler constructor running (this = %x)\n",this);
     message_port_register_in(pmt::mp("handle_event"));
 }
 
