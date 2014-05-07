@@ -403,7 +403,6 @@ es_sink::work (int noutput_items,
 
 //    printf("es_sink::work()::fetched event successfully (%llu --> %llu)\n",min_time,max_time);
     pmt_t event = eh->event;
-    event = pmt::make_tuple( es::type_es_event, pmt::dict_update( pmt::tuple_ref( event, 1), latest_tags ) );
     uint64_t etime = ::event_time(eh->event);
 
     // compute the local buffer offset of the event
@@ -426,6 +425,7 @@ es_sink::work (int noutput_items,
     DEBUG(printf("reg buffer: ");)
     DEBUG(pmt::print(buf_list);)
     DEBUG(printf("\n");)
+    event = pmt::make_tuple( es::type_es_event, pmt::dict_update( pmt::tuple_ref( event, 1), latest_tags ) );
     event = register_buffer( event, buf_list );
     eh->event = event;
 
