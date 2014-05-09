@@ -40,11 +40,15 @@ if(NOT CPPUNIT_FOUND)
     message(FATAL_ERROR "CPPUNIT NOT FOUND!")
 endif(NOT CPPUNIT_FOUND)
 
-find_package(ICE)
+find_package(ICE-3.5)
+if (NOT ICE_FOUND)
+    find_package(ICE)
+endif()
+
 if (NOT ICE_FOUND)
     message(STATUS "ICE not found, GR_CTRLPORT will not be enabled.")
 else()
-    message(STATUS "ICE found, enabling GR_CTRLPORT.")
+    message(STATUS "Enabling GR_CTRLPORT.")
     add_definitions(-DGR_CTRLPORT)
 endif()
 
