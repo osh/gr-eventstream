@@ -20,11 +20,13 @@
 # Boston, MA 02110-1301, USA.
 
 from gnuradio import gr, gr_unittest, blocks
+import pmt
 import sys;
 sys.path.append("../swig/");
 sys.path.append("../swig/.libs/");
 import es_swig as es;
 import random;
+import numpy;
 
 class qa_es (gr_unittest.TestCase):
 
@@ -61,59 +63,35 @@ class qa_es (gr_unittest.TestCase):
         print len(snk.data());
         self.assertEqual( len(snk.data()), 20);
 
-
     
-#    def test_003_es_flowgraph(self):
-#        tb = gr.top_block();
-#
-#        data = [1,2,3,4];
-#        src = gr.vector_source_c(data);
-# 
-#        e1 = es.event_create("Evt1", 2,1);
-#        
-#        hb = gr.hier_block2("blk", gr.io_signature(0,0,0), gr.io_signature(0,0,0));
-#        h1 = es.es_handler_flowgraph( 1, hb);
- 
+    def test_003_es_sink (self):
 
-#    def test_004_es_loopback(self):
-#        tb = gr.top_block();
-#        arb = es.es_make_arbiter();
-#        queue = es.queue();
-#        queue_snk = es.queue();
-#        
-#        max_idx = 10000;
-#
-#        sig = [gr.sizeof_float];
-#        src = es.source(arb, queue, sig );
-#        src.set_max(max_idx);
-# 
-#        count = 0;
-#        xloc = 0;
-#        firstiter = True;
-#
-#        while xloc < max_idx:
-#            count = float(count + 1);
-#            xloc = xloc + random.randint(1,50);
-#            dvec  = [];
-#            for i in range(1,10):
-#                dvec.append(count);
-#            vec = es.pmt_float_vector( dvec );
-#            e1 = es.event_create_gen_vector_f( xloc, vec );
-#            queue.add_event( e1 );
-#    
-#        print "queue adding done"
-#           
-#        snk = gr.vector_sink_f();
-#        #snk = es.sink(arb, queue_snk, sig);      
-#        tb.connect(src,snk);
-# 
-#        print "Total Events = %d"%(count);
-#
-#        tb.run();
-#        print snk.data();
-#           
-            
-            
+        iv = [0,1,2,3,4,5,6,7,8,9];
+        src = blocks.vector_source_f(iv, repeat=True);
+        hd = blocks.head(gr.sizeof_float, 10000);
+        snk = es.sink([gr.sizeof_float], 1);
+        t = es.trigger_sample_timer(gr.sizeof_float, 10, 5, 10, 10);
+        tb = gr.top_block();
+        pduh = es.es_make_handler_pdu(es.es_handler_print.TYPE_F32);
+        msgdb = blocks.message_debug()
+        tb.connect(src, hd, t, snk);   
+        tb.msg_connect( t, "which_stream", snk, "schedule_event" )
+        tb.msg_connect( t, "sample_timer_event", pduh, "handle_event" )
+        tb.msg_connect( pduh, "pdus_out", msgdb, "store" )
+        tb.run();
+ 
+        # expected output of each event in the periodic sequence   
+        sv = numpy.array( iv[5:] + iv[:5], dtype=numpy.float );
+
+        # verify each received message
+        nm = msgdb.num_messages();
+        print "nm = %d"%(nm);
+        for i in range(0, nm):
+            m = msgdb.get_message(i);
+            mp = pmt.to_python(pmt.cdr(m));
+            print mp;
+            self.assertEqual( sv.all(), mp.all() );
+
 
 
 if __name__ == '__main__':

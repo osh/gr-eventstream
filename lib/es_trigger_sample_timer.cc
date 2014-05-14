@@ -61,7 +61,7 @@ static const int MAX_OUT = 1;	// maximum number of output streams
 es_trigger_sample_timer::es_trigger_sample_timer (int itemsize, int period, int shift, int sched_dist, int event_length)
   : d_period(period), d_shift(shift),
     d_time(0), d_evt_time(shift), d_evt_len(event_length), d_sched_dist(sched_dist),
-    d_enabled(true),
+    d_enabled(true), d_itemsize(itemsize),
     gr::sync_block("es_trigger_sample_timer",
         gr::io_signature::make(MIN_IN, MAX_IN,  itemsize),
         gr::io_signature::make(MIN_OUT,MAX_OUT, itemsize))
