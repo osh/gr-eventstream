@@ -31,6 +31,9 @@
 
 
 es_handler_flowgraph::es_handler_flowgraph( es_pyhandler_def* _pyhd, int pool_size ) : 
+    gr::sync_block ("es_handler_flowgraph",
+            gr::io_signature::make(0,0,0),
+            gr::io_signature::make(0,0,0)),
     pyhd(_pyhd),
     d_free_pyhandlers(100)
 {

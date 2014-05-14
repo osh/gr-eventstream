@@ -28,7 +28,11 @@ es_handler_sptr es_make_handler_file(es_handler_file::DATATYPE type, std::string
     return es_handler_sptr(new es_handler_file(type, path, desc));
 }
 
-es_handler_file::es_handler_file( DATATYPE type, std::string path, std::string desc){
+es_handler_file::es_handler_file( DATATYPE type, std::string path, std::string desc) : 
+    gr::sync_block("es_handler_file", 
+        gr::io_signature::make(0,0,0),   
+        gr::io_signature::make(0,0,0))  
+{
     d_type = type;
     d_path = path;
     d_desc = desc;

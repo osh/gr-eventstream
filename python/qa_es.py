@@ -35,12 +35,15 @@ class qa_es (gr_unittest.TestCase):
         self.tb = None
 
     def test_001_alloc_things(self):
-        print "AAA"
-        a = es.sink([1,1], 8);
-        b = es.source([1], 8);
-        print "BBB"
-        
-
+        b = []
+        b.append(es.sink([1,1], 8))
+        b.append(es.source([1], 8))
+        b.append(es.es_handler_file( es.es_handler_file.TYPE_F32, "/dev/null", "test"))
+        b.append(es.es_handler_insert_vector())
+        b.append(es.es_handler_print(es.es_handler_print.TYPE_C32))
+        b.append(es.es_handler_pdu(es.es_handler_pdu.TYPE_C32))
+        b.append(es.trigger_edge_f(0, 100, 0, 1, 0))
+        b.append(es.trigger_sample_timer(1, 1000, 0, 0, 100))
 #    def test_001_square_ff (self):
 #        print "ok"
 #        print dir(es);

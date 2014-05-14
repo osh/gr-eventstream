@@ -29,7 +29,7 @@ es_handler_sptr es_make_handler_pdu(es_handler_pdu::DATATYPE type){
 }
 
 es_handler_pdu::es_handler_pdu( DATATYPE type ) :
-    gr::sync_block ("es_sink",
+    gr::sync_block ("es_handler_pdu",
             gr::io_signature::make(0,0,0),
             gr::io_signature::make(0,0,0))
 { 

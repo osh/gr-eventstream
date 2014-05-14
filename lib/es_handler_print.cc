@@ -28,7 +28,11 @@ es_handler_sptr es_make_handler_print(es_handler_print::DATATYPE type){
     return es_handler_sptr(new es_handler_print(type));
 }
 
-es_handler_print::es_handler_print( DATATYPE type ){
+es_handler_print::es_handler_print( DATATYPE type )
+ :  gr::sync_block("es_handler_file",
+        gr::io_signature::make(0,0,0),
+        gr::io_signature::make(0,0,0))
+{
     d_type = type;
 }
 

@@ -39,7 +39,6 @@ list(APPEND eventstream_sources
     es_trigger.cc
     es_trigger_edge_f.cc
     es_trigger_sample_timer.cc
-    es_trigger_pdu.cc
     es_pyhandler_def.cc
     es_patterned_interleaver.cc
     es_exceptions.cc
