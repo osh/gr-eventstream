@@ -1,0 +1,14 @@
+
+
+May 14, 2014
+
+1. es_trigger no longer inherits from es_handler, but directly from sync_block ( blocks that do both need to inherit from both now)
+2. es_trigger, es_handler and es_event_acceptor are now all virtual base classes of sync block
+        they all now take no required arguments in their constructors
+         AND
+        the virtual base class (sync_block) *must* be initialized directly by the class inhertiing from them
+     i.e.   class handler_foo : public es_handler { . }
+      must implement   handler_foo::handler_foo(...) : gr::sync_block("foo", iosig,iosig), ...  in initializer list
+      this change has been made in all in-tree handlers and trigger blocks, but will need to be made in any OOT modules using eventstream as well.
+    - this change was neccisary to allow es_sink to also be an es_handler since both require access to methods in the block interface
+3. there is now QA that does a bit of sanity checking on "make test"
