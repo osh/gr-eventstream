@@ -22,8 +22,6 @@ from gnuradio import gr;
 import es;
 import pmt;
 
-
-
 def test_factory_cb(index):
     print "test_factory_cb called with index = %d"%(index);
     r = es.es_pyhandler();

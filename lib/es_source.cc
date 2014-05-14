@@ -82,7 +82,6 @@ es_source::es_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_b
     qq(100), dq(100),
     es_event_acceptor(eb)
 {
-    //event_queue->set_append_callback( self );
     // create and dispatch handler threads
     for(int i=0; i<n_threads; i++){
         boost::shared_ptr<es_source_thread> th( new es_source_thread(pmt::PMT_NIL, event_queue, &qq, &lin_mut, &readylist, &qq_cond, out_sig) );
@@ -161,9 +160,7 @@ es_source::work (int noutput_items,
 
   // grab serialized buffers from thread output
   //        copy buffers into work output buffer
-  
   std::vector<pmt_t>::iterator it;
-  //for(it = readylist.begin(); it != readylist.end(); ){
   for(int i = 0; i<readylist.size(); i++){
     DEBUG(printf("readylist[%d] = %p\n", i, readylist[i].get());)
     pmt_t evt = readylist[i];
@@ -332,10 +329,13 @@ es_source::work (int noutput_items,
  
   
   // determine number to be produced
-//  printf("d_maxlen = %llu, d_time = %llu, noutput_items = %d\n", d_maxlen, d_time, noutput_items);
+  //printf("d_maxlen = %llu, d_time = %llu, noutput_items = %d\n", d_maxlen, d_time, noutput_items);
   int produced = (d_maxlen < d_time + noutput_items)?d_maxlen - d_time:noutput_items;
-//  std::cout << "*** produced = " << produced << "\n";
-  d_time += produced; // step time ptr along
+  //std::cout << "*** produced = " << produced << "\n";
   message_port_pub(pmt::mp("nproduced"), pmt::mp(d_time));
+  
+  // check finished condition for exit
+  if(__builtin_expect(d_maxlen == d_time, false)){ return -1; } 
+  d_time += produced; // step time ptr along
   return produced;
 }

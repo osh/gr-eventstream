@@ -19,7 +19,7 @@
 # the Free Software Foundation, Inc., 51 Franklin Street,
 # Boston, MA 02110-1301, USA.
 
-from gnuradio import gr, gr_unittest
+from gnuradio import gr, gr_unittest, blocks
 import sys;
 sys.path.append("../swig/");
 sys.path.append("../swig/.libs/");
@@ -44,42 +44,22 @@ class qa_es (gr_unittest.TestCase):
         b.append(es.es_handler_pdu(es.es_handler_pdu.TYPE_C32))
         b.append(es.trigger_edge_f(0, 100, 0, 1, 0))
         b.append(es.trigger_sample_timer(1, 1000, 0, 0, 100))
-#    def test_001_square_ff (self):
-#        print "ok"
-#        print dir(es);
     
-#    def test_002_es_source (self):
-#
-#        tb = gr.top_block();
-#
-#        # create the arbiter shared memory space
-#        arb = es.es_make_arbiter();
-#
-#        # create the source event queue
-#        queue = es.queue();
-#
-#        # create the source block and set a max stream length on it
-#        sig = gr.io_signature( 1,1,gr.sizeof_float );
-#        src = es.source( arb, queue, sig );
-#        src.set_max(20);
-#       
-#        # add a singular event
-#        vec = es.pmt_float_vector([1,2,3,4]);
-#        e1 = es.event_create_gen_vector_f( 3, vec );
-#        h1 = es.es_handler_insert_vector();
-#        h1p = es.make_handler_pmt( h1 );
-#
-#        queue.register_event_type( es.event_type( e1 ) );
-#        queue.bind_handler( es.event_type( e1 ), h1p );
-#        queue.add_event(e1);
-#        
-#        # set up a vector sink for printing
-#        snk = gr.vector_sink_f();
-#        tb.connect(src, snk);
-#
-#        # run the graph to completion and print output stream
-#        tb.run();
-#        print snk.data();
+    def test_002_es_source (self):
+
+        tb = gr.top_block();
+        src = es.source( [gr.sizeof_float], 1 );
+        src.set_max(20);
+
+        # set up a vector sink for printing
+        snk = blocks.vector_sink_f();
+        tb.connect(src, snk);
+
+        # run the graph to completion and print output stream
+        tb.run();
+        print snk.data();
+        print len(snk.data());
+        self.assertEqual( len(snk.data()), 20);
 
 
     
