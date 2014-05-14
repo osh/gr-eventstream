@@ -62,7 +62,7 @@ es_trigger_sample_timer::es_trigger_sample_timer (int itemsize, int period, int 
   : d_period(period), d_shift(shift),
     d_time(0), d_evt_time(shift), d_evt_len(event_length), d_sched_dist(sched_dist),
     d_enabled(true),
-    es_trigger ( "es_trigger_sample_timer",
+    gr::sync_block("es_trigger_sample_timer",
         gr::io_signature::make(MIN_IN, MAX_IN,  itemsize),
         gr::io_signature::make(MIN_OUT,MAX_OUT, itemsize))
 {

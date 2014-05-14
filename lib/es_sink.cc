@@ -103,10 +103,10 @@ es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_ki
 es_sink::~es_sink ()
 {
 
-    //printf("es_sink::destructor running!\n");
+    printf("es_sink::destructor running!\n");
     wait_events();
 
-    //printf("waiting for join\n");
+    printf("waiting for join\n");
     // stop all the threads in the pool
     for(int i=0; i<n_threads; i++){
         threadpool[i]->stop();

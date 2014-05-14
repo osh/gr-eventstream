@@ -63,7 +63,7 @@ es_trigger_edge_f::es_trigger_edge_f (float thresh, int length, int lookback, in
     d_guard(guard),
     d_lasttrigger(0),
     d_thresh(thresh), 
-    es_trigger ("es_trigger_edge_f",
+    gr::sync_block ("es_trigger_edge_f",
         gr::io_signature::make2(MIN_IN, MAX_IN, sizeof(float), itemsize),
         gr::io_signature::make(MIN_OUT,MAX_OUT, itemsize))
 {

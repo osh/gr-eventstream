@@ -29,11 +29,15 @@ es_handler_sptr es_make_handler_insert_vector(){
     return es_handler_sptr(new es_handler_insert_vector());
 }
 
-es_handler_insert_vector::es_handler_insert_vector( ){
+es_handler_insert_vector::es_handler_insert_vector( )
+ : gr::sync_block("es_handler_insert_vector", 
+        gr::io_signature::make(0,0,0),
+        gr::io_signature::make(0,0,0))
+{
 }
 
 //void es_handler_insert_vector::handler( pmt_t msg, void* buf ){
-void es_handler_insert_vector::handler( pmt_t msg, gr_vector_void_star buf ){
+void es_handler_insert_vector::handler( pmt_t msg, gr_vector_void_star buf ) {
 
 //    std::cout << "es_handler_insert_vector::handler\n";
 

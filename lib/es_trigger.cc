@@ -53,11 +53,8 @@ es_make_trigger (pmt_t arb, es_queue_sptr queue, int itemsize, std::string blkna
  * are connected to this block.  In this case, we accept
  * only 1 input and 1 output.
  */
-es_trigger::es_trigger (std::string blkname, gr::io_signature::sptr in_sig, gr::io_signature::sptr out_sig)
-  : es_handler (blkname.append("_trigger"),
-		   in_sig,
-		   out_sig),
-    d_time(0), d_length(1), d_lookback(0)
+es_trigger::es_trigger ()
+  : d_time(0), d_length(1), d_lookback(0)
 {
     message_port_register_out(pmt::intern("which_stream"));
 }

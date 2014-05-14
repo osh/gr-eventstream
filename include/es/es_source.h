@@ -39,7 +39,7 @@ typedef boost::shared_ptr<es_source> es_source_sptr;
 
 es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads=1, enum es_queue_early_behaviors = DISCARD);
 
-class es_source : public virtual gr::sync_block, public es_event_acceptor
+class es_source : public virtual gr::sync_block, public virtual es_event_acceptor
 {
 private:
   friend es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_behaviors);

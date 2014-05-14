@@ -26,7 +26,6 @@ sys.path.append("../swig/.libs/");
 import es_swig as es;
 import random;
 
-
 class qa_es (gr_unittest.TestCase):
 
     def setUp (self):
@@ -34,6 +33,13 @@ class qa_es (gr_unittest.TestCase):
 
     def tearDown (self):
         self.tb = None
+
+    def test_001_alloc_things(self):
+        print "AAA"
+        a = es.sink([1,1], 8);
+        b = es.source([1], 8);
+        print "BBB"
+        
 
 #    def test_001_square_ff (self):
 #        print "ok"
@@ -86,43 +92,43 @@ class qa_es (gr_unittest.TestCase):
 #        h1 = es.es_handler_flowgraph( 1, hb);
  
 
-    def test_004_es_loopback(self):
-        tb = gr.top_block();
-        arb = es.es_make_arbiter();
-        queue = es.queue();
-        queue_snk = es.queue();
-        
-        max_idx = 10000;
-
-        sig = [gr.sizeof_float];
-        src = es.source(arb, queue, sig );
-        src.set_max(max_idx);
- 
-        count = 0;
-        xloc = 0;
-        firstiter = True;
-
-        while xloc < max_idx:
-            count = float(count + 1);
-            xloc = xloc + random.randint(1,50);
-            dvec  = [];
-            for i in range(1,10):
-                dvec.append(count);
-            vec = es.pmt_float_vector( dvec );
-            e1 = es.event_create_gen_vector_f( xloc, vec );
-            queue.add_event( e1 );
-    
-        print "queue adding done"
-           
-        snk = gr.vector_sink_f();
-        #snk = es.sink(arb, queue_snk, sig);      
-        tb.connect(src,snk);
- 
-        print "Total Events = %d"%(count);
-
-        tb.run();
-        print snk.data();
-           
+#    def test_004_es_loopback(self):
+#        tb = gr.top_block();
+#        arb = es.es_make_arbiter();
+#        queue = es.queue();
+#        queue_snk = es.queue();
+#        
+#        max_idx = 10000;
+#
+#        sig = [gr.sizeof_float];
+#        src = es.source(arb, queue, sig );
+#        src.set_max(max_idx);
+# 
+#        count = 0;
+#        xloc = 0;
+#        firstiter = True;
+#
+#        while xloc < max_idx:
+#            count = float(count + 1);
+#            xloc = xloc + random.randint(1,50);
+#            dvec  = [];
+#            for i in range(1,10):
+#                dvec.append(count);
+#            vec = es.pmt_float_vector( dvec );
+#            e1 = es.event_create_gen_vector_f( xloc, vec );
+#            queue.add_event( e1 );
+#    
+#        print "queue adding done"
+#           
+#        snk = gr.vector_sink_f();
+#        #snk = es.sink(arb, queue_snk, sig);      
+#        tb.connect(src,snk);
+# 
+#        print "Total Events = %d"%(count);
+#
+#        tb.run();
+#        print snk.data();
+#           
             
             
 

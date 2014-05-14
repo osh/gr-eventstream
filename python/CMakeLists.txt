@@ -16,4 +16,4 @@ GR_PYTHON_INSTALL(
     COMPONENT "es_py"
 )
    
-GR_ADD_TEST(qa_patterned_interleaver ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_es_patterned_interleaver.py)
+GR_ADD_TEST(qa_es ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_es.py)

@@ -36,7 +36,7 @@ typedef boost::shared_ptr<es_handler> es_handler_sptr;
 class es_handler : public virtual gr::sync_block
 {
     public:
-        es_handler(std::string name = std::string("es_handler"), gr::io_signature::sptr in_sig = gr::io_signature::make(0,0,0), gr::io_signature::sptr out_sig = gr::io_signature::make(0,0,0));
+        es_handler();
         gr_vector_void_star get_buffer_ptr(pmt_t buffer_pmt);
         void handler_helper( pmt_t msg );
         virtual void handler(pmt_t msg, gr_vector_void_star buf);

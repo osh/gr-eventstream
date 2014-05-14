@@ -74,8 +74,8 @@ unsigned long long es_source::time(){
  */
 es_source::es_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_behaviors eb)
   : gr::sync_block ("es_source",
-    gr::io_signature::make (MIN_IN, MAX_IN, 0),
-    es_make_io_signature (out_sig.size(), out_sig) ),
+        gr::io_signature::make (MIN_IN, MAX_IN, 0),
+        es_make_io_signature (out_sig.size(), out_sig) ),
     d_maxlen(ULLONG_MAX),
     d_time(0),
     n_threads(nthreads), // poke this through as a constructor arg

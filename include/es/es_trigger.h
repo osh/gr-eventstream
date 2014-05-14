@@ -36,13 +36,13 @@ using namespace pmt;
 //es_trigger_sptr es_make_trigger (pmt_t arb, es_queue_sptr queue, int itemsize, std::string type);
 
 //class es_trigger : public gr::sync_block
-class es_trigger : public es_handler
+class es_trigger : public virtual gr::sync_block
 {
 private:
 //  friend es_trigger_sptr es_make_trigger (pmt_t arb, es_queue_sptr queue, int itemsize, std::string type);
 
  protected:
-  es_trigger (std::string type, gr::io_signature::sptr in_sig = gr::io_signature::make(0,0,0), gr::io_signature::sptr out_sig = gr::io_signature::make(0,0,0));  	// private constructor
+  es_trigger ();  	// private constructor
 
 
  public:

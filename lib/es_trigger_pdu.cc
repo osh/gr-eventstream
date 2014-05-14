@@ -46,7 +46,7 @@ es_make_trigger_pdu (int itemsize){
 
 es_trigger_pdu::es_trigger_pdu (int itemsize)
   : d_itemsize(itemsize),
-    es_trigger ( "es_trigger_pdu",
+    gr::sync_block ( "es_trigger_pdu",
         gr::io_signature::make(0,0, 0),
         gr::io_signature::make(0,0, 0))
 {
