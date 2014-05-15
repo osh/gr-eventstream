@@ -361,7 +361,7 @@ es_sink::work (int noutput_items,
   std::vector <gr::tag_t> v;
   get_tags_in_range(v,0,nitems_read(0),nitems_read(0)+noutput_items);
   for(int i=0; i<v.size(); i++){
-    latest_tags = pmt::dict_add(latest_tags, v[i].key, v[i].value);
+    latest_tags = pmt::dict_add(latest_tags, v[i].key, pmt::cons(pmt::from_uint64(v[i].offset), v[i].value));
     }
 
   char *in = (char*) input_items[0];
