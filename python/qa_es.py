@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2011 Free Software Foundation, Inc.
+# Copyright 2014 Free Software Foundation, Inc.
 #
 # This file is part of gr-eventstream
 #
@@ -25,8 +25,7 @@ import sys;
 sys.path.append("../swig/");
 sys.path.append("../swig/.libs/");
 import es_swig as es;
-import random;
-import numpy;
+import random, numpy, time
 
 class qa_es (gr_unittest.TestCase):
 
@@ -37,6 +36,7 @@ class qa_es (gr_unittest.TestCase):
         self.tb = None
 
     def test_001_alloc_things(self):
+        print "test_001_alloc_things"
         b = []
         b.append(es.sink([1,1], 8))
         b.append(es.source([1], 8))
@@ -48,9 +48,9 @@ class qa_es (gr_unittest.TestCase):
         b.append(es.trigger_sample_timer(1, 1000, 0, 0, 100))
     
     def test_002_es_source (self):
-
+        print "test_002_es_source"
         tb = gr.top_block();
-        src = es.source( [gr.sizeof_float], 1 );
+        src = es.source( [gr.sizeof_float], 8 );
         src.set_max(20);
 
         # set up a vector sink for printing
@@ -65,11 +65,11 @@ class qa_es (gr_unittest.TestCase):
 
     
     def test_003_es_sink (self):
-
+        print "test_003_es_sink"
         iv = [0,1,2,3,4,5,6,7,8,9];
         src = blocks.vector_source_f(iv, repeat=True);
         hd = blocks.head(gr.sizeof_float, 10000);
-        snk = es.sink([gr.sizeof_float], 1);
+        snk = es.sink([gr.sizeof_float], 8);
         t = es.trigger_sample_timer(gr.sizeof_float, 10, 5, 10, 10);
         tb = gr.top_block();
         pduh = es.es_make_handler_pdu(es.es_handler_print.TYPE_F32);
@@ -81,7 +81,7 @@ class qa_es (gr_unittest.TestCase):
         tb.run();
  
         # expected output of each event in the periodic sequence   
-        sv = numpy.array( iv[5:] + iv[:5], dtype=numpy.float );
+        sv = numpy.array( iv[5:] + iv[:5], dtype=numpy.float32 );
 
         # verify each received message
         nm = msgdb.num_messages();
@@ -92,7 +92,31 @@ class qa_es (gr_unittest.TestCase):
             print mp;
             self.assertEqual( sv.all(), mp.all() );
 
+    def test_004_es_source_pdus(self):
+        print "test_004_es_source_pdus"       
+        msg = pmt.cons( pmt.to_pmt( {"somekey":"val2", "somekey2":"someval2" } ), 
+                        pmt.to_pmt( numpy.array( [0,1,2,3,4,5,6,7,8,9] , dtype=numpy.float32) ) );
+        src = es.source([gr.sizeof_float], 8, 2);
+        stb = blocks.message_strobe( msg, 100.0 );
+        tb = gr.top_block();
+        tb.msg_connect(stb, "strobe", src, "schedule_event");
+        th = blocks.throttle(gr.sizeof_float, 1000*100);
+        hd = blocks.head(gr.sizeof_float, 1000*100);
+        snk = blocks.vector_sink_f();
+        tb.connect(src,th,hd,snk);
 
+        # TODO: this can not use run because it is 
+        # subject to GNU Radio's shutdown msg block bug
+        # for remaining upstream msg blocks ...
+        #tb.run();
+
+        # workaround
+        tb.start();
+        time.sleep(1);
+        tb.stop();
+        tb.wait();
+
+        self.assertEqual( sum(snk.data())>0, True );
 
 if __name__ == '__main__':
     gr_unittest.main ()

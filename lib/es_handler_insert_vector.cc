@@ -43,10 +43,32 @@ void es_handler_insert_vector::handler( pmt_t msg, gr_vector_void_star buf ) {
 
 //    printf("INSERT VECTOR HANDLER RUNNING!\n");
     pmt_t vector = event_field( msg, pmt::intern("vector") );
- 
-    // AAA: GNU Radio Bug ? 
-    // pmt_is_vector(vector) should return true!
-    //assert( pmt_is_vector( vector)==true );
+
+    // TODO: switch to more generic implementation once it is debugged
+    // we should be able to get rid of es::event_type_gen_vector_X args
+/*
+    // if we just got a uniform vector in
+    // convert it to a one long list for uniformity
+    if(pmt::is_uniform_vector(vector))
+        vector = pmt::list1(vector);
+
+    size_t i=0;
+    while(pmt::is_pair(vector)){
+        pmt::pmt_t uvec = pmt::car(vector);
+        
+        // make sure buffer size matches   
+        // TODO ?
+
+        // copy the buffer contents
+        uint8_t* buf = (uint8_t*) buf[i++];
+        size_t len = pmt::length(uvec);
+        memcpy(buf, pmt::uniform_vector_elements(uvec, len), len*pmt::uniform_vector_itemsize(uvec));
+
+        // move to next item
+        vector = pmt::cdr(uvec);
+        }
+*/
+
 
     size_t len = 0;
 

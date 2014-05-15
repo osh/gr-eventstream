@@ -23,12 +23,14 @@ void es_event_acceptor::schedule_event(pmt::pmt_t m){
                     pmt::pmt_t etype = pmt::dict_ref(pmt::car(m),pmt::mp("event_type"), pmt::mp("pdu_event"));
                     uint64_t time = pmt::to_uint64(pmt::dict_ref(pmt::car(m),pmt::mp("event_time"), pmt::from_uint64(0UL)));
                     uint64_t len;
+                    size_t itemsize;
                     pmt::pmt_t buf_list;
 
                     if(pmt::is_uniform_vector(pmt::cdr(m))){    // often a source event
-                        len = pmt::length(pmt::cdr(m));
+                        len = pmt::length(pmt::cdr(m));         // get vector length
+                        itemsize = pmt::uniform_vector_itemsize(pmt::cdr(m));   // vector itemsize
                         // create the event and register the vector with it
-                        pmt::pmt_t buf = pmt::make_blob( pmt::blob_data(pmt::cdr(m)) , len*sizeof(gr_complex) );
+                        pmt::pmt_t buf = pmt::make_blob( pmt::blob_data(pmt::cdr(m)) , len*itemsize );
                         buf_list = pmt::list_add(pmt::PMT_NIL, buf);
                     } else if(pmt::is_null(pmt::cdr(m))) {      // often a sink event
                         // this must be a sink event (metadata pdu with null vector)

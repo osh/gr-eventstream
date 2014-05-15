@@ -79,7 +79,6 @@ void es_source_thread::do_work(){
         qq_cond->wait(lock);
 
         // get events to handle as long as they are available
-        //while( (*qq).dequeue(&eh) ){
         while( (*qq).pop(eh) ){
 
             // if BB entered, we have a new eh pair to process ... 
@@ -88,7 +87,7 @@ void es_source_thread::do_work(){
             //          round up to next 2^n size for better pool size hits
             // allocate some buffers (this should be pooled soon)
             int n_items = event_length(eh->event);
-            gr_vector_void_star bufs(out_sig.size());
+
 
             pmt_t buf_list;
             for(int i=0 ; i<out_sig.size(); i++){
@@ -100,11 +99,6 @@ void es_source_thread::do_work(){
                     zerobuf.resize(itemsize*n_items);
                 }
                 pmt_t buf = pmt::make_blob(&zerobuf[0],itemsize*n_items);
-                //pmt_t buf = pmt_make_blob(NULL,itemsize*n_items);
-                //pmt_t buf = pmt_make_blob(NULL,itemsize*n_items);
-                //pmt_t buf = pmt_blob(NULL,NULL,itemsize*n_items);
-                //bufs[i] = (void*) pmt_blob_rw_data(buf);
-                bufs[i] = (void*) pmt::blob_data(buf);
 
                 if(i==0){
                     buf_list = pmt::list1( buf );
@@ -115,14 +109,11 @@ void es_source_thread::do_work(){
             }
     
             // assign buffers to the event for output
-            //pmt_t event = register_buffer( eh->event, bufs);
             pmt_t event = register_buffer( eh->event, buf_list);
             eh->event = event;
 
-
             // run the event/handler pair
             eh->run();
-
 
             // grab the mutex over the linear list 
             lin_mut->lock();

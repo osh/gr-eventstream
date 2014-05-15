@@ -15,5 +15,9 @@ GR_PYTHON_INSTALL(
     DESTINATION ${GR_PYTHON_DIR}/es
     COMPONENT "es_py"
 )
-   
+
+# this is only here for debugging purposes
+# useful for grabbing segfaults under ctest
+#add_test(run_xterm xterm)
+  
 GR_ADD_TEST(qa_es ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_es.py)

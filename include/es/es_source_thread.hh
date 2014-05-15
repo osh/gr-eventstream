@@ -37,7 +37,6 @@ class es_source_thread {
     
         //es_source_thread();
         es_source_thread(pmt_t _arb, es_queue_sptr _queue, boost::lockfree::queue<es_eh_pair*> *qq, boost::mutex *_lin_mut, std::vector<pmt_t> *_readylist, boost::condition *qq_cond, gr_vector_int out_sig);
-        //es_source_thread(pmt_t _arb, es_queue_sptr _queue, boost::lockfree::queue<es_eh_pair*> *qq, boost::lockfree::queue<unsigned long long> *dq, boost::condition *qq_cond);
         void start();
         void stop();
         void do_work();
