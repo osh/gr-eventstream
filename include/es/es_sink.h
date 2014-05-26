@@ -53,6 +53,8 @@ class es_sink :  public virtual es_handler, public virtual es_event_acceptor
 {
 private:
   pmt::pmt_t latest_tags;
+  std::vector<std::vector<uint8_t> > d_localhist;
+  //std::vector<boost::circular_buffer<uint8_t> > d_localhist;
 
   //New constructor with user-selectable sample history.
   friend es_sink_sptr es_make_sink (gr_vector_int insig, int n_threads,
