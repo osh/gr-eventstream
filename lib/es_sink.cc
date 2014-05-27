@@ -33,6 +33,7 @@
 
 #include <es/es.h>
 #include <gnuradio/io_signature.h>
+#include <gnuradio/buffer.h>
 #include <stdio.h>
 
 #define DEBUG(X)
@@ -81,12 +82,16 @@ es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_ki
     d_history = 1024*sample_history_in_kilosamples;
     // set up our private history space
     for(int i=0; i<insig.size(); i++){
+        d_localhist.push_back(gr::make_buffer(d_history*2, insig[i]));
+        d_localhist_readers.push_back( gr::buffer_add_reader(d_localhist[i], d_history-1));
+
         //d_localhist.push_back(boost::circular_buffer<uint8_t>(d_history*insig[i]*2));
-        d_localhist.push_back(std::vector<uint8_t>(d_history*insig[i]));
+        //d_localhist.push_back(std::vector<uint8_t>(d_history*insig[i]));
+        //d_localhist.push_back(gr::buffer(
         //d_localhist[i].rresize( insig[i]*d_history, 0);
-        for(int j=0; j<insig[i]*(d_history-1); j++){
-            d_localhist[i].push_back(0);
-        }
+        //for(int j=0; j<insig[i]*(d_history-1); j++){
+        //    d_localhist[i].push_back(0);
+        //}
        }
     printf("history = %d\n", d_history);
     //set_history(d_history);
@@ -377,10 +382,16 @@ es_sink::work (int noutput_items,
     //d_localhist[i].erase(d_localhist[i].begin(), d_localhist[i].begin()+noutput_items*d_input_signature->sizeof_stream_item(i));
     const uint8_t* portin = (const uint8_t*) input_items[i];
     
-    
-    size_t orig_size = d_localhist[i].size();
-    d_localhist[i].resize(orig_size + noutput_items*d_input_signature->sizeof_stream_item(i));
-    memcpy(&d_localhist[i][orig_size], portin, noutput_items*d_input_signature->sizeof_stream_item(i));
+//    size_t orig_size = d_localhist[i].size();
+//    d_localhist[i].resize(orig_size + noutput_items*d_input_signature->sizeof_stream_item(i));
+//    memcpy(&d_localhist[i][orig_size], portin, noutput_items*d_input_signature->sizeof_stream_item(i));
+
+    int ncopy = nitems_read(0) - d_localhist[i]->nitems_written();
+    if(ncopy > 0){
+        memcpy(d_localhist[i]->write_pointer(), portin,  ncopy*d_input_signature->sizeof_stream_item(i));
+        d_localhist[i]->update_write_pointer(ncopy);
+    }
+
     //for(int j=0; j<noutput_items*d_input_signature->sizeof_stream_item(i); j++){
     //    d_localhist[i].push_back(portin[j]);
     //    //d_localhist[i].push_back(portin[j]);
@@ -467,14 +478,20 @@ es_sink::work (int noutput_items,
         size_t event_len = d_input_signature->sizeof_stream_item(i)*eh->length();
         //printf("start_offset=%d, event_offset=%d, event_len=%d\n", start_offset, event_offset, event_len);
         //printf("-start_offset+event_offset=%d, -start_offset+event_offset+event_len=%d\n", -start_offset+event_offset, -start_offset+event_offset+event_len);
-        size_t o1 = event_offset;
-        size_t o2 = event_offset + event_len;
-        printf("o1 = %d, o2 = %d, size=%d\n", o1, o2, d_localhist[i].size());
-        
-        std::vector<uint8_t> tmp(d_localhist[i].begin()+o1, d_localhist[i].begin()+o2);
+
+        size_t o1 = (etime % d_localhist[i]->bufsize());
+        size_t o2 = ((etime + event_len) % d_localhist[i]->bufsize());
+        printf("o1 = %d (etime = %lu), o2 = %d\n",o1,etime,o2);
+
+//        const void* rptr = d_localhist_readers[i]->read_pointer();
+
+//        std::vector<uint8_t> tmp(d_localhist[i].begin()+o1, d_localhist[i].begin()+o2);
         //std::vector<uint8_t> tmp(d_localhist[i].end()-start_offset+event_offset, d_localhist[i].end()-start_offset+event_offset+event_len);
 //        tmp.assign( d_localhist[i].end()-start_offset+event_offset, d_localhist[i].end()-start_offset+event_offset+event_len );
-        pmt_t buf_i = pmt::init_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), &tmp[0] );
+        pmt_t buf_i = pmt::make_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), 0 );
+
+        //BBB
+        //pmt_t buf_i = pmt::init_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), &tmp[0] );
         //assert(tmp.size() == d_localhist[i].end()+start_offset+event_offset );
 
         // build up a pmt list containing pmt_u8vectors with all the buffers
@@ -534,20 +551,8 @@ es_sink::work (int noutput_items,
 
   // if we aren't consuming all the items, wipe them out of out history
   // for initial simplicity
-  if(nconsume != noutput_items){
-    printf("R-ERASE CALLED!\n");
-    for(int i=0; i<d_localhist.size(); i++){
-        d_localhist[i].resize(d_localhist[i].size()-(noutput_items-nconsume)*d_input_signature->sizeof_stream_item(i));
-        d_localhist[i].erase(d_localhist[i].begin(), d_localhist[i].begin() + nconsume*d_input_signature->sizeof_stream_item(i));
-        //d_localhist[i].erase(nconsume*d_input_signature->sizeof_stream_item(i));
-        //d_localhist[i].rerase(d_localhist[i].end()-(noutput_items-nconsume)*d_input_signature->sizeof_stream_item(i), d_localhist[i].end());
-        //d_localhist[i].erase_begin( nconsume*d_input_signature->sizeof_stream_item(i) );
-        }
-    } else {
-    for(int i=0; i<d_localhist.size(); i++){
-        d_localhist[i].erase( d_localhist[i].begin(), d_localhist[i].begin() + noutput_items*d_input_signature->sizeof_stream_item(i) );
-        //d_localhist[i].erase_begin( noutput_items*d_input_signature->sizeof_stream_item(i) );
-    }
+  for(int i=0; i<d_localhist.size(); i++){
+      d_localhist_readers[i]->update_read_pointer(nconsume);
   }
   return nconsume;
 }
