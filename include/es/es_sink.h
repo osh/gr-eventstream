@@ -54,6 +54,7 @@ class es_sink :  public virtual es_handler, public virtual es_event_acceptor
 private:
   pmt::pmt_t latest_tags;
   std::vector<gr::buffer_sptr> d_localhist;
+  std::vector<uint8_t*> d_localhist_baseadx;
   std::vector<gr::buffer_reader_sptr> d_localhist_readers;
   //std::vector<boost::circular_buffer<uint8_t> > d_localhist;
 

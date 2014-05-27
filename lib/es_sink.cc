@@ -80,20 +80,13 @@ es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_ki
 
     d_time = 0;
     d_history = 1024*sample_history_in_kilosamples;
-    // set up our private history space
+
+    // set up our internal history storage space
     for(int i=0; i<insig.size(); i++){
         d_localhist.push_back(gr::make_buffer(d_history*2, insig[i]));
+        d_localhist_baseadx.push_back( (uint8_t*) d_localhist[i]->write_pointer() );
         d_localhist_readers.push_back( gr::buffer_add_reader(d_localhist[i], d_history-1));
-
-        //d_localhist.push_back(boost::circular_buffer<uint8_t>(d_history*insig[i]*2));
-        //d_localhist.push_back(std::vector<uint8_t>(d_history*insig[i]));
-        //d_localhist.push_back(gr::buffer(
-        //d_localhist[i].rresize( insig[i]*d_history, 0);
-        //for(int j=0; j<insig[i]*(d_history-1); j++){
-        //    d_localhist[i].push_back(0);
-        //}
        }
-    printf("history = %d\n", d_history);
     //set_history(d_history);
 
     // instantiate the threadpool workers
@@ -372,32 +365,18 @@ es_sink::work (int noutput_items,
 			gr_vector_const_void_star &input_items,
 			gr_vector_void_star &output_items)
 {
-  // make room for assignment
   // assign input to local history copy
   for(int i=0; i<input_items.size(); i++){
-    //AAAprintf("size=%d, max_size=%d\n", d_localhist[i].size(), d_localhist[i].max_size());
-    //AAAprintf("noutput_items = %d\n", noutput_items);
-    //AAAprintf("req erase %d\n", noutput_items*d_input_signature->sizeof_stream_item(i) );
-    //d_localhist[i].erase_begin( noutput_items*d_input_signature->sizeof_stream_item(i) );
-    //d_localhist[i].erase(d_localhist[i].begin(), d_localhist[i].begin()+noutput_items*d_input_signature->sizeof_stream_item(i));
     const uint8_t* portin = (const uint8_t*) input_items[i];
     
-//    size_t orig_size = d_localhist[i].size();
-//    d_localhist[i].resize(orig_size + noutput_items*d_input_signature->sizeof_stream_item(i));
-//    memcpy(&d_localhist[i][orig_size], portin, noutput_items*d_input_signature->sizeof_stream_item(i));
-
-    int ncopy = nitems_read(0) - d_localhist[i]->nitems_written();
+    // copy items in to our local history buffer
+    //printf("nitems_read=%lu, nitems_written=%lu\n", nitems_read(0), d_localhist[i]->nitems_written());
+    int ncopy = nitems_read(0) + noutput_items - d_localhist[i]->nitems_written();
     if(ncopy > 0){
-        memcpy(d_localhist[i]->write_pointer(), portin,  ncopy*d_input_signature->sizeof_stream_item(i));
+        // we assume that any wrap arround that occurs here is handle by the gnuradio mmap trick
+        memcpy(d_localhist[i]->write_pointer(), portin, ncopy*d_input_signature->sizeof_stream_item(i));
         d_localhist[i]->update_write_pointer(ncopy);
-    }
-
-    //for(int j=0; j<noutput_items*d_input_signature->sizeof_stream_item(i); j++){
-    //    d_localhist[i].push_back(portin[j]);
-    //    //d_localhist[i].push_back(portin[j]);
-   // }
-    //d_localhist[i].assign( noutput_items*d_input_signature->sizeof_stream_item(i), portin, portin+noutput_items*d_input_signature->sizeof_stream_item(i));
-    //AAAprintf("after assign - size=%d, max_size=%d\n", d_localhist[i].size(), d_localhist[i].max_size());
+        }
     }
 
   // keep up with the latest tags
@@ -461,38 +440,34 @@ es_sink::work (int noutput_items,
     // loop over each input buffer copying contents into pmt_buffers to tag onto event
     for(int i=0; i<input_items.size(); i++){
 
-        //printf("copying buffer contents\n");
         // alocate a new pmt u8 vector to store buffer contents in.
-        //const uint8_t* port_data_start = (const uint8_t*) input_items[i];
-
-        // tested working
-        //pmt_t buf_i = pmt::init_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), (const uint8_t*) input_items[i] + (buffer_offset * d_input_signature->sizeof_stream_item(i)) );
-
-        // same thing split up
-        //const uint8_t* port_data_start = (const uint8_t*) input_items[i];
-        //pmt_t buf_i = pmt::init_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), port_data_start + (buffer_offset * d_input_signature->sizeof_stream_item(i)) );
-
-        //const uint8_t* port_data_start = (const uint8_t*) d_localhist[i].end()
-        //size_t start_offset = -(-d_history-noutput_items+1)*d_input_signature->sizeof_stream_item(i);
-        size_t event_offset = (buffer_offset * d_input_signature->sizeof_stream_item(i));
         size_t event_len = d_input_signature->sizeof_stream_item(i)*eh->length();
-        //printf("start_offset=%d, event_offset=%d, event_len=%d\n", start_offset, event_offset, event_len);
-        //printf("-start_offset+event_offset=%d, -start_offset+event_offset+event_len=%d\n", -start_offset+event_offset, -start_offset+event_offset+event_len);
+        size_t o1 = ((etime + d_localhist[i]->bufsize() - d_history + 1)%d_localhist[i]->bufsize());
+        size_t o2 = ((etime + event_len + d_localhist[i]->bufsize() - d_history + 1)%d_localhist[i]->bufsize());
+        //size_t o1 = ((etime )% d_localhist[i]->bufsize());
+        //size_t o2 = ((etime + event_len ) % d_localhist[i]->bufsize());
 
-        size_t o1 = (etime % d_localhist[i]->bufsize());
-        size_t o2 = ((etime + event_len) % d_localhist[i]->bufsize());
+        /*
+        printf("bufsize = %d\n", d_localhist[i]->bufsize());
         printf("o1 = %d (etime = %lu), o2 = %d\n",o1,etime,o2);
 
-//        const void* rptr = d_localhist_readers[i]->read_pointer();
+        printf( "wr/re = %lu/%lu\n", d_localhist[i]->nitems_written(), d_localhist_readers[i]->nitems_read() );
+        printf("gap = %lu\n", d_localhist[i]->nitems_written() -  d_localhist_readers[i]->nitems_read());
+        */
 
-//        std::vector<uint8_t> tmp(d_localhist[i].begin()+o1, d_localhist[i].begin()+o2);
-        //std::vector<uint8_t> tmp(d_localhist[i].end()-start_offset+event_offset, d_localhist[i].end()-start_offset+event_offset+event_len);
-//        tmp.assign( d_localhist[i].end()-start_offset+event_offset, d_localhist[i].end()-start_offset+event_offset+event_len );
-        pmt_t buf_i = pmt::make_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), 0 );
-
-        //BBB
-        //pmt_t buf_i = pmt::init_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), &tmp[0] );
-        //assert(tmp.size() == d_localhist[i].end()+start_offset+event_offset );
+        pmt_t buf_i;
+        if(o2 > o1){ //simple case
+            buf_i = pmt::init_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), 
+                &d_localhist_baseadx[i][o1*d_input_signature->sizeof_stream_item(i)] );
+            } else { //wrapping case (might be larget than 1 mmapped page)
+            std::vector<uint8_t> tmp( (d_localhist[i]->bufsize() - o2 + o1)*d_input_signature->sizeof_stream_item(i));
+            memcpy( &tmp[0], 
+                &d_localhist_baseadx[i][(d_localhist[i]->bufsize() - o2)* d_input_signature->sizeof_stream_item(i)],  
+                (d_localhist[i]->bufsize() - o2)* d_input_signature->sizeof_stream_item(i) );
+            memcpy( &tmp[(d_localhist[i]->bufsize() - o2)*d_input_signature->sizeof_stream_item(i)], 
+                &d_localhist_baseadx[i][0], (o1)* d_input_signature->sizeof_stream_item(i) );
+            buf_i = pmt::init_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), &tmp[0] );
+            }
 
         // build up a pmt list containing pmt_u8vectors with all the buffers
         buf_list = pmt::list_add(buf_list, buf_i);
@@ -542,9 +517,11 @@ es_sink::work (int noutput_items,
     qq_cond.notify_one();
 
   // if we can not consume any more while waiting for the next event - yield so handler can finish
-  if(nconsume == 0)
+  if(nconsume == 0){
+    //printf("yield.\n");
 	boost::this_thread::yield();
-    //boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    //boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    }
 
   d_time += nconsume;
   message_port_pub(pmt::mp("nconsumed"), pmt::mp(d_time));
