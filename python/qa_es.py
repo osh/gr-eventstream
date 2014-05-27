@@ -116,6 +116,7 @@ class qa_es (gr_unittest.TestCase):
         tb.stop();
         tb.wait();
 
+#        print snk.data();
         self.assertEqual( sum(snk.data())>0, True );
 
 if __name__ == '__main__':

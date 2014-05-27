@@ -442,10 +442,10 @@ es_sink::work (int noutput_items,
 
         // alocate a new pmt u8 vector to store buffer contents in.
         size_t event_len = d_input_signature->sizeof_stream_item(i)*eh->length();
-        size_t o1 = ((etime + d_localhist[i]->bufsize() - d_history + 1)%d_localhist[i]->bufsize());
-        size_t o2 = ((etime + event_len + d_localhist[i]->bufsize() - d_history + 1)%d_localhist[i]->bufsize());
-        //size_t o1 = ((etime )% d_localhist[i]->bufsize());
-        //size_t o2 = ((etime + event_len ) % d_localhist[i]->bufsize());
+        //size_t o1 = ((etime + d_localhist[i]->bufsize() - d_history + 1)%d_localhist[i]->bufsize());
+        //size_t o2 = ((etime + event_len + d_localhist[i]->bufsize() - d_history + 1)%d_localhist[i]->bufsize());
+        size_t o1 = ((etime )% d_localhist[i]->bufsize());
+        size_t o2 = ((etime + event_len ) % d_localhist[i]->bufsize());
 
         /*
         printf("bufsize = %d\n", d_localhist[i]->bufsize());
