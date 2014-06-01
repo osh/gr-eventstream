@@ -130,10 +130,11 @@ es_sink::handler(pmt_t msg, gr_vector_void_star buf){
 
     int len = event_length(msg);
 
-    if(buf.size() < 1 || buf.size() > 1){
-        throw std::runtime_error("TODO: update es_sink to handle bufs != 1");
-        }
+    //if(buf.size() < 1 || buf.size() > 1){
+    //    throw std::runtime_error("TODO: update es_sink to handle bufs != 1");
+    //    }
 
+  if(buf.size() == 1){
     switch(input_signature()->sizeof_stream_item(0)){
         case sizeof(std::complex<int16_t>):
             vec = pmt::init_s16vector(len*2, (const int16_t*) buf[0]);
@@ -144,8 +145,26 @@ es_sink::handler(pmt_t msg, gr_vector_void_star buf){
         default:
             throw std::runtime_error("TODO: update es_sink for unknown item size to pdu");
         }
+        message_port_pub(pmt::mp("pdu_event"), pmt::cons(meta, vec));
 
-    message_port_pub(pmt::mp("pdu_event"), pmt::cons(meta, vec));
+    } else {
+        pmt_t buflist = PMT_NIL;
+        for(int i=buf.size()-1; i>=0; i--){
+            switch(input_signature()->sizeof_stream_item(i)){
+                case sizeof(std::complex<int16_t>):
+                    vec = pmt::init_s16vector(len*2, (const int16_t*) buf[i]);
+                    break;
+                case sizeof(std::complex<float>):
+                    vec = pmt::init_c32vector(len, (const gr_complex*) buf[i]);
+                    break;
+                default:
+                    throw std::runtime_error("TODO: update es_sink for unknown item size to pdu");
+            }
+            buflist = pmt::cons(vec, buflist);
+        }
+        message_port_pub(pmt::mp("pdu_event"), pmt::cons(meta, buflist));
+    }
+
     }
 
 void
