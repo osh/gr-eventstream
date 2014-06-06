@@ -191,6 +191,7 @@ int es_queue::register_event_type(std::string type){
 }
 
 void es_queue::bind_handler(pmt_t type, gr::basic_block_sptr handler){
+    d_hvec.push_back(handler);
     bind_handler( pmt::symbol_to_string(type), handler);
     }
 
