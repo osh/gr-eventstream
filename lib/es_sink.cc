@@ -89,12 +89,6 @@ es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_ki
        }
     //set_history(d_history);
 
-    // instantiate the threadpool workers
-    for(int i=0; i<n_threads; i++){
-        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(pmt::PMT_NIL, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers) );
-        threadpool.push_back( th );
-    }
-
     // message port that tracks the production rate
     // for upstream schedulers
     message_port_register_out(pmt::mp("nconsumed"));
@@ -110,8 +104,19 @@ es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_ki
  */
 es_sink::~es_sink ()
 {
-
     //printf("es_sink::destructor running!\n");
+}
+
+bool es_sink::start(){
+    // instantiate the threadpool workers
+    for(int i=0; i<n_threads; i++){
+        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(pmt::PMT_NIL, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers) );
+        threadpool.push_back( th );
+    }
+}
+
+bool es_sink::stop(){
+    //printf("es_sink::stop running!\n");
     wait_events();
 
     //printf("waiting for join\n");
@@ -119,8 +124,8 @@ es_sink::~es_sink ()
     for(int i=0; i<n_threads; i++){
         threadpool[i]->stop();
     }
+    threadpool.clear();
 }
-
 
 void 
 es_sink::handler(pmt_t msg, gr_vector_void_star buf){
@@ -558,9 +563,9 @@ void es_sink::wait_events(){
     while(d_nevents>0){
         // we need to allow our python flowgraph handlers to be able to grab the GIL here...
         qq_cond.notify_all();
-        Py_BEGIN_ALLOW_THREADS
+        //Py_BEGIN_ALLOW_THREADS
         boost::this_thread::yield();
-        Py_END_ALLOW_THREADS
+        //Py_END_ALLOW_THREADS
         }
 }
 

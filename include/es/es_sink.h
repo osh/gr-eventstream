@@ -109,6 +109,9 @@ private:
   //bool state_done_prevent_exit() { return false; }
   //bool state_done_call_empty() { return false; }
   void setup_rpc();
+  bool start();
+  bool stop();
+
 
   private:
     uint64_t d_buffer_window_size;

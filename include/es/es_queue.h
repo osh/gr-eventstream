@@ -51,7 +51,7 @@ class es_queue {
 
     public:
 
-
+        std::vector<gr::basic_block_sptr> d_hvec;
         es_queue(enum es_queue_early_behaviors = DISCARD);
         int add_event(pmt_t evt);
         void print_queue(bool already_locked = false);
