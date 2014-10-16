@@ -393,7 +393,7 @@ es_sink::work (int noutput_items,
   //printf("entered es_sink::work()\n");
   // compute the min and max sample times currently accessible in the buffer
   unsigned long long max_time = d_time + noutput_items;
-  unsigned long long min_time = (d_history > d_time)?0:d_time-d_history;
+  unsigned long long min_time = (d_history > d_time)?0:d_time-d_history+1;
 
   d_buffer_window_size = max_time - min_time;
 
@@ -430,12 +430,14 @@ es_sink::work (int noutput_items,
     uint64_t etime = ::event_time(eh->event);
 
     // compute the local buffer offset of the event
-    int buffer_offset = std::max(0, (int)(etime - d_time + d_history - 1));
+    int buffer_offset = (int)(etime - d_time + d_history - 1);
 
-//    printf("event(%lu), time(%lu), history(%lu), offset(%d)\n",
-//            etime, d_time, d_history, buffer_offset);
-//    if(buffer_offset < 0)
-//        throw std::runtime_error("bad offset");
+    //printf("event(%lu), time(%lu), history(%lu), offset(%d)\n",
+    //        etime, d_time, d_history, buffer_offset);
+    if(buffer_offset < 0) {
+        printf("WARNING: bad buffer_offset: %d, Dropping Data!\n",buffer_offset);
+        buffer_offset = 0;
+    }
 
     pmt_t buf_list = PMT_NIL;
     bool first_item = true;
