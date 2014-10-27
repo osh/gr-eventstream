@@ -113,13 +113,21 @@ void es_handler_insert_vector::handler( pmt_t msg, gr_vector_void_star buf ) {
     */
     if( event_type_compare( msg, es::event_type_gen_vector ) ||
         event_type_compare( msg, pmt::mp("pdu_event")) ){
+
+        // make sure our uniform vector is in a list for below...
+        if(pmt::is_uniform_vector(vector)){
+            vector = pmt::list1(vector);
+            }        
+
+        // copy vectors of data into our output buffer
         for(int i=0; i<buf.size(); i++){
             pmt_t buf_i = pmt::nth( i, vector );
-            size_t blen = 0;
-            const uint8_t * bufdatasrc = pmt::u8vector_elements( buf_i, blen );
+            size_t byte_len = 0;
+            size_t itemsize = pmt::uniform_vector_itemsize(buf_i);
+            const void * bufdatasrc = pmt::uniform_vector_elements( buf_i, byte_len );
             // we really should be making sure buffer lenghts line up here.
             //assert( blen == len * d_output_signature->sizeof_stream_item(i) );
-            memcpy( buf[i], bufdatasrc, blen );
+            memcpy( buf[i], bufdatasrc, byte_len );
         }
 
     } else

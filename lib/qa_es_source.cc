@@ -52,6 +52,7 @@ qa_es_source::t1()
 
 #include <gnuradio/top_block.h>
 #include <gnuradio/blocks/vector_sink_f.h>
+#include <gnuradio/blocks/vector_sink_c.h>
 
 // Test gr-runtime operation of single event item
 void
@@ -77,26 +78,8 @@ qa_es_source::t2()
     pmt_t e1 = event_create_gen_vector_f( (uint64_t)3, e1_vector );   
     
     
-//    es_event_sptr e1 = es_event_sptr(new event_gen_vector_f( arb, const_ramp ));   
-//    e1->set_time(3);
-
-    // set up handlers for the event
-//    es_handler_sptr h1( new es_handler_print() );
-//    es_handler_sptr h2( new es_handler_insert_vector_f() );
-
-    // register the event
-//    q->register_event_type(e1->type());
-
-    // bind handlers to the event
-//    q->bind_handler( e1->type(), h1 );
-//    q->bind_handler( e1->type(), h2 );
-
-    // manually add event to queue
-    //q->add_event(e1);
-    
     printf("QA_ES_SOURCE::t200CMT BARRIER\n");
 
-    
     gr::top_block_sptr tb = gr::make_top_block("t2 graph");
     gr::blocks::vector_sink_f::sptr vs = gr::blocks::vector_sink_f::make();
  
@@ -114,5 +97,45 @@ qa_es_source::t2()
 }
 
 
+// Test gr-runtime operation of single event item
+void
+qa_es_source::t3()
+{
+
+    printf("QA_ES_SOURCE::t3\n");
+
+    gr_vector_int outsig(1);
+    outsig[0] = sizeof(gr_complex);
+    es_source_sptr s = es_make_source(outsig);
+
+    s->set_max(100);
+
+    std::vector<gr_complex> const_ramp;
+    const_ramp.push_back(gr_complex(1.0,0));
+    const_ramp.push_back(gr_complex(0.75,0.5));
+    const_ramp.push_back(gr_complex(0.5,1));
+    const_ramp.push_back(gr_complex(0.25,2));
+
+    // set up the event
+    pmt_t e1_vector = pmt::init_c32vector( const_ramp.size(), &const_ramp[0] );
+    pmt_t e1 = event_create( pmt::mp("pdu_event"), 0, const_ramp.size() );
+    e1 = event_args_add(e1, pmt::mp("vector"), e1_vector);
+
+    gr::top_block_sptr tb = gr::make_top_block("t3 graph");
+    gr::blocks::vector_sink_c::sptr vs = gr::blocks::vector_sink_c::make();
+    s->schedule_event(e1);
+
+    tb->connect( s, 0, vs, 0 );
+    printf("running flowgraph.\n");
+    tb->run();
+
+    std::vector<gr_complex> out_data = vs->data();
+    printf("total_output_vector=[");
+    for(int i=0; i<out_data.size(); i++){
+        printf("(%f,%f),", out_data[i].real(), out_data[i].imag());
+    }
+    printf("]\n");
+
+}
 
 
