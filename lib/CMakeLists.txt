@@ -71,6 +71,24 @@ INSTALL(TARGETS eventstream
 )
 
 
+#######################################################
+# STATIC LIB BUILD
+#######################################################
+if(ENABLE_STATIC_LIBS)
+
+    add_library(eventstream_static STATIC ${eventstream_sources})
+
+    set_target_properties(eventstream_static PROPERTIES OUTPUT_NAME eventstream)
+    install(TARGETS eventstream_static
+        LIBRARY DESTINATION lib${LIB_SUFFIX} # .so/.dylib file
+        ARCHIVE DESTINATION lib${LIB_SUFFIX} # .lib file
+        RUNTIME DESTINATION bin              # .dll file
+    )
+
+endif()
+
+
+
 ########################################################################
 # Build and register unit test
 ########################################################################

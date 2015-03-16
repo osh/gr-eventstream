@@ -18,6 +18,9 @@ set(CMAKE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/share/gnuradio/cmake/Modules)
 
+OPTION(ENABLE_STATIC_LIBS "Enable building of static libraries" OFF)
+message(STATUS "Building Static Libraries: ${ENABLE_STATIC_LIBS}")
+
 ########################################################################
 # Dependencies setup
 ########################################################################
@@ -45,11 +48,18 @@ if (NOT ICE_FOUND)
     find_package(ICE)
 endif()
 
+# Enable Control Port code by default.
+option(ENABLE_GR_CTRLPORT "Enable the Control Port stats." ON)
+message(STATUS "Control Port ${ENABLE_GR_CTRLPORT}")
+
 if (NOT ICE_FOUND)
     message(STATUS "ICE not found, GR_CTRLPORT will not be enabled.")
 else()
-    message(STATUS "Enabling GR_CTRLPORT.")
-    add_definitions(-DGR_CTRLPORT)
+    
+    if (ENABLE_GR_CTRLPORT)
+        message(STATUS "Enabling GR_CTRLPORT.")
+        add_definitions(-DGR_CTRLPORT)
+    endif()
 endif()
 
 # locate python
