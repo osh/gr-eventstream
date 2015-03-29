@@ -26,3 +26,4 @@
 /install-sh
 *.pc
 .svn
+build
