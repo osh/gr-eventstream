@@ -129,4 +129,9 @@ es_trigger_edge_f::work (int noutput_items,
   
 }
 
+void 
+es_trigger_edge_f::set_thresh(float thresh)
+{
+  d_thresh = thresh;
+}
 
