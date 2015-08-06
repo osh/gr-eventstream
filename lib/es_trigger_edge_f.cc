@@ -111,7 +111,7 @@ es_trigger_edge_f::work (int noutput_items,
         //pmt_t e1 = event_create( event_type(0), d_time-d_lookback, d_length );
         uint64_t event_time = (i+d_time)>d_lookback?i+d_time-d_lookback:0;
         pmt_t e1 = event_create( pmt::mp("edge_event"), event_time, d_length );
-        std::cout << "creating event @ time " << event_time << ", length = " << d_length << "\n";
+        //std::cout << "creating event @ time " << event_time << ", length = " << d_length << "\n";
     
         // add event to our queue
         message_port_pub(pmt::mp("which_stream"), e1);
