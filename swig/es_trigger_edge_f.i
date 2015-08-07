@@ -31,6 +31,8 @@ private:
   es_trigger_edge_f (float thresh, int length, int lookback, int itemsize, int guard);   // private constructor
 
  public:
+  void set_thresh(float thresh);
+
   float d_thresh;
   float d_lastval;
 };

@@ -19,8 +19,8 @@
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
  */
-#ifndef INCLUDED_EVENTSTREAM_TRIGGER_RISINGEDGE_F_H
-#define INCLUDED_EVENTSTREAM_TRIGGER_RISINGEDGE_F_H
+#ifndef INCLUDED_EVENTSTREAM_TRIGGER_EDGE_F_H
+#define INCLUDED_EVENTSTREAM_TRIGGER_EDGE_F_H
 
 #include <gnuradio/sync_block.h>
 #include <pmt/pmt.h>
@@ -49,8 +49,10 @@ private:
 	    gr_vector_const_void_star &input_items,
 	    gr_vector_void_star &output_items);
 
+  void set_thresh(float thresh);
+
   float d_thresh;
   float d_lastval;
 };
 
-#endif /* INCLUDED_EVENTSTREAM_SQUARE2_FF_H */
+#endif /* INCLUDED_EVENTSTREAM_TRIGGER_EDGE_F_H */
