@@ -6,6 +6,8 @@
   <import>import es</import>
   <make>es.trigger_edge_f($thresh,$length,$lookback,$type.size,$guard)</make>
   
+  <callback>self.$(id).set_thresh($thresh)</callback>
+
   <param>
     <name>Trigger Threshold</name>
     <key>thresh</key>
