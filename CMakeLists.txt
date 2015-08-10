@@ -43,6 +43,11 @@ if(NOT CPPUNIT_FOUND)
     message(FATAL_ERROR "CPPUNIT NOT FOUND!")
 endif(NOT CPPUNIT_FOUND)
 
+find_package(Log4Cpp)
+if(NOT LOG4CPP_FOUND)
+    message(FATAL_ERROR "LOG4CPP NOT FOUND!")
+endif(NOT LOG4CPP_FOUND)
+
 find_package(ICE-3.5)
 if (NOT ICE_FOUND)
     find_package(ICE)
@@ -90,10 +95,8 @@ set(BOOST_REQUIRED_COMPONENTS
     regex
 )
 MESSAGE("")
-#find_package(Threads REQUIRED)
 set(Boost_USE_MULTITHREADED ON)
-FIND_PACKAGE(Boost "1.53" COMPONENTS system)
-#FIND_PACKAGE(Boost "1.53" COMPONENTS ${BOOST_REQUIRED_COMPONENTS})
+FIND_PACKAGE(Boost "1.53" COMPONENTS ${BOOST_REQUIRED_COMPONENTS})
 
 IF(NOT Boost_FOUND)
     MESSAGE(FATAL_ERROR "Boost required")
@@ -111,6 +114,29 @@ set(includedir "\${prefix}/include")
 set(grcdir "\${prefix}/share/gnuradio/grc/blocks/")
 set(GR_PKG_DATA_DIR "\${prefix}/share/gnuradio/")
 set(GRC_BLOCKS_DIR      ${GR_PKG_DATA_DIR}/grc/blocks)
+set(GR_LIBRARY_DIR lib${LIB_SUFFIX})
+
+
+########################################################################
+# On Apple only, set install name and use rpath correctly, if not already set
+########################################################################
+if(APPLE)
+    if(NOT CMAKE_INSTALL_NAME_DIR)
+        set(CMAKE_INSTALL_NAME_DIR
+            ${CMAKE_INSTALL_PREFIX}/${GR_LIBRARY_DIR} CACHE
+            PATH "Library Install Name Destination Directory" FORCE)
+    endif(NOT CMAKE_INSTALL_NAME_DIR)
+    if(NOT CMAKE_INSTALL_RPATH)
+        set(CMAKE_INSTALL_RPATH
+            ${CMAKE_INSTALL_PREFIX}/${GR_LIBRARY_DIR} CACHE
+            PATH "Library Install RPath" FORCE)
+    endif(NOT CMAKE_INSTALL_RPATH)
+    if(NOT CMAKE_BUILD_WITH_INSTALL_RPATH)
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH ON CACHE
+            BOOL "Do Build Using Library Install RPath" FORCE)
+    endif(NOT CMAKE_BUILD_WITH_INSTALL_RPATH)
+endif(APPLE)
+
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/eventstream.pc.in
