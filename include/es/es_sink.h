@@ -45,8 +45,12 @@ using namespace boost::accumulators;
 typedef accumulator_set<double, stats<tag::rolling_mean> > acc_avg_t;
 typedef boost::shared_ptr<es_sink> es_sink_sptr;
 
-es_sink_sptr es_make_sink (gr_vector_int insig, int n_threads,
-		int sample_history_in_kilosamples=64, enum es_queue_early_behaviors = DISCARD);
+es_sink_sptr es_make_sink (
+    gr_vector_int insig,
+    int n_threads,
+    int sample_history_in_kilosamples=64,
+    enum es_queue_early_behaviors = DISCARD,
+    enum es_search_styles = SEARCH_FORWARD);
 
 //class es_sink :  public virtual gr::sync_block, public es_event_acceptor
 class es_sink :  public virtual es_handler, public virtual es_event_acceptor
@@ -55,18 +59,26 @@ private:
   pmt::pmt_t latest_tags;
 
   //New constructor with user-selectable sample history.
-  friend es_sink_sptr es_make_sink (gr_vector_int insig, int n_threads,
-		  int sample_history_in_kilosamples, enum es_queue_early_behaviors);
-  es_sink (gr_vector_int insig, int n_threads,
-		  int sample_history_in_kilosamples=64, enum es_queue_early_behaviors = DISCARD);  	// private constructor
+  friend es_sink_sptr es_make_sink (
+    gr_vector_int insig,
+    int n_threads,
+    int sample_history_in_kilosamples,
+    enum es_queue_early_behaviors,
+    enum es_search_styles);
+  es_sink (
+    gr_vector_int insig,
+    int n_threads,
+    int sample_history_in_kilosamples=64,
+    enum es_queue_early_behaviors = DISCARD,
+    enum es_search_styles = SEARCH_FORWARD);  // private constructor
   void handler(pmt_t msg, gr_vector_void_star buf);
 
  public:
   ~es_sink ();	// public destructor
 
   int work (int noutput_items,
-	    gr_vector_const_void_star &input_items,
-	    gr_vector_void_star &output_items);
+            gr_vector_const_void_star &input_items,
+            gr_vector_void_star &output_items);
   int num_events();
   uint64_t num_discarded();
   uint64_t num_asap();
@@ -98,7 +110,7 @@ private:
   boost::lockfree::queue<unsigned long long> dq;
 
   std::vector<boost::shared_ptr<es_event_loop_thread> > threadpool;
-  std::vector<unsigned long long> live_event_times;
+  std::vector<uint64_t> live_event_times;
 
   bool state_done_prevent_exit() { return (d_nevents + event_queue->length())!=0; }
   bool state_done_call_empty() { return (d_nevents + event_queue->length())!=0; }
@@ -114,6 +126,11 @@ private:
     boost::atomic<uint64_t> d_num_running_handlers;
     acc_avg_t d_avg_ratio;
     acc_avg_t d_avg_thread_utilization;
+
+    int d_search_style;
+    int find_index(uint64_t evt_time);
+
+    index_search_direct<uint64_t> d_idx_srch;
 
 
 };

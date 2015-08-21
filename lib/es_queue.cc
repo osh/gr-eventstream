@@ -23,6 +23,7 @@
 #include <es/es_queue.h>
 #include <es/es_common.h>
 #include <es/es_exceptions.h>
+#include <algorithm>
 
 #include <limits.h>
 #include <stdio.h>
@@ -30,14 +31,14 @@
 #define DEBUG(X)
 //#define DEBUG(X)  X
 
-es_queue_sptr es_make_queue(es_queue_early_behaviors eb){
-    return es_queue_sptr(new es_queue(eb));
+es_queue_sptr es_make_queue(es_queue_early_behaviors eb, es_search_styles ss){
+    return es_queue_sptr(new es_queue(eb, ss));
 }
 
-es_queue::es_queue(es_queue_early_behaviors eb) :
+es_queue::es_queue(es_queue_early_behaviors eb, es_search_styles ss) :
     d_early_behavior(eb), d_num_discarded(0), d_num_asap(0),
     d_num_events_added(0), d_num_events_removed(0), d_event_time(0),
-    d_num_soon(0)
+    d_num_soon(0), d_search_style(ss), d_idx_srch(event_queue)
 {
     bindings = pmt::make_dict();
 }
@@ -51,6 +52,24 @@ int es_queue::length(){
     int l = event_queue.size();
     queue_lock.unlock();
     return l;
+}
+
+int es_queue::find_index(uint64_t evt_time)
+{
+    return d_idx_srch.find(
+        evt_time,
+        static_cast<int>(d_search_style));
+    //switch (search_style)
+    //{
+    //    case SEARCH_FORWARD:
+    //        return d_idx_srch.find_forward(evt_time);
+    //    case SEARCH_REVERSE:
+    //        return d_idx_srch.find_reverse(evt_time);
+    //    case SEARCH_BINARY:
+    //        return d_idx_srch.find_binary(evt_time);
+    //    default:
+    //        return d_idx_srch.find_forward(evt_time);
+    //}
 }
 
 int es_queue::add_event(pmt_t evt){
@@ -88,11 +107,11 @@ int es_queue::add_event(pmt_t evt){
     if(event_time(evt) == ULLONG_MAX){
         fprintf(stderr, "WARNING: event recieved with unset time. (%s)\n", event_type(evt).c_str());
     }
-    int idx;
 
     queue_lock.lock();
-
-    for(idx=0; (idx < event_queue.size() && event_time(evt) > event_queue[idx]->time() ); idx++){ }
+    //index_search_es_queue<es_eh_pair*, uint64_t> idx_srch(event_queue);
+    index_search_es_queue<es_eh_pair*, uint64_t> idx_srch(event_queue);
+    int idx = idx_srch.find_forward(event_time(evt));
 
     //for(int i=0; i<handlers.size(); i++){
 
