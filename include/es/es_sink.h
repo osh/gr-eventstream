@@ -127,6 +127,9 @@ private:
     acc_avg_t d_avg_ratio;
     acc_avg_t d_avg_thread_utilization;
 
+    /**
+     * @brief Configuration variable for selecting an insertion sort algorithm.
+     */
     es_search_behaviors d_search_behavior;
     int find_index(const uint64_t& evt_time);
     size_t find_forward(const uint64_t& evt_time);

@@ -389,6 +389,17 @@ es_sink::event_thread_utilization()
     return rolling_mean(d_avg_thread_utilization);
 }
 
+/**
+ * @brief Search forward through live_event_times to find an insertion index.
+ *
+ * Search forward starting at the beginning of the live_event_times list and
+ * continuing until either an appropriate insertion index is found or the end
+ * of the list is reached.
+ *
+ * @param [in] evt_time Event time to insert into the live_event_times list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
 size_t
 es_sink::find_forward(const uint64_t& evt_time)
 {
@@ -397,6 +408,17 @@ es_sink::find_forward(const uint64_t& evt_time)
   return idx;
 }
 
+/**
+ * @brief Search backward through live_event_times to find an insertion index.
+ *
+ * Search backward starting at the end of the live_event_times list and
+ * continuing until either an appropriate insertion index is found or the
+ * beginning of the list is reached.
+ *
+ * @param [in] evt_time Event time to insert into the live_event_times list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
 size_t
 es_sink::find_reverse(const uint64_t& evt_time)
 {
@@ -413,11 +435,31 @@ es_sink::find_reverse(const uint64_t& evt_time)
   return idx + 1;
 }
 
+/**
+ * @brief Comparison function used by the binary search method find_binary().
+ *
+ * @param [in] vval Reference to an item in the live_event_times vector (vector
+ *   value).
+ * @param [in] cval Reference to an item to be inserted into the
+ *   live_event_times vector (comparison value).
+ */
 bool sink_compare(const uint64_t& vval, const uint64_t& cval)
 {
   return cval > vval;
 };
 
+/**
+ * @brief Search through a sorted list using a binary pattern to find an
+ *   insertion index.
+ *
+ * Search using a binary pattern starting at the beginning of the
+ * live_event_times list and continuing until either an appropriate insertion
+ * index is found or the binary search is exhausted.
+ *
+ * @param [in] evt_time Event time to insert into the live_event_times list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
 size_t
 es_sink::find_binary(const uint64_t& evt_time)
 {
@@ -428,6 +470,16 @@ es_sink::find_binary(const uint64_t& evt_time)
       sink_compare) - live_event_times.begin();
 }
 
+/**
+ * @brief Search using the preconfigured search type for an insertion index.
+ *
+ * This is a wrapper method to call the appropriate search method based on the
+ * value of the d_search_behavior member variable.
+ *
+ * @param [in] evt_time Event time to insert into the live_event_times list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
 int es_sink::find_index(const uint64_t& evt_time)
 {
     switch(d_search_behavior)

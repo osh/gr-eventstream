@@ -102,6 +102,9 @@ class es_queue {
         std::vector< es_handler_sptr > protected_handler;
         std::vector< boost::function< bool (es_eh_pair**) > > cb_list;
 
+        /**
+         * @brief Configuration variable for selecting an insertion sort algorithm.
+         */
         es_search_behaviors d_search_behavior;
         int find_index(uint64_t evt_time);
         size_t find_forward(const uint64_t evt_time);

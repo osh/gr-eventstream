@@ -54,6 +54,17 @@ int es_queue::length(){
     return l;
 }
 
+/**
+ * @brief Search forward through event_queue to find an insertion index.
+ *
+ * Search forward starting at the beginning of the event_queue and
+ * continuing until either an appropriate insertion index is found or the
+ * end of the list is reached.
+ *
+ * @param [in] evt_time Event time to insert into the event_queue list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
 size_t
 es_queue::find_forward(const uint64_t evt_time)
 {
@@ -62,6 +73,17 @@ es_queue::find_forward(const uint64_t evt_time)
   return idx;
 }
 
+/**
+ * @brief Search backward through event_queue to find an insertion index.
+ *
+ * Search backward starting at the end of the event_queue list and
+ * continuing until either an appropriate insertion index is found or the
+ * beginning of the list is reached.
+ *
+ * @param [in] evt_time Event time to insert into the event_queue list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
 size_t
 es_queue::find_reverse(const uint64_t evt_time)
 {
@@ -78,6 +100,14 @@ es_queue::find_reverse(const uint64_t evt_time)
   return idx + 1;
 }
 
+/**
+ * @brief Comparison function used by the binary search method find_binary().
+ *
+ * @param [in] vval Reference to an item in the event_queue vector (vector
+ *   value).
+ * @param [in] cval Reference to an item to be inserted into the
+ *   event_queue vector (comparison value).
+ */
 bool queue_compare(es_eh_pair* vval, const int64_t& cval)
 {
   return cval > vval->time();
@@ -95,6 +125,18 @@ es_queue::find_binary(const uint64_t evt_time)
     return low - event_queue.begin();
 }
 
+/**
+ * @brief Search through a sorted list using a binary pattern to find an
+ *   insertion index.
+ *
+ * Search using a binary pattern starting at the beginning of the
+ * event_queue list and continuing until either an appropriate insertion
+ * index is found or the binary search is exhausted.
+ *
+ * @param [in] evt_time Event time to insert into the event_queue list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
 int es_queue::find_index(uint64_t evt_time)
 {
     switch(d_search_behavior)
@@ -147,6 +189,7 @@ int es_queue::add_event(pmt_t evt){
     }
 
     queue_lock.lock();
+
     int idx = find_index(event_time(evt));
 
     //for(int i=0; i<handlers.size(); i++){
