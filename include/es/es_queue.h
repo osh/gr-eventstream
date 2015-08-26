@@ -32,7 +32,6 @@ class es_queue;
 typedef boost::shared_ptr<es_queue> es_queue_sptr;
 
 
-#include <es/es_find_index.hh>
 #include <es/es_eh_pair.hh>
 #include <es/es_event.h>
 #include <es/es_handler.h>
@@ -44,55 +43,10 @@ enum es_queue_early_behaviors {
             ASAP
 };
 
-template<typename T, typename T2> class index_search_es_queue;
-
-/**
- * @brief Provide an es_queue comparison implemention for index_search_base.
- *
- * This class derives from index_search_base and provides a specialized
- * implementation for the case when T and T2 index_search_base template
- * parameters are of types es_eh_pair* and uint64_t respectively. In other
- * words, the type of the value stored in the sorted vector is es_eh_pair* and
- * the type of the value to be compared is uint64_t. Since the types are not
- * equal the index_search_direct implementation cannot be used.
- */
-template<>
-class index_search_es_queue<es_eh_pair*, uint64_t>:
-    public index_search_base<
-        index_search_es_queue<es_eh_pair*, uint64_t>, es_eh_pair*, uint64_t>
-{
-  public:
-  typedef es_eh_pair* pair_ptr;
-  /**
-   * @brief Compare vval and cval.
-   *
-   * @param [in] vval Reference to a vector value.
-   *
-   * @param [in] cval Reference to a comparison value.
-   *
-   * @return True if cval > vval->time(), else false.
-   */
-  static bool compare_static(const pair_ptr& vval, const uint64_t& cval)
-  {
-    return cval > vval->time();
-  }
-
-  /**
-   * @brief Constructor.
-   *
-   * @param [in] vec Reference to sorted vector.
-   */
-  index_search_es_queue(std::vector<pair_ptr>& vec):
-    index_search_base<
-        index_search_es_queue<pair_ptr, uint64_t>,
-        pair_ptr,
-        uint64_t>(vec)
-  {};
-};
 
 es_queue_sptr es_make_queue(
     enum es_queue_early_behaviors = DISCARD,
-    enum es_search_styles ss = SEARCH_FORWARD);
+    enum es_search_behaviors sb = SEARCH_BINARY);
 
 class es_eh_queue;
 
@@ -104,7 +58,7 @@ class es_queue {
         std::vector<gr::basic_block_sptr> d_hvec;
         es_queue(
             enum es_queue_early_behaviors = DISCARD,
-            enum es_search_styles = SEARCH_FORWARD);
+            enum es_search_behaviors = SEARCH_BINARY);
         int add_event(pmt_t evt);
         void print_queue(bool already_locked = false);
         int fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh);
@@ -148,11 +102,11 @@ class es_queue {
         std::vector< es_handler_sptr > protected_handler;
         std::vector< boost::function< bool (es_eh_pair**) > > cb_list;
 
-
-        es_search_styles d_search_style;
+        es_search_behaviors d_search_behavior;
         int find_index(uint64_t evt_time);
-
-        index_search_es_queue<es_eh_pair*, uint64_t> d_idx_srch;
+        size_t find_forward(const uint64_t evt_time);
+        size_t find_reverse(const uint64_t evt_time);
+        size_t find_binary(const uint64_t evt_time);
 };
 
 

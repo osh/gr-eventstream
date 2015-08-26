@@ -50,7 +50,7 @@ es_sink_sptr es_make_sink (
     int n_threads,
     int sample_history_in_kilosamples=64,
     enum es_queue_early_behaviors = DISCARD,
-    enum es_search_styles = SEARCH_FORWARD);
+    enum es_search_behaviors = SEARCH_BINARY);
 
 //class es_sink :  public virtual gr::sync_block, public es_event_acceptor
 class es_sink :  public virtual es_handler, public virtual es_event_acceptor
@@ -64,13 +64,13 @@ private:
     int n_threads,
     int sample_history_in_kilosamples,
     enum es_queue_early_behaviors,
-    enum es_search_styles);
+    enum es_search_behaviors);
   es_sink (
     gr_vector_int insig,
     int n_threads,
     int sample_history_in_kilosamples=64,
     enum es_queue_early_behaviors = DISCARD,
-    enum es_search_styles = SEARCH_FORWARD);  // private constructor
+    enum es_search_behaviors = SEARCH_BINARY);  // private constructor
   void handler(pmt_t msg, gr_vector_void_star buf);
 
  public:
@@ -127,10 +127,12 @@ private:
     acc_avg_t d_avg_ratio;
     acc_avg_t d_avg_thread_utilization;
 
-    int d_search_style;
-    int find_index(uint64_t evt_time);
+    es_search_behaviors d_search_behavior;
+    int find_index(const uint64_t& evt_time);
+    size_t find_forward(const uint64_t& evt_time);
+    size_t find_reverse(const uint64_t& evt_time);
+    size_t find_binary(const uint64_t& evt_time);
 
-    index_search_direct<uint64_t> d_idx_srch;
 
 
 };

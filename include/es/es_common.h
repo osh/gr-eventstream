@@ -53,7 +53,7 @@ class es {
 
 };
 
-enum es_search_styles {
+enum es_search_behaviors {
     SEARCH_FORWARD,
     SEARCH_REVERSE,
     SEARCH_BINARY

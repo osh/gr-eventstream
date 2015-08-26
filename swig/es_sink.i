@@ -24,11 +24,11 @@ GR_SWIG_BLOCK_MAGIC(es,sink);
 %include "std_string.i"
 %include "std_vector.i"
 
-es_sink_sptr es_make_sink (std::vector<int> insig, int n_threads, int sample_history_in_kilosamples=64, enum es_queue_early_behaviors eb = DISCARD, enum es_search_styles ss = SEARCH_FORWARD);
+es_sink_sptr es_make_sink (std::vector<int> insig, int n_threads, int sample_history_in_kilosamples=64, enum es_queue_early_behaviors eb = DISCARD, enum es_search_behaviors sb = SEARCH_BINARY);
 
 class es_sink : public gr::sync_block
 {
-  es_sink (std::vector<int> insig, int n_threads, int sample_history_in_kilosamples=64, enum es_queue_early_behaviors eb = DISCARD, enum es_search_styles ss = SEARCH_FORWARD);   // private constructor
+  es_sink (std::vector<int> insig, int n_threads, int sample_history_in_kilosamples=64, enum es_queue_early_behaviors eb = DISCARD, enum es_search_behaviors sb = SEARCH_BINARY);   // private constructor
 
   es_queue_sptr event_queue;
   unsigned long long d_time;

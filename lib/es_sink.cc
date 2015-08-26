@@ -34,7 +34,6 @@
 #include <es/es.h>
 #include <gnuradio/io_signature.h>
 #include <stdio.h>
-#include <es/es_find_index.hh>
 
 #define DEBUG(X)
 //#define DEBUG(X) X
@@ -49,10 +48,10 @@ es_make_sink (
     int n_threads,
     int sample_history_in_kilosamples,
     enum es_queue_early_behaviors eb,
-    enum es_search_styles ss)
+    enum es_search_behaviors sb)
 {
   return es_sink_sptr (
-    new es_sink (insig,n_threads,sample_history_in_kilosamples,eb,ss));
+    new es_sink (insig,n_threads,sample_history_in_kilosamples,eb,sb));
 }
 
 /*
@@ -75,7 +74,7 @@ es_sink::es_sink (
   int _n_threads,
   int _sample_history_in_kilosamples,
   enum es_queue_early_behaviors eb,
-  enum es_search_styles ss)
+  enum es_search_behaviors sb)
     : gr::sync_block (
         "es_sink",
         es_make_io_signature(insig.size(), insig),
@@ -87,10 +86,9 @@ es_sink::es_sink (
         d_avg_ratio(tag::rolling_window::window_size=50),
         d_avg_thread_utilization(tag::rolling_window::window_size=50),
         latest_tags(pmt::make_dict()),
-        d_search_style(ss),
-        d_idx_srch(live_event_times)
+        d_search_behavior(sb)
 {
-    event_acceptor_setup(eb);
+    event_acceptor_setup(eb, sb);
 
     d_time = 0;
     d_history = 1024*sample_history_in_kilosamples;
@@ -104,8 +102,6 @@ es_sink::es_sink (
     // set up our special pdu handler
     event_queue->register_event_type("pdu_event");
     event_queue->bind_handler("pdu_event", this);
-
-    //d_index_search = index_search_direct2<uint64_t>(live_event_times);
 }
 
 /*
@@ -393,20 +389,58 @@ es_sink::event_thread_utilization()
     return rolling_mean(d_avg_thread_utilization);
 }
 
-int es_sink::find_index(uint64_t evt_time)
+size_t
+es_sink::find_forward(const uint64_t& evt_time)
 {
-    return d_idx_srch.find(evt_time, d_search_style);
-    //switch (d_search_style)
-    //{
-    //    case SEARCH_FORWARD:
-    //        return d_idx_srch.find_forward(evt_time);
-    //    case SEARCH_REVERSE:
-    //        return d_idx_srch.find_reverse(evt_time);
-    //    case SEARCH_BINARY:
-    //        return d_idx_srch.find_binary(evt_time);
-    //    default:
-    //        return d_idx_srch.find_forward(evt_time);
-    //}
+  size_t idx = 0, sz = live_event_times.size();
+  for (idx = 0; idx < sz && evt_time > live_event_times[idx]; idx++){}
+  return idx;
+}
+
+size_t
+es_sink::find_reverse(const uint64_t& evt_time)
+{
+  size_t sz = live_event_times.size(), idx = 0;
+
+  // If nothing is in the vector then the insertion index must be 0.
+  if (sz == 0)
+  {
+    return 0;
+  }
+
+  for (idx = sz; idx-- > 0 && evt_time < live_event_times[idx];){}
+
+  return idx + 1;
+}
+
+bool sink_compare(const uint64_t& vval, const uint64_t& cval)
+{
+  return cval > vval;
+};
+
+size_t
+es_sink::find_binary(const uint64_t& evt_time)
+{
+    return std::lower_bound(
+      live_event_times.begin(),
+      live_event_times.end(),
+      evt_time,
+      sink_compare) - live_event_times.begin();
+}
+
+int es_sink::find_index(const uint64_t& evt_time)
+{
+    switch(d_search_behavior)
+    {
+        case SEARCH_BINARY:
+            return find_binary(evt_time);
+        case SEARCH_REVERSE:
+            return find_reverse(evt_time);
+        case SEARCH_FORWARD:
+            return find_forward(evt_time);
+        default:
+            return find_forward(evt_time);
+    }
 }
 
 int
@@ -501,15 +535,9 @@ es_sink::work (int noutput_items,
 
     // insert event time in an ordered list of live events
     int live_event_times_insert_offset = find_index(etime);
-    //int live_event_times_insert_offset = find_index(etime, d_search_style);
-
-    //while(live_event_times_insert_offset < live_event_times.size()){
-    //    if(live_event_times[live_event_times_insert_offset] > etime)
-    //        break;
-    //    live_event_times_insert_offset++;
-    //    }
     live_event_times.insert(live_event_times.begin() + live_event_times_insert_offset, etime);
 //    printf("adding live event time %lu\n", ::event_time(eh->event));
+
     qq_cond.notify_one();
 
   }

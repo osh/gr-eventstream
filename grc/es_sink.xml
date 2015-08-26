@@ -89,7 +89,7 @@
   <param>
     <name>Search Style</name>
     <key>ss</key>
-    <value></value>
+    <value>binary</value>
     <type>enum</type>
     <hide>none</hide>
     <option>

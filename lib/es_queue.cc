@@ -31,14 +31,14 @@
 #define DEBUG(X)
 //#define DEBUG(X)  X
 
-es_queue_sptr es_make_queue(es_queue_early_behaviors eb, es_search_styles ss){
-    return es_queue_sptr(new es_queue(eb, ss));
+es_queue_sptr es_make_queue(es_queue_early_behaviors eb, es_search_behaviors sb){
+    return es_queue_sptr(new es_queue(eb, sb));
 }
 
-es_queue::es_queue(es_queue_early_behaviors eb, es_search_styles ss) :
+es_queue::es_queue(es_queue_early_behaviors eb, es_search_behaviors sb) :
     d_early_behavior(eb), d_num_discarded(0), d_num_asap(0),
     d_num_events_added(0), d_num_events_removed(0), d_event_time(0),
-    d_num_soon(0), d_search_style(ss), d_idx_srch(event_queue)
+    d_num_soon(0), d_search_behavior(sb)
 {
     bindings = pmt::make_dict();
 }
@@ -54,22 +54,60 @@ int es_queue::length(){
     return l;
 }
 
+size_t
+es_queue::find_forward(const uint64_t evt_time)
+{
+  size_t idx = 0, sz = event_queue.size();
+  for (idx = 0; idx < sz && evt_time > event_queue[idx]->time(); idx++){}
+  return idx;
+}
+
+size_t
+es_queue::find_reverse(const uint64_t evt_time)
+{
+  size_t sz = event_queue.size(), idx = 0;
+
+  // If nothing is in the vector then the insertion index must be 0.
+  if (sz == 0)
+  {
+    return 0;
+  }
+
+  for (idx = sz; idx-- > 0 && evt_time < event_queue[idx]->time();){}
+
+  return idx + 1;
+}
+
+bool queue_compare(es_eh_pair* vval, const int64_t& cval)
+{
+  return cval > vval->time();
+};
+
+size_t
+es_queue::find_binary(const uint64_t evt_time)
+{
+    typename std::vector<es_eh_pair*>::iterator low;
+    low = std::lower_bound(
+      event_queue.begin(),
+      event_queue.end(),
+      evt_time,
+      queue_compare);
+    return low - event_queue.begin();
+}
+
 int es_queue::find_index(uint64_t evt_time)
 {
-    return d_idx_srch.find(
-        evt_time,
-        static_cast<int>(d_search_style));
-    //switch (search_style)
-    //{
-    //    case SEARCH_FORWARD:
-    //        return d_idx_srch.find_forward(evt_time);
-    //    case SEARCH_REVERSE:
-    //        return d_idx_srch.find_reverse(evt_time);
-    //    case SEARCH_BINARY:
-    //        return d_idx_srch.find_binary(evt_time);
-    //    default:
-    //        return d_idx_srch.find_forward(evt_time);
-    //}
+    switch(d_search_behavior)
+    {
+        case SEARCH_BINARY:
+            return find_binary(evt_time);
+        case SEARCH_REVERSE:
+            return find_reverse(evt_time);
+        case SEARCH_FORWARD:
+            return find_forward(evt_time);
+        default:
+            return find_forward(evt_time);
+    }
 }
 
 int es_queue::add_event(pmt_t evt){
@@ -109,9 +147,7 @@ int es_queue::add_event(pmt_t evt){
     }
 
     queue_lock.lock();
-    //index_search_es_queue<es_eh_pair*, uint64_t> idx_srch(event_queue);
-    index_search_es_queue<es_eh_pair*, uint64_t> idx_srch(event_queue);
-    int idx = idx_srch.find_forward(event_time(evt));
+    int idx = find_index(event_time(evt));
 
     //for(int i=0; i<handlers.size(); i++){
 
