@@ -91,7 +91,7 @@
     <key>ss</key>
     <value>binary</value>
     <type>enum</type>
-    <hide>none</hide>
+    <hide>part</hide>
     <option>
         <name>FORWARD</name>
         <key>forward</key>
