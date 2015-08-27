@@ -4,7 +4,7 @@
     <key>es_sink</key>
     <category>EVENTSTREAM</category>
     <import>import es</import>
-    <make>es.sink($num_streams*[$type.size],$nthreads,$samplehistory,$eb.raw)</make>
+    <make>es.sink($num_streams*[$type.size],$nthreads,$samplehistory,$eb.raw,$ss.raw)</make>
 
       <param>
         <name>IO Type</name>
@@ -82,6 +82,29 @@
     <option>
         <name>ASAP</name>
         <key>asap</key>
+        <opt>raw:2</opt>
+    </option>
+  </param>
+
+  <param>
+    <name>Search Style</name>
+    <key>ss</key>
+    <value>binary</value>
+    <type>enum</type>
+    <hide>part</hide>
+    <option>
+        <name>FORWARD</name>
+        <key>forward</key>
+        <opt>raw:0</opt>
+    </option>
+    <option>
+        <name>REVERSE</name>
+        <key>reverse</key>
+        <opt>raw:1</opt>
+    </option>
+    <option>
+        <name>BINARY</name>
+        <key>binary</key>
         <opt>raw:2</opt>
     </option>
   </param>

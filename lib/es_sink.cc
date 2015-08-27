@@ -43,10 +43,15 @@
  * a boost shared_ptr.  This is effectively the public constructor.
  */
 es_sink_sptr
-es_make_sink (gr_vector_int insig, int n_threads,
-		int sample_history_in_kilosamples, enum es_queue_early_behaviors eb)
+es_make_sink (
+    gr_vector_int insig,
+    int n_threads,
+    int sample_history_in_kilosamples,
+    enum es_queue_early_behaviors eb,
+    enum es_search_behaviors sb)
 {
-  return es_sink_sptr (new es_sink (insig,n_threads,sample_history_in_kilosamples,eb));
+  return es_sink_sptr (
+    new es_sink (insig,n_threads,sample_history_in_kilosamples,eb,sb));
 }
 
 /*
@@ -64,18 +69,26 @@ static const int MAX_OUT = 0;	// maximum number of output streams
 /*
  * The private constructor - NEW, with user-configurable sample history.
  */
-es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_kilosamples, enum es_queue_early_behaviors eb)
-  : gr::sync_block ("es_sink",
-           es_make_io_signature(insig.size(), insig),
-		   gr::io_signature::make (MIN_OUT, MAX_OUT, 0)), 
-    n_threads(_n_threads),
-    d_nevents(0), sample_history_in_kilosamples(_sample_history_in_kilosamples),
-    qq(100), dq(100), d_num_running_handlers(0),
-    d_avg_ratio(tag::rolling_window::window_size=50),
-    d_avg_thread_utilization(tag::rolling_window::window_size=50),
-    latest_tags(pmt::make_dict())
+es_sink::es_sink (
+  gr_vector_int insig,
+  int _n_threads,
+  int _sample_history_in_kilosamples,
+  enum es_queue_early_behaviors eb,
+  enum es_search_behaviors sb)
+    : gr::sync_block (
+        "es_sink",
+        es_make_io_signature(insig.size(), insig),
+        gr::io_signature::make (MIN_OUT, MAX_OUT, 0)),
+        n_threads(_n_threads),
+        d_nevents(0),
+        sample_history_in_kilosamples(_sample_history_in_kilosamples),
+        qq(100), dq(100), d_num_running_handlers(0),
+        d_avg_ratio(tag::rolling_window::window_size=50),
+        d_avg_thread_utilization(tag::rolling_window::window_size=50),
+        latest_tags(pmt::make_dict()),
+        d_search_behavior(sb)
 {
-    event_acceptor_setup(eb);
+    event_acceptor_setup(eb, sb);
 
     d_time = 0;
     d_history = 1024*sample_history_in_kilosamples;
@@ -90,7 +103,7 @@ es_sink::es_sink (gr_vector_int insig, int _n_threads, int _sample_history_in_ki
     event_queue->register_event_type("pdu_event");
     event_queue->bind_handler("pdu_event", this);
 }
- 
+
 /*
  * Our virtual destructor.
  */
@@ -119,7 +132,7 @@ bool es_sink::stop(){
     threadpool.clear();
 }
 
-void 
+void
 es_sink::handler(pmt_t msg, gr_vector_void_star buf){
 
     pmt::pmt_t meta = pmt::tuple_ref(msg, 1);
@@ -376,6 +389,112 @@ es_sink::event_thread_utilization()
     return rolling_mean(d_avg_thread_utilization);
 }
 
+/**
+ * @brief Search forward through live_event_times to find an insertion index.
+ *
+ * Search forward starting at the beginning of the live_event_times list and
+ * continuing until either an appropriate insertion index is found or the end
+ * of the list is reached.
+ *
+ * @param [in] evt_time Event time to insert into the live_event_times list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
+size_t
+es_sink::find_forward(const uint64_t& evt_time)
+{
+  size_t idx = 0, sz = live_event_times.size();
+  for (idx = 0; idx < sz && evt_time > live_event_times[idx]; idx++){}
+  return idx;
+}
+
+/**
+ * @brief Search backward through live_event_times to find an insertion index.
+ *
+ * Search backward starting at the end of the live_event_times list and
+ * continuing until either an appropriate insertion index is found or the
+ * beginning of the list is reached.
+ *
+ * @param [in] evt_time Event time to insert into the live_event_times list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
+size_t
+es_sink::find_reverse(const uint64_t& evt_time)
+{
+  size_t sz = live_event_times.size(), idx = 0;
+
+  // If nothing is in the vector then the insertion index must be 0.
+  if (sz == 0)
+  {
+    return 0;
+  }
+
+  for (idx = sz; idx-- > 0 && evt_time < live_event_times[idx];){}
+
+  return idx + 1;
+}
+
+/**
+ * @brief Comparison function used by the binary search method find_binary().
+ *
+ * @param [in] vval Reference to an item in the live_event_times vector (vector
+ *   value).
+ * @param [in] cval Reference to an item to be inserted into the
+ *   live_event_times vector (comparison value).
+ */
+bool sink_compare(const uint64_t& vval, const uint64_t& cval)
+{
+  return cval > vval;
+};
+
+/**
+ * @brief Search through a sorted list using a binary pattern to find an
+ *   insertion index.
+ *
+ * Search using a binary pattern starting at the beginning of the
+ * live_event_times list and continuing until either an appropriate insertion
+ * index is found or the binary search is exhausted.
+ *
+ * @param [in] evt_time Event time to insert into the live_event_times list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
+size_t
+es_sink::find_binary(const uint64_t& evt_time)
+{
+    return std::lower_bound(
+      live_event_times.begin(),
+      live_event_times.end(),
+      evt_time,
+      sink_compare) - live_event_times.begin();
+}
+
+/**
+ * @brief Search using the preconfigured search type for an insertion index.
+ *
+ * This is a wrapper method to call the appropriate search method based on the
+ * value of the d_search_behavior member variable.
+ *
+ * @param [in] evt_time Event time to insert into the live_event_times list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
+int es_sink::find_index(const uint64_t& evt_time)
+{
+    switch(d_search_behavior)
+    {
+        case SEARCH_BINARY:
+            return find_binary(evt_time);
+        case SEARCH_REVERSE:
+            return find_reverse(evt_time);
+        case SEARCH_FORWARD:
+            return find_forward(evt_time);
+        default:
+            return find_forward(evt_time);
+    }
+}
+
 int
 es_sink::work (int noutput_items,
 			gr_vector_const_void_star &input_items,
@@ -467,14 +586,10 @@ es_sink::work (int noutput_items,
     qq.push(eh);
 
     // insert event time in an ordered list of live events
-    int live_event_times_insert_offset = 0;
-    while(live_event_times_insert_offset < live_event_times.size()){
-        if(live_event_times[live_event_times_insert_offset] > etime)
-            break;
-        live_event_times_insert_offset++;
-        }
+    int live_event_times_insert_offset = find_index(etime);
     live_event_times.insert(live_event_times.begin() + live_event_times_insert_offset, etime);
 //    printf("adding live event time %lu\n", ::event_time(eh->event));
+
     qq_cond.notify_one();
 
   }
@@ -484,14 +599,14 @@ es_sink::work (int noutput_items,
                     (uint64_t)noutput_items,
                     std::min(
                         live_event_times.size()==0?
-                            noutput_items : 
+                            noutput_items :
                             (uint64_t)(live_event_times[0] - min_time),
                         event_queue->empty()?
                             noutput_items :
                             (uint64_t)(event_queue->min_time() - min_time)
                         )
                     );
- 
+
   // make sure worker threads are working on live events
   if(nconsume != noutput_items)
     qq_cond.notify_one();
@@ -516,4 +631,3 @@ void es_sink::wait_events(){
         //Py_END_ALLOW_THREADS
         }
 }
-

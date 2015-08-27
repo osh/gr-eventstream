@@ -23,6 +23,7 @@
 #include <es/es_queue.h>
 #include <es/es_common.h>
 #include <es/es_exceptions.h>
+#include <algorithm>
 
 #include <limits.h>
 #include <stdio.h>
@@ -30,14 +31,14 @@
 #define DEBUG(X)
 //#define DEBUG(X)  X
 
-es_queue_sptr es_make_queue(es_queue_early_behaviors eb){
-    return es_queue_sptr(new es_queue(eb));
+es_queue_sptr es_make_queue(es_queue_early_behaviors eb, es_search_behaviors sb){
+    return es_queue_sptr(new es_queue(eb, sb));
 }
 
-es_queue::es_queue(es_queue_early_behaviors eb) :
+es_queue::es_queue(es_queue_early_behaviors eb, es_search_behaviors sb) :
     d_early_behavior(eb), d_num_discarded(0), d_num_asap(0),
     d_num_events_added(0), d_num_events_removed(0), d_event_time(0),
-    d_num_soon(0)
+    d_num_soon(0), d_search_behavior(sb)
 {
     bindings = pmt::make_dict();
 }
@@ -51,6 +52,104 @@ int es_queue::length(){
     int l = event_queue.size();
     queue_lock.unlock();
     return l;
+}
+
+/**
+ * @brief Search forward through event_queue to find an insertion index.
+ *
+ * Search forward starting at the beginning of the event_queue and
+ * continuing until either an appropriate insertion index is found or the
+ * end of the list is reached.
+ *
+ * @param [in] evt_time Event time to insert into the event_queue list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
+size_t
+es_queue::find_forward(const uint64_t evt_time)
+{
+  size_t idx = 0, sz = event_queue.size();
+  for (idx = 0; idx < sz && evt_time > event_queue[idx]->time(); idx++){}
+  return idx;
+}
+
+/**
+ * @brief Search backward through event_queue to find an insertion index.
+ *
+ * Search backward starting at the end of the event_queue list and
+ * continuing until either an appropriate insertion index is found or the
+ * beginning of the list is reached.
+ *
+ * @param [in] evt_time Event time to insert into the event_queue list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
+size_t
+es_queue::find_reverse(const uint64_t evt_time)
+{
+  size_t sz = event_queue.size(), idx = 0;
+
+  // If nothing is in the vector then the insertion index must be 0.
+  if (sz == 0)
+  {
+    return 0;
+  }
+
+  for (idx = sz; idx-- > 0 && evt_time < event_queue[idx]->time();){}
+
+  return idx + 1;
+}
+
+/**
+ * @brief Comparison function used by the binary search method find_binary().
+ *
+ * @param [in] vval Reference to an item in the event_queue vector (vector
+ *   value).
+ * @param [in] cval Reference to an item to be inserted into the
+ *   event_queue vector (comparison value).
+ */
+bool queue_compare(es_eh_pair* vval, const int64_t& cval)
+{
+  return cval > vval->time();
+};
+
+size_t
+es_queue::find_binary(const uint64_t evt_time)
+{
+    typename std::vector<es_eh_pair*>::iterator low;
+    low = std::lower_bound(
+      event_queue.begin(),
+      event_queue.end(),
+      evt_time,
+      queue_compare);
+    return low - event_queue.begin();
+}
+
+/**
+ * @brief Search through a sorted list using a binary pattern to find an
+ *   insertion index.
+ *
+ * Search using a binary pattern starting at the beginning of the
+ * event_queue list and continuing until either an appropriate insertion
+ * index is found or the binary search is exhausted.
+ *
+ * @param [in] evt_time Event time to insert into the event_queue list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
+int es_queue::find_index(uint64_t evt_time)
+{
+    switch(d_search_behavior)
+    {
+        case SEARCH_BINARY:
+            return find_binary(evt_time);
+        case SEARCH_REVERSE:
+            return find_reverse(evt_time);
+        case SEARCH_FORWARD:
+            return find_forward(evt_time);
+        default:
+            return find_forward(evt_time);
+    }
 }
 
 int es_queue::add_event(pmt_t evt){
@@ -88,11 +187,10 @@ int es_queue::add_event(pmt_t evt){
     if(event_time(evt) == ULLONG_MAX){
         fprintf(stderr, "WARNING: event recieved with unset time. (%s)\n", event_type(evt).c_str());
     }
-    int idx;
 
     queue_lock.lock();
 
-    for(idx=0; (idx < event_queue.size() && event_time(evt) > event_queue[idx]->time() ); idx++){ }
+    int idx = find_index(event_time(evt));
 
     //for(int i=0; i<handlers.size(); i++){
 

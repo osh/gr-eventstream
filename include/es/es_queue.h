@@ -31,6 +31,7 @@
 class es_queue;
 typedef boost::shared_ptr<es_queue> es_queue_sptr;
 
+
 #include <es/es_eh_pair.hh>
 #include <es/es_event.h>
 #include <es/es_handler.h>
@@ -42,7 +43,10 @@ enum es_queue_early_behaviors {
             ASAP
 };
 
-es_queue_sptr es_make_queue(enum es_queue_early_behaviors = DISCARD);
+
+es_queue_sptr es_make_queue(
+    enum es_queue_early_behaviors = DISCARD,
+    enum es_search_behaviors sb = SEARCH_BINARY);
 
 class es_eh_queue;
 
@@ -52,7 +56,9 @@ class es_queue {
     public:
 
         std::vector<gr::basic_block_sptr> d_hvec;
-        es_queue(enum es_queue_early_behaviors = DISCARD);
+        es_queue(
+            enum es_queue_early_behaviors = DISCARD,
+            enum es_search_behaviors = SEARCH_BINARY);
         int add_event(pmt_t evt);
         void print_queue(bool already_locked = false);
         int fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh);
@@ -96,8 +102,17 @@ class es_queue {
         std::vector< es_handler_sptr > protected_handler;
         std::vector< boost::function< bool (es_eh_pair**) > > cb_list;
 
-
+        /**
+         * @brief Configuration variable for selecting an insertion sort algorithm.
+         */
+        es_search_behaviors d_search_behavior;
+        int find_index(uint64_t evt_time);
+        size_t find_forward(const uint64_t evt_time);
+        size_t find_reverse(const uint64_t evt_time);
+        size_t find_binary(const uint64_t evt_time);
 };
+
+
 
 
 #endif

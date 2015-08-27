@@ -1,19 +1,19 @@
 /* -*- c++ -*- */
 /*
  * Copyright 2011 Free Software Foundation, Inc.
- * 
+ *
  * This file is part of gr-eventstream
- * 
+ *
  * gr-eventstream is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3, or (at your option)
  * any later version.
- * 
+ *
  * gr-eventstream is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with gr-eventstream; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street,
@@ -37,35 +37,41 @@ class es {
 
         // event type values within tuple
 //        static pmt_t event_vector_created;
- 
+
         // common hash keys
         static pmt_t event_type;
         static pmt_t event_time;
-        static pmt_t event_length;       
-        static pmt_t event_buffer;       
- 
+        static pmt_t event_length;
+        static pmt_t event_buffer;
+
         // common event types
         static pmt_t event_type_1;
         static pmt_t event_type_gen_vector_f;
         static pmt_t event_type_gen_vector_c;
         static pmt_t event_type_gen_vector_b;
         static pmt_t event_type_gen_vector;
-       
+
+};
+
+enum es_search_behaviors {
+    SEARCH_FORWARD,
+    SEARCH_REVERSE,
+    SEARCH_BINARY
 };
 
 bool is_event( pmt_t event );
 void event_print( pmt_t event );
-pmt_t event_create( pmt_t es_event_type, unsigned long long time, unsigned long long max_len );      
-pmt_t event_create( std::string es_event_type, unsigned long long time, unsigned long long max_len );      
+pmt_t event_create( pmt_t es_event_type, unsigned long long time, unsigned long long max_len );
+pmt_t event_create( std::string es_event_type, unsigned long long time, unsigned long long max_len );
 pmt_t event_field( pmt_t event, pmt_t field );
 bool event_has_field( pmt_t event, pmt_t field );
 
-pmt_t event_type_pmt( pmt_t event );       
-std::string event_type( pmt_t event );       
+pmt_t event_type_pmt( pmt_t event );
+std::string event_type( pmt_t event );
 bool event_type_compare( pmt_t event, pmt_t evt_type );
 uint64_t event_time( pmt_t event );
 uint64_t event_length( pmt_t event );
-        
+
 pmt_t event_args_add( pmt_t evt, pmt_t arg_key, pmt_t arg_val );
 
 pmt_t eh_pair_event( pmt_t eh_pair );
