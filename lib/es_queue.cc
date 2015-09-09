@@ -113,18 +113,6 @@ bool queue_compare(es_eh_pair* vval, const int64_t& cval)
   return cval > vval->time();
 };
 
-size_t
-es_queue::find_binary(const uint64_t evt_time)
-{
-    typename std::vector<es_eh_pair*>::iterator low;
-    low = std::lower_bound(
-      event_queue.begin(),
-      event_queue.end(),
-      evt_time,
-      queue_compare);
-    return low - event_queue.begin();
-}
-
 /**
  * @brief Search through a sorted list using a binary pattern to find an
  *   insertion index.
@@ -132,6 +120,26 @@ es_queue::find_binary(const uint64_t evt_time)
  * Search using a binary pattern starting at the beginning of the
  * event_queue list and continuing until either an appropriate insertion
  * index is found or the binary search is exhausted.
+ *
+ * @param [in] evt_time Event time to insert into the event_queue list.
+ *
+ * @return Index at which evt_time should be inserted to maintain sort.
+ */
+size_t
+es_queue::find_binary(const uint64_t evt_time)
+{
+    return std::lower_bound(
+      event_queue.begin(),
+      event_queue.end(),
+      evt_time,
+      queue_compare) - event_queue.begin();
+}
+
+/**
+ * @brief Search using the preconfigured search type for an insertion index.
+ *
+ * This is a wrapper method to call the appropriate search method based on the
+ * value of the d_search_behavior member variable.
  *
  * @param [in] evt_time Event time to insert into the event_queue list.
  *
