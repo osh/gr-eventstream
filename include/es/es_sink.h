@@ -113,7 +113,9 @@ private:
   boost::lockfree::queue<unsigned long long> dq;
 
   std::vector<boost::shared_ptr<es_event_loop_thread> > threadpool;
-  std::vector<uint64_t> live_event_times;
+
+  boost::shared_ptr<std::vector<uint64_t> > live_event_times;
+  boost::shared_ptr<boost::mutex>           live_event_times_lock;
 
   bool state_done_prevent_exit() { return (d_nevents + event_queue->length())!=0; }
   bool state_done_call_empty() { return (d_nevents + event_queue->length())!=0; }

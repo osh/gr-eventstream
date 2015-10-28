@@ -91,6 +91,10 @@ es_sink::es_sink (
         d_search_behavior(sb),
         es_event_acceptor(eb,sb,tgroup)
 {
+    // assign live event times from our thread group
+    live_event_times = d_group.live_event_times();
+    live_event_times_lock = d_group.live_event_times_lock();
+
     d_time = 0;
     d_history = 1024*sample_history_in_kilosamples;
     set_history(d_history);
@@ -404,8 +408,8 @@ es_sink::event_thread_utilization()
 size_t
 es_sink::find_forward(const uint64_t& evt_time)
 {
-  size_t idx = 0, sz = live_event_times.size();
-  for (idx = 0; idx < sz && evt_time > live_event_times[idx]; idx++){}
+  size_t idx = 0, sz = live_event_times->size();
+  for (idx = 0; idx < sz && evt_time > live_event_times->at(idx); idx++){}
   return idx;
 }
 
@@ -423,15 +427,16 @@ es_sink::find_forward(const uint64_t& evt_time)
 size_t
 es_sink::find_reverse(const uint64_t& evt_time)
 {
-  size_t sz = live_event_times.size(), idx = 0;
+  size_t sz = live_event_times->size(), idx = 0;
 
   // If nothing is in the vector then the insertion index must be 0.
   if (sz == 0)
   {
+    live_event_times_lock->unlock();
     return 0;
   }
 
-  for (idx = sz; idx-- > 0 && evt_time < live_event_times[idx];){}
+  for (idx = sz; idx-- > 0 && evt_time < live_event_times->at(idx);){}
 
   return idx + 1;
 }
@@ -464,11 +469,12 @@ bool sink_compare(const uint64_t& vval, const uint64_t& cval)
 size_t
 es_sink::find_binary(const uint64_t& evt_time)
 {
+    
     return std::lower_bound(
-      live_event_times.begin(),
-      live_event_times.end(),
+      live_event_times->begin(),
+      live_event_times->end(),
       evt_time,
-      sink_compare) - live_event_times.begin();
+      sink_compare) - live_event_times->begin();
 }
 
 /**
@@ -522,18 +528,17 @@ es_sink::work (int noutput_items,
 
   unsigned long long delete_index = 0;
 
-  //while( dq.pop(&delete_index) ){
+  live_event_times_lock->lock(); //TODO: can we move this inside the loop for better performance?
   while( dq.pop(delete_index) ){
-//    printf(" removing live_time %llu \n", delete_index);
 	// remove the event time from the event live times l
-    for(int i=0; i<live_event_times.size(); i++){
-        if(live_event_times[i] == delete_index){
-            live_event_times.erase(live_event_times.begin()+i);
+    for(int i=0; i<live_event_times->size(); i++){
+        if(live_event_times->at(i) == delete_index){
+            live_event_times->erase(live_event_times->begin()+i);
             break;
             }
         }
-    //assert(0);
     }
+  live_event_times_lock->unlock();
 
 
   // while we can service events with the current buffer, get them and handle them.
@@ -587,8 +592,10 @@ es_sink::work (int noutput_items,
     qq.push(eh);
 
     // insert event time in an ordered list of live events
+    live_event_times_lock->lock();
     int live_event_times_insert_offset = find_index(etime);
-    live_event_times.insert(live_event_times.begin() + live_event_times_insert_offset, etime);
+    live_event_times->insert(live_event_times->begin() + live_event_times_insert_offset, etime);
+    live_event_times_lock->unlock();
 //    printf("adding live event time %lu\n", ::event_time(eh->event));
 
     qq_cond.notify_one();
@@ -596,17 +603,19 @@ es_sink::work (int noutput_items,
   }
 
   // consume the current input items
+  live_event_times_lock->lock();
   int nconsume = (int)std::min(
                     (uint64_t)noutput_items,
                     std::min(
-                        live_event_times.size()==0?
+                        live_event_times->size()==0?
                             noutput_items :
-                            (uint64_t)(live_event_times[0] - min_time),
+                            (uint64_t)(live_event_times->at(0) - min_time),
                         event_queue->empty()?
                             noutput_items :
                             (uint64_t)(event_queue->min_time() - min_time)
                         )
                     );
+  live_event_times_lock->unlock();
 
   // make sure worker threads are working on live events
   if(nconsume != noutput_items)

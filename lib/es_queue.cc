@@ -445,12 +445,15 @@ int es_queue::fetch_next_event2(unsigned long long min, unsigned long long max, 
 
 
 es_queue_group::es_queue_group(std::string id,es_queue_early_behaviors eb, es_search_behaviors sb) :
+    d_enabled( id!="" ),
     d_id( id!=""?id:boost::uuids::to_string(id_gen()))
 {
     std::cout << "New queue group accessor with id = " << d_id << "\n";
     if(d_queues.find(d_id) == d_queues.end()){
-        d_queues[d_id] = std::pair<int, es_queue_sptr>
-            (1, es_queue_sptr(new es_queue(eb,sb)));
+        d_queues[d_id] = std::pair<int, es_queue_group_entry*>(1, new es_queue_group_entry());
+        d_queues[d_id].second->queue = es_queue_sptr(new es_queue(eb,sb));
+        d_queues[d_id].second->live_event_times = boost::shared_ptr<std::vector<uint64_t> >(new std::vector<uint64_t>());
+        d_queues[d_id].second->live_event_times_lock = boost::shared_ptr<boost::mutex>(new boost::mutex());
         d_primary = true;
     }
     else
@@ -459,7 +462,6 @@ es_queue_group::es_queue_group(std::string id,es_queue_early_behaviors eb, es_se
         d_primary = false;
     }
 }
-
 
 es_queue_group::~es_queue_group()
 {
@@ -475,9 +477,21 @@ bool es_queue_group::primary(){
     return d_primary;
 }
 
-es_queue_sptr es_queue_group::queue(){
-    return d_queues[d_id].second;
+bool es_queue_group::enabled(){
+    return d_enabled;
 }
 
-std::map<std::string, std::pair<int, es_queue_sptr> >   es_queue_group::d_queues;
+es_queue_sptr es_queue_group::queue(){
+    return d_queues[d_id].second->queue;
+}
+
+
+boost::shared_ptr<std::vector<uint64_t> >   es_queue_group::live_event_times(){
+    return d_queues[d_id].second->live_event_times;
+}
+boost::shared_ptr< boost::mutex >           es_queue_group::live_event_times_lock(){
+    return d_queues[d_id].second->live_event_times_lock;
+}   
+
+std::map<std::string, std::pair<int, es_queue_group_entry*> >   es_queue_group::d_queues;
 boost::uuids::basic_random_generator<boost::mt19937>    es_queue_group::id_gen;

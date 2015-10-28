@@ -3,13 +3,17 @@
 #include <stdio.h>
 
 void es_event_acceptor::schedule_event(pmt::pmt_t m){
-    //printf("schedule_event.\n");
-//    printf("es_event_acceptor::schedule_event() called with .,.. \n");
-//    pmt::print(m);
+
+    // if we are a secondary on a thread group don't add anything ...
+    if(d_group.enabled() && !d_group.primary())
+        return;
+
     if(pmt::is_pair(m) && (pmt::eqv(pmt::car(m), pmt::mp("ES_REGISTER_HANDLER")))){
         // if this is a registration message, register the handlers
         add_handlers(pmt::cdr(m));
         } else {
+
+
         // otherwise assume it is an event we are scheduling
         if(is_event(m)){
             event_queue->add_event(m);

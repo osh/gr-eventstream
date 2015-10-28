@@ -117,16 +117,26 @@ class es_queue {
 
 
 
+struct es_queue_group_entry {
+    es_queue_sptr                             queue;
+    boost::shared_ptr<std::vector<uint64_t> > live_event_times;
+    boost::shared_ptr<boost::mutex>           live_event_times_lock; 
+};
+
 class es_queue_group {
     public:
         es_queue_group(std::string id,es_queue_early_behaviors eb, es_search_behaviors sb);
         ~es_queue_group();
         bool primary();
+        bool enabled();
         es_queue_sptr queue();
+        boost::shared_ptr<std::vector<uint64_t> >   live_event_times();
+        boost::shared_ptr< boost::mutex >           live_event_times_lock();
     private:
         std::string d_id;
+        bool d_enabled;
         bool d_primary;
-        static std::map<std::string, std::pair<int, es_queue_sptr> >  d_queues;
+        static std::map<std::string, std::pair<int, es_queue_group_entry*> >  d_queues;
         static boost::uuids::basic_random_generator<boost::mt19937> id_gen;
 };
 
