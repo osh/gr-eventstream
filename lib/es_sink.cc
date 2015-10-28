@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /*
- * Copyright 2011 Free Software Foundation, Inc.
+ * Copyright 2015 Free Software Foundation, Inc.
  *
  * This file is part of gr-eventstream
  *
@@ -48,10 +48,11 @@ es_make_sink (
     int n_threads,
     int sample_history_in_kilosamples,
     enum es_queue_early_behaviors eb,
-    enum es_search_behaviors sb)
+    enum es_search_behaviors sb,
+    std::string tgroup)
 {
   return es_sink_sptr (
-    new es_sink (insig,n_threads,sample_history_in_kilosamples,eb,sb));
+    new es_sink (insig,n_threads,sample_history_in_kilosamples,eb,sb,tgroup));
 }
 
 /*
@@ -74,7 +75,8 @@ es_sink::es_sink (
   int _n_threads,
   int _sample_history_in_kilosamples,
   enum es_queue_early_behaviors eb,
-  enum es_search_behaviors sb)
+  enum es_search_behaviors sb, 
+  std::string tgroup)
     : gr::sync_block (
         "es_sink",
         es_make_io_signature(insig.size(), insig),
@@ -86,10 +88,9 @@ es_sink::es_sink (
         d_avg_ratio(tag::rolling_window::window_size=50),
         d_avg_thread_utilization(tag::rolling_window::window_size=50),
         latest_tags(pmt::make_dict()),
-        d_search_behavior(sb)
+        d_search_behavior(sb),
+        es_event_acceptor(eb,sb,tgroup)
 {
-    event_acceptor_setup(eb, sb);
-
     d_time = 0;
     d_history = 1024*sample_history_in_kilosamples;
     set_history(d_history);

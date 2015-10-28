@@ -442,3 +442,42 @@ int es_queue::fetch_next_event2(unsigned long long min, unsigned long long max, 
     return false;
 
 }
+
+
+es_queue_group::es_queue_group(std::string id,es_queue_early_behaviors eb, es_search_behaviors sb) :
+    d_id( id!=""?id:boost::uuids::to_string(id_gen()))
+{
+    std::cout << "New queue group accessor with id = " << d_id << "\n";
+    if(d_queues.find(d_id) == d_queues.end()){
+        d_queues[d_id] = std::pair<int, es_queue_sptr>
+            (1, es_queue_sptr(new es_queue(eb,sb)));
+        d_primary = true;
+    }
+    else
+    {
+        d_queues[d_id].first++;
+        d_primary = false;
+    }
+}
+
+
+es_queue_group::~es_queue_group()
+{
+    std::cout << "Finished with queue group accessor with id = " << d_id << "\n";
+    if(d_queues[d_id].first > 1){
+        d_queues[d_id].first--;
+    } else {
+        d_queues.erase(d_queues.find(d_id));
+    }
+}
+
+bool es_queue_group::primary(){
+    return d_primary;
+}
+
+es_queue_sptr es_queue_group::queue(){
+    return d_queues[d_id].second;
+}
+
+std::map<std::string, std::pair<int, es_queue_sptr> >   es_queue_group::d_queues;
+boost::uuids::basic_random_generator<boost::mt19937>    es_queue_group::id_gen;

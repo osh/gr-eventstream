@@ -27,6 +27,9 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/bimap.hpp>
 #include <boost/function.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 class es_queue;
 typedef boost::shared_ptr<es_queue> es_queue_sptr;
@@ -113,6 +116,19 @@ class es_queue {
 };
 
 
+
+class es_queue_group {
+    public:
+        es_queue_group(std::string id,es_queue_early_behaviors eb, es_search_behaviors sb);
+        ~es_queue_group();
+        bool primary();
+        es_queue_sptr queue();
+    private:
+        std::string d_id;
+        bool d_primary;
+        static std::map<std::string, std::pair<int, es_queue_sptr> >  d_queues;
+        static boost::uuids::basic_random_generator<boost::mt19937> id_gen;
+};
 
 
 #endif

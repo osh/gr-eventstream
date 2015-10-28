@@ -4,7 +4,7 @@
     <key>es_sink</key>
     <category>EVENTSTREAM</category>
     <import>import es</import>
-    <make>es.sink($num_streams*[$type.size],$nthreads,$samplehistory,$eb.raw,$ss.raw)</make>
+    <make>es.sink($num_streams*[$type.size],$nthreads,$samplehistory,$eb.raw,$ss.raw,$tgroup)</make>
 
       <param>
         <name>IO Type</name>
@@ -107,6 +107,13 @@
         <key>binary</key>
         <opt>raw:2</opt>
     </option>
+  </param>
+
+  <param>
+    <name>Thread Group</name>
+    <key>tgroup</key>
+    <value></value>
+    <type>string</type>
   </param>
 
   <sink>
