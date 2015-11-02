@@ -542,8 +542,7 @@ es_sink::work (int noutput_items,
 
 
   // while we can service events with the current buffer, get them and handle them.
-//  printf("event_queue->fetch_next_event( %llu, %llu, &eh )\n", min_time, max_time );
-  while( event_queue->fetch_next_event( min_time, max_time, &eh ) ){
+  while( this->locked_fetch_next_event( min_time, max_time, &eh ) ){
 
    DEBUG( printf("es::sink work() got event\n"); )
   //  int a = d_nevents;
@@ -570,7 +569,6 @@ es_sink::work (int noutput_items,
     // loop over each input buffer copying contents into pmt_buffers to tag onto event
     for(int i=0; i<input_items.size(); i++){
 
-        //printf("copying buffer contents\n");
         // alocate a new pmt u8 vector to store buffer contents in.
         pmt_t buf_i = pmt::init_u8vector( d_input_signature->sizeof_stream_item(i)*eh->length(), (const uint8_t*) input_items[i] + (buffer_offset * d_input_signature->sizeof_stream_item(i)) );
 
@@ -586,18 +584,8 @@ es_sink::work (int noutput_items,
     event = register_buffer( event, buf_list );
     eh->event = event;
 
-    // post the event to the event-loop input queue
-    //printf("es_sink::work()::posting event to event loop queue (qq) with buffer.\n");
-
+    // insert event time into thread notification list and notify
     qq.push(eh);
-
-    // insert event time in an ordered list of live events
-    live_event_times_lock->lock();
-    int live_event_times_insert_offset = find_index(etime);
-    live_event_times->insert(live_event_times->begin() + live_event_times_insert_offset, etime);
-    live_event_times_lock->unlock();
-//    printf("adding live event time %lu\n", ::event_time(eh->event));
-
     qq_cond.notify_one();
 
   }
@@ -641,3 +629,19 @@ void es_sink::wait_events(){
         //Py_END_ALLOW_THREADS
         }
 }
+
+int es_sink::locked_fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh){
+    live_event_times_lock->lock();
+    if(event_queue->fetch_next_event( min, max, eh ) == false){
+        live_event_times_lock->unlock();
+        return false;
+        }
+ 
+    // add it to live events list before releasing lock
+    uint64_t etime = ::event_time((*eh)->event);
+    int live_event_times_insert_offset = find_index(etime);
+    live_event_times->insert(live_event_times->begin() + live_event_times_insert_offset, etime);
+    live_event_times_lock->unlock();
+    return true;
+}
+

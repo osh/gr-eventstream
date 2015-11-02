@@ -74,7 +74,8 @@ private:
     enum es_queue_early_behaviors = DISCARD,
     enum es_search_behaviors = SEARCH_BINARY,
     std::string tgroup = "");  // private constructor
-  void handler(pmt_t msg, gr_vector_void_star buf);
+    void handler(pmt_t msg, gr_vector_void_star buf);
+    int locked_fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh);
 
  public:
   ~es_sink ();	// public destructor
