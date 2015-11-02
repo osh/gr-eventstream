@@ -105,8 +105,10 @@ es_sink::es_sink (
     message_port_register_out(pmt::mp("pdu_event"));
 
     // set up our special pdu handler
-    event_queue->register_event_type("pdu_event");
-    event_queue->bind_handler("pdu_event", this);
+    if(d_group.primary()){
+        event_queue->register_event_type("pdu_event");
+        event_queue->bind_handler("pdu_event", this);
+        }
 }
 
 /*
@@ -144,10 +146,6 @@ es_sink::handler(pmt_t msg, gr_vector_void_star buf){
     pmt::pmt_t vec = pmt::make_u8vector(100, 1);
 
     int len = event_length(msg);
-
-    //if(buf.size() < 1 || buf.size() > 1){
-    //    throw std::runtime_error("TODO: update es_sink to handle bufs != 1");
-    //    }
 
   if(buf.size() == 1){
     switch(input_signature()->sizeof_stream_item(0)){
@@ -516,7 +514,6 @@ es_sink::work (int noutput_items,
 
   char *in = (char*) input_items[0];
 
-  //printf("entered es_sink::work()\n");
   // compute the min and max sample times currently accessible in the buffer
   unsigned long long max_time = d_time + noutput_items;
   unsigned long long min_time = (d_history > d_time)?0:d_time-d_history+1;
@@ -542,14 +539,10 @@ es_sink::work (int noutput_items,
 
 
   // while we can service events with the current buffer, get them and handle them.
-  while( this->locked_fetch_next_event( min_time, max_time, &eh ) ){
+  while( locked_fetch_next_event( min_time, max_time, &eh ) ){
+    DEBUG( printf("es::sink work() got event\n"); )
 
-   DEBUG( printf("es::sink work() got event\n"); )
-  //  int a = d_nevents;
- //   printf("incrementing d_nevents (%d->%d)\n", a, a+1);
-    d_nevents++;
-
-//    printf("es_sink::work()::fetched event successfully (%llu --> %llu)\n",min_time,max_time);
+    // make the event message 
     pmt_t event = eh->event;
     uint64_t etime = ::event_time(eh->event);
 
@@ -592,6 +585,7 @@ es_sink::work (int noutput_items,
 
   // consume the current input items
   live_event_times_lock->lock();
+//  printf("%d\n",live_event_times->size());
   int nconsume = (int)std::min(
                     (uint64_t)noutput_items,
                     std::min(
@@ -636,7 +630,10 @@ int es_sink::locked_fetch_next_event(unsigned long long min, unsigned long long 
         live_event_times_lock->unlock();
         return false;
         }
- 
+    
+    // increment num events counter
+    d_nevents++;
+
     // add it to live events list before releasing lock
     uint64_t etime = ::event_time((*eh)->event);
     int live_event_times_insert_offset = find_index(etime);
