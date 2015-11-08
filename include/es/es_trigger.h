@@ -59,6 +59,10 @@ class es_trigger : public virtual gr::sync_block
             message_port_pub(pmt::mp("which_stream"), reg);
 //            std::cout << "sent registeration message: " << reg << "\n";
             }
+
+        // message to obtain the message queue pointer
+        pmt::pmt_t omq(pmt::cons(pmt::mp("ES_OBTAIN_QUEUE"), pmt::make_any(this)));
+        message_port_pub(pmt::mp("which_stream"), omq);
         }
   
   std::vector<pmt_t> event_types;

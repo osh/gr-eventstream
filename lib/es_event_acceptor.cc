@@ -1,4 +1,5 @@
 #include <es/es_event_acceptor.h>
+#include <es/es_trigger.h>
 #include <gnuradio/block_registry.h>
 #include <stdio.h>
 
@@ -11,6 +12,11 @@ void es_event_acceptor::schedule_event(pmt::pmt_t m){
     if(pmt::is_pair(m) && (pmt::eqv(pmt::car(m), pmt::mp("ES_REGISTER_HANDLER")))){
         // if this is a registration message, register the handlers
         add_handlers(pmt::cdr(m));
+    } else if(pmt::is_pair(m) && (pmt::eqv(pmt::car(m), pmt::mp("ES_OBTAIN_QUEUE")))){
+        // set up a direct shared pointer to the event_queue in the trigger block
+        //  this way we dont have non-deterministic behavior of messages in flight not in the queue yet
+        es_trigger* t = boost::any_cast<es_trigger*>( pmt::any_ref(pmt::cdr(m)) );
+        t->event_queue = event_queue;
         } else {
 
 

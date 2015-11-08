@@ -167,7 +167,7 @@ int es_queue::add_event(pmt_t evt){
 
     std::map< std::string, std::vector<pmt_t> >::iterator it;
 
-//    printf("add_event of type :: %s\n", event_type(evt).c_str() );
+    //printf("add_event of type :: %s @  %lu\n", event_type(evt).c_str(), event_time(evt));
 
     bool found = pmt::dict_has_key(bindings, pmt::intern(event_type(evt)));
     if(!found){
