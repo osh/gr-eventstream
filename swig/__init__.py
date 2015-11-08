@@ -40,10 +40,11 @@ if _RTLD_GLOBAL != 0:
 
 # import swig generated symbols into the es namespace
 from es_swig import *
-from es.es_trigger_keyboard import *;
-from es.es_trigger_timer import *;
-#from es.patterned_interleaver import *;
-from es.util import *;
+from es.es_trigger_keyboard import *
+from es.es_trigger_timer import *
+#from es.patterned_interleaver import *
+from es.util import *
+from es_multisink import *
 
 # import any pure python here
 # from es_foo import bar

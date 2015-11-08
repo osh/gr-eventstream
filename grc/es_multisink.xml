@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<block>
+    <name>EventStream Multi-Sink</name>
+    <key>es_mulisink</key>
+    <category>EVENTSTREAM</category>
+    <import>import es</import>
+    <make>es.multisink($num_streams*[$type.size],$nthreads,$samplehistory,$eb.raw,$ss.raw,$tgroup, $nsinks)</make>
+
+      <param>
+        <name>IO Type</name>
+        <key>type</key>
+        <type>enum</type>
+        <option>
+            <name>Complex</name>
+            <key>complex</key>
+            <opt>size:gr.sizeof_gr_complex</opt>
+        </option>
+        <option>
+            <name>Float</name>
+            <key>float</key>
+            <opt>size:gr.sizeof_float</opt>
+        </option>
+        <option>
+            <name>Int</name>
+            <key>int</key>
+            <opt>size:gr.sizeof_int</opt>
+        </option>
+        <option>
+            <name>Short</name>
+            <key>short</key>
+            <opt>size:gr.sizeof_short</opt>
+        </option>
+        <option>
+            <name>Complex Short</name>
+            <key>sc16</key>
+            <opt>size:2*gr.sizeof_short</opt>
+        </option>
+        <option>
+            <name>Byte</name>
+            <key>byte</key>
+            <opt>size:gr.sizeof_char</opt>
+        </option>
+    </param>
+
+
+    <param>
+        <name>Num Streams</name>
+        <key>num_streams</key>
+        <value>1</value>
+        <type>int</type>
+    </param>
+
+    <param>
+      <name>Hndlr-Threads per Sink</name>
+      <key>nthreads</key>
+      <value>8</value>
+      <type>int</type>
+    </param>
+    <param>
+      <name>Num Sinks</name>
+      <key>nsinks</key>
+      <value>2</value>
+      <type>int</type>
+    </param>
+
+    <param>
+      <name>Size of Sample History Ksamples</name>
+      <key>samplehistory</key>
+      <value>64</value>
+      <type>int</type>
+    </param>
+
+  <param>
+    <name>Early Behavior</name>
+    <key>eb</key>
+    <value></value>
+    <type>enum</type>
+    <option>
+        <name>DISCARD</name>
+        <key>discard</key>
+        <opt>raw:0</opt>
+    </option>
+    <option>
+        <name>BALK</name>
+        <key>balk</key>
+        <opt>raw:1</opt>
+    </option>
+    <option>
+        <name>ASAP</name>
+        <key>asap</key>
+        <opt>raw:2</opt>
+    </option>
+  </param>
+
+  <param>
+    <name>Search Style</name>
+    <key>ss</key>
+    <value>binary</value>
+    <type>enum</type>
+    <hide>part</hide>
+    <option>
+        <name>FORWARD</name>
+        <key>forward</key>
+        <opt>raw:0</opt>
+    </option>
+    <option>
+        <name>REVERSE</name>
+        <key>reverse</key>
+        <opt>raw:1</opt>
+    </option>
+    <option>
+        <name>BINARY</name>
+        <key>binary</key>
+        <opt>raw:2</opt>
+    </option>
+  </param>
+
+  <param>
+    <name>Thread Group</name>
+    <key>tgroup</key>
+    <value></value>
+    <type>string</type>
+  </param>
+
+  <sink>
+    <name>in</name>
+    <type>$type</type>
+    <vlen>1</vlen>
+    <nports>$num_streams</nports>
+  </sink>
+
+  <sink>
+    <name>schedule_event</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+
+  <source>
+    <name>nconsumed</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+  <source>
+    <name>pdu_event</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+
+
+</block>

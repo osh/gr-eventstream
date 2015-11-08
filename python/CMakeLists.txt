@@ -8,6 +8,7 @@ INCLUDE(GrPython)
 
 GR_PYTHON_INSTALL(
     FILES
+    es_multisink.py
     es_trigger_keyboard.py
     es_trigger_timer.py
     #patterned_interleaver.py
