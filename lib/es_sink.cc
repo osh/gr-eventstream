@@ -430,7 +430,6 @@ es_sink::find_reverse(const uint64_t& evt_time)
   // If nothing is in the vector then the insertion index must be 0.
   if (sz == 0)
   {
-    live_event_times_lock->unlock();
     return 0;
   }
 
@@ -525,17 +524,21 @@ es_sink::work (int noutput_items,
 
   unsigned long long delete_index = 0;
 
-  live_event_times_lock->lock(); //TODO: can we move this inside the loop for better performance?
   while( dq.pop(delete_index) ){
+  
+    live_event_times_lock->lock(); 
 	// remove the event time from the event live times l
     for(int i=0; i<live_event_times->size(); i++){
         if(live_event_times->at(i) == delete_index){
             live_event_times->erase(live_event_times->begin()+i);
-            break;
+            goto finished_removing_time;
             }
         }
+        throw std::runtime_error("Could not remove time!");
+    finished_removing_time:
+        live_event_times_lock->unlock();
+
     }
-  live_event_times_lock->unlock();
 
 
   // while we can service events with the current buffer, get them and handle them.
