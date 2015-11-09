@@ -448,7 +448,7 @@ es_queue_group::es_queue_group(std::string id,es_queue_early_behaviors eb, es_se
     d_enabled( id!="" ),
     d_id( id!=""?id:boost::uuids::to_string(id_gen()))
 {
-    std::cout << "INFO: new es_queue_group with id " << d_id << "\n";
+    //std::cout << "INFO: new es_queue_group with id " << d_id << "\n";
     if(d_queues.find(d_id) == d_queues.end()){
         d_queues[d_id] = std::pair<int, es_queue_group_entry*>(1, new es_queue_group_entry());
         d_queues[d_id].second->queue = es_queue_sptr(new es_queue(eb,sb));
