@@ -63,7 +63,11 @@ class es_trigger : public virtual gr::sync_block
         // message to obtain the message queue pointer
         pmt::pmt_t omq(pmt::cons(pmt::mp("ES_OBTAIN_QUEUE"), pmt::make_any(this)));
         message_port_pub(pmt::mp("which_stream"), omq);
-        }
+    }
+
+  virtual bool stop(){
+    event_queue.reset();
+    }
   
   std::vector<pmt_t> event_types;
   pmt_t event_type(int idx);
