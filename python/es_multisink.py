@@ -27,10 +27,9 @@ class multisink(gr.hier_block2):
 
         # Set up hier connections
         for sink in self.sinks:
-            print "Internal connect: ",sink, self
-            # TODO: message connections are currently breaking this block
-#            self.msg_connect( (self, "schedule_event"), (sink, "schedule_event") )       
-#            self.msg_connect( sink, "nconsumed", self, "nconsumed" )       
-#            self.msg_connect( sink, "pdu_event", self, "pdu_event" )       
+            print "es_multisink connecting internal sink: ",sink
+            self.msg_connect( (self, "schedule_event"), (sink, "schedule_event") )       
+            self.msg_connect( sink, "nconsumed", self, "nconsumed" )       
+            self.msg_connect( sink, "pdu_event", self, "pdu_event" )       
             self.connect( (self,0), (sink,0) )
 
