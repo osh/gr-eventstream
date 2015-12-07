@@ -34,8 +34,6 @@ using namespace pmt;
 class es_event_loop_thread {
 
     public:
-
-        //es_event_loop_thread();
         es_event_loop_thread(
             pmt_t _arb,
             es_queue_sptr _queue,
@@ -43,7 +41,8 @@ class es_event_loop_thread {
             boost::lockfree::queue<unsigned long long> *dq,
             boost::condition *qq_cond,
             boost::atomic<int> *nevents,
-            boost::atomic<uint64_t> *num_running_handlers);
+            boost::atomic<uint64_t> *num_running_handlers,
+            std::string threadname = "es_event_loop_thread");
         void start();
         void stop();
         void do_work();
@@ -56,8 +55,7 @@ class es_event_loop_thread {
 
         bool finished;
         boost::shared_ptr<boost::thread> d_thread;
-
-        //boost::lockfree::queue<pmt_t*> *qq;
+        std::string d_threadname;
 
         boost::condition *qq_cond;
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from gnuradio import gr;
+from gnuradio import gr,blocks
 import es, pmt, uuid;
 
 class multisink(gr.hier_block2):
@@ -12,6 +12,8 @@ class multisink(gr.hier_block2):
             gr.io_signature(0,0,0))
         if(tg == None):
             tg = uuid.uuid4();
+
+        debug = blocks.message_debug()
 
         # set up ports
         self.message_port_register_hier_in("schedule_event");
@@ -25,6 +27,7 @@ class multisink(gr.hier_block2):
                 es.sink(io_sig, nthreads,samplehist,eb,ss,tg)
                 )
 
+        self.msg_connect( (self, "schedule_event"), (debug, "print") )       
         # Set up hier connections
         for sink in self.sinks:
             print "es_multisink connecting internal sink: ",sink

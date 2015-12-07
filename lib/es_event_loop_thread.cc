@@ -23,11 +23,12 @@
 #include <stdio.h>
 #include <es/es_common.h>
 #include <es/es_event_loop_thread.hh>
+#include <gnuradio/thread/thread.h>
 
 /*
  * Constructor function, sets up parameters
  */
-es_event_loop_thread::es_event_loop_thread(pmt_t _arb, es_queue_sptr _queue, boost::lockfree::queue<es_eh_pair*> *_qq, boost::lockfree::queue<unsigned long long> *_dq, boost::condition *_qq_cond, boost::atomic<int> *nevents, boost::atomic<uint64_t> *num_running_handlers) :
+es_event_loop_thread::es_event_loop_thread(pmt_t _arb, es_queue_sptr _queue, boost::lockfree::queue<es_eh_pair*> *_qq, boost::lockfree::queue<unsigned long long> *_dq, boost::condition *_qq_cond, boost::atomic<int> *nevents, boost::atomic<uint64_t> *num_running_handlers, std::string threadname) :
     arb(_arb),
     queue(_queue),
     qq(_qq),
@@ -35,7 +36,8 @@ es_event_loop_thread::es_event_loop_thread(pmt_t _arb, es_queue_sptr _queue, boo
     qq_cond(_qq_cond),
     finished(false),
     d_nevents(nevents),
-    d_num_running_handlers(num_running_handlers)
+    d_num_running_handlers(num_running_handlers),
+    d_threadname(threadname)
 {
     start();
 }
@@ -58,7 +60,6 @@ void es_event_loop_thread::stop(){
     d_thread->join();
 }
 
-
 /*
  *  Main event loop thread work function,
  *    constantly receives and services event/handler pairs
@@ -66,7 +67,11 @@ void es_event_loop_thread::stop(){
  */
 void es_event_loop_thread::do_work(){
 
-//    // used by boost::condition, has no scope outside of this thread, unneccisary
+    gr::thread::set_thread_name( 
+        gr::thread::get_current_thread_id(),
+        d_threadname);
+
+    // used by boost::condition, has no scope outside of this thread, unneccisary
     boost::mutex access;
     boost::mutex::scoped_lock lock(access);
 

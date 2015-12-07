@@ -122,7 +122,8 @@ es_sink::~es_sink ()
 bool es_sink::start(){
     // instantiate the threadpool workers
     for(int i=0; i<n_threads; i++){
-        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(pmt::PMT_NIL, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers) );
+        std::string threadname((boost::format("%s::hndl%d") % alias() % i).str());
+        boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(pmt::PMT_NIL, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers, threadname) );
         threadpool.push_back( th );
     }
 }
