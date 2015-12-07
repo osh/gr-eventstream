@@ -3,7 +3,12 @@
 #include <gnuradio/block_registry.h>
 #include <stdio.h>
 
+#define DEBUG_ES_SINK 0
+
 void es_event_acceptor::schedule_event(pmt::pmt_t m){
+
+    if(DEBUG_ES_SINK)
+        std::cout << "es_sink: msg in " << pmt::write_string(m) << std::endl;
 
     // if we are a secondary on a thread group don't add anything ...
     if(d_group.enabled() && !d_group.primary())

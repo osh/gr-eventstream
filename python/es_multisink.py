@@ -13,7 +13,7 @@ class multisink(gr.hier_block2):
         if(tg == None):
             tg = uuid.uuid4();
 
-        debug = blocks.message_debug()
+        #debug = blocks.message_debug()
 
         # set up ports
         self.message_port_register_hier_in("schedule_event");
@@ -27,7 +27,7 @@ class multisink(gr.hier_block2):
                 es.sink(io_sig, nthreads,samplehist,eb,ss,tg)
                 )
 
-        self.msg_connect( (self, "schedule_event"), (debug, "print") )       
+        #self.msg_connect( (self, "schedule_event"), (debug, "print") )       
         # Set up hier connections
         for sink in self.sinks:
             print "es_multisink connecting internal sink: ",sink
