@@ -91,6 +91,9 @@ es_sink::es_sink (
         d_search_behavior(sb),
         es_event_acceptor(eb,sb,tgroup)
 {
+
+    std::cout << "es_sink::threadgroup = " << tgroup << std::endl;
+
     // assign live event times from our thread group
     live_event_times = d_group.live_event_times();
     live_event_times_lock = d_group.live_event_times_lock();
