@@ -30,7 +30,7 @@ class multisink(gr.hier_block2):
         #self.msg_connect( (self, "schedule_event"), (debug, "print") )       
         # Set up hier connections
         for sink in self.sinks:
-            print "es_multisink connecting internal sink: ",sink
+            #print "es_multisink connecting internal sink: ",sink
             if sink == self.sinks[0]:
                 self.msg_connect( (self, "schedule_event"), (sink, "schedule_event") )       
                 self.msg_connect( sink, "nconsumed", self, "nconsumed" )       
