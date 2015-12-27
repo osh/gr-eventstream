@@ -38,7 +38,8 @@ es_queue_sptr es_make_queue(es_queue_early_behaviors eb, es_search_behaviors sb)
 es_queue::es_queue(es_queue_early_behaviors eb, es_search_behaviors sb) :
     d_early_behavior(eb), d_num_discarded(0), d_num_asap(0),
     d_num_events_added(0), d_num_events_removed(0), d_event_time(0),
-    d_num_soon(0), d_search_behavior(sb)
+    d_num_soon(0), d_search_behavior(sb),
+    n_sinks(0), n_sources(0)
 {
     bindings = pmt::make_dict();
 }
@@ -203,6 +204,7 @@ int es_queue::add_event(pmt_t evt){
     //for(int i=0; i<handlers.size(); i++){
 
     while(pmt::is_pair(handlers)){
+        int thread = random()%n_sinks;
         es_eh_pair* eh_pair = new es_eh_pair( evt, pmt::car(handlers) );
 
         DEBUG(printf("created new eh_pair = %x\n", eh_pair);)
@@ -325,7 +327,8 @@ void es_queue::bind_handler(std::string type, gr::basic_block_sptr handler){
 
 
 
-int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh){
+int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh, int tid){
+//    printf("fetch_next_event ... tid=%d\n",tid);
   fstart:
     *eh = NULL;
     queue_lock.lock();
@@ -365,6 +368,7 @@ int es_queue::fetch_next_event(unsigned long long min, unsigned long long max, e
     }
     for(int i=0; i<event_queue.size(); i++){
         es_eh_pair *eh_test = event_queue[i];
+        if(eh_test->tid != tid){ continue; } // skip if its not for our thread
         if(eh_test->time() + eh_test->length() < max){
             event_queue.erase(event_queue.begin()+i);
             d_num_events_removed++;

@@ -29,9 +29,10 @@ using namespace pmt;
 class es_eh_pair {
 
     public:
-        es_eh_pair(pmt_t event, pmt_t handler);
+        es_eh_pair(pmt_t event, pmt_t handler, int tid=0);
         pmt_t event;
         pmt_t handler;
+        int tid;
 
         void run();
         unsigned long long time();

@@ -64,12 +64,11 @@ class es_queue {
             enum es_search_behaviors = SEARCH_BINARY);
         int add_event(pmt_t evt);
         void print_queue(bool already_locked = false);
-        int fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh);
+        int fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh, int tid=0);
         int fetch_next_event2(unsigned long long min, unsigned long long max, es_eh_pair **eh);
 
-        //int fetch_next_event(unsigned long long min, unsigned long long max, pmt_t &eh);
-        //int fetch_next_event2(unsigned long long min, unsigned long long max, pmt_t &eh);
-
+        int register_sink(){ return n_sinks++; }
+        void deregister_sink(){ n_sinks--; }
 
         void bind_handler(std::string type, gr::basic_block_sptr handler);
         void bind_handler(std::string type, es_handler* handler);
@@ -113,6 +112,9 @@ class es_queue {
         size_t find_forward(const uint64_t evt_time);
         size_t find_reverse(const uint64_t evt_time);
         size_t find_binary(const uint64_t evt_time);
+
+        boost::atomic<int> n_sinks;
+        boost::atomic<int> n_sources;
 };
 
 

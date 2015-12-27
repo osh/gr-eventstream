@@ -25,9 +25,10 @@
 #include <es/es_handler.h>
 #include <stdio.h>
 
-es_eh_pair::es_eh_pair(pmt_t _event, pmt_t _handler) :
+es_eh_pair::es_eh_pair(pmt_t _event, pmt_t _handler, int tid) :
     handler(_handler), 
-    event(_event)
+    event(_event),
+    tid(tid)
     {
 
 }

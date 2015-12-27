@@ -76,6 +76,7 @@ private:
     std::string tgroup = "");  // private constructor
     void handler(pmt_t msg, gr_vector_void_star buf);
     int locked_fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh);
+    int d_sink_id;
 
  public:
   ~es_sink ();	// public destructor

@@ -112,30 +112,32 @@ es_sink::es_sink (
         event_queue->register_event_type("pdu_event");
         event_queue->bind_handler("pdu_event", this);
         }
+    d_sink_id = event_queue->register_sink();
+    printf("d_sink_id = %d\n", d_sink_id);
 }
 
 /*
- * Our virtual destructor.
+ * es_sink destructor.
  */
 es_sink::~es_sink ()
 {
-    //printf("es_sink::destructor running!\n");
+    event_queue->deregister_sink();
 }
 
 bool es_sink::start(){
     // instantiate the threadpool workers
     for(int i=0; i<n_threads; i++){
         std::string threadname((boost::format("%s::hndl%d") % alias() % i).str());
+        std::cout << "starting thread " << threadname << std::endl;
         boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(pmt::PMT_NIL, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers, threadname) );
         threadpool.push_back( th );
     }
 }
 
 bool es_sink::stop(){
-    //printf("es_sink::stop running!\n");
+    // wait for events to finish
     wait_events();
 
-    //printf("waiting for join\n");
     // stop all the threads in the pool
     for(int i=0; i<n_threads; i++){
         threadpool[i]->stop();
@@ -633,7 +635,7 @@ void es_sink::wait_events(){
 
 int es_sink::locked_fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh){
     live_event_times_lock->lock();
-    if(event_queue->fetch_next_event( min, max, eh ) == false){
+    if(event_queue->fetch_next_event( min, max, eh, d_sink_id) == false){
         live_event_times_lock->unlock();
         return false;
         }
