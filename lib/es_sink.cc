@@ -113,7 +113,7 @@ es_sink::es_sink (
         event_queue->bind_handler("pdu_event", this);
         }
     d_sink_id = event_queue->register_sink();
-    printf("d_sink_id = %d\n", d_sink_id);
+    //printf("d_sink_id = %d\n", d_sink_id);
 }
 
 /*
@@ -128,7 +128,7 @@ bool es_sink::start(){
     // instantiate the threadpool workers
     for(int i=0; i<n_threads; i++){
         std::string threadname((boost::format("%s::hndl%d") % alias() % i).str());
-        std::cout << "starting thread " << threadname << std::endl;
+        //std::cout << "starting thread " << threadname << std::endl;
         boost::shared_ptr<es_event_loop_thread> th( new es_event_loop_thread(pmt::PMT_NIL, event_queue, &qq, &dq, &qq_cond, &d_nevents, &d_num_running_handlers, threadname) );
         threadpool.push_back( th );
     }
