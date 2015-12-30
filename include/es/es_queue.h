@@ -30,6 +30,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/atomic.hpp>
 
 class es_queue;
 typedef boost::shared_ptr<es_queue> es_queue_sptr;
