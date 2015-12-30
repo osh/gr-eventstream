@@ -92,7 +92,7 @@ es_sink::es_sink (
         es_event_acceptor(eb,sb,tgroup)
 {
 
-    std::cout << "es_sink::threadgroup = " << tgroup << std::endl;
+//    std::cout << "es_sink::threadgroup = " << tgroup << std::endl;
 
     // assign live event times from our thread group
     live_event_times = d_group.live_event_times();
