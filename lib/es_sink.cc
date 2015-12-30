@@ -528,6 +528,10 @@ es_sink::work (int noutput_items,
 
   unsigned long long delete_index = 0;
 
+  /*
+   * Receive notification from worker theads
+   * that they are finished working on events!
+   */
   while( dq.pop(delete_index) ){
   
     live_event_times_lock->lock(); 
