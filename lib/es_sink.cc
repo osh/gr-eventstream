@@ -75,7 +75,7 @@ es_sink::es_sink (
   int _n_threads,
   int _sample_history_in_kilosamples,
   enum es_queue_early_behaviors eb,
-  enum es_search_behaviors sb, 
+  enum es_search_behaviors sb,
   std::string tgroup)
     : gr::sync_block (
         "es_sink",
@@ -112,6 +112,8 @@ es_sink::es_sink (
         event_queue->register_event_type("pdu_event");
         event_queue->bind_handler("pdu_event", this);
         }
+
+    //std::cout << "Eventstream Sink " << alias().c_str() << " started.\n";
 }
 
 /*
@@ -470,7 +472,7 @@ bool sink_compare(const uint64_t& vval, const uint64_t& cval)
 size_t
 es_sink::find_binary(const uint64_t& evt_time)
 {
-    
+
     return std::lower_bound(
       live_event_times->begin(),
       live_event_times->end(),
@@ -533,8 +535,8 @@ es_sink::work (int noutput_items,
    * that they are finished working on events!
    */
   while( dq.pop(delete_index) ){
-  
-    live_event_times_lock->lock(); 
+
+    live_event_times_lock->lock();
 	// remove the event time from the event live times l
     for(int i=0; i<live_event_times->size(); i++){
         if(live_event_times->at(i) == delete_index){
@@ -553,7 +555,7 @@ es_sink::work (int noutput_items,
   while( locked_fetch_next_event( min_time, max_time, &eh ) ){
     DEBUG( printf("es::sink work() got event\n"); )
 
-    // make the event message 
+    // make the event message
     pmt_t event = eh->event;
     uint64_t etime = ::event_time(eh->event);
 
@@ -641,7 +643,7 @@ int es_sink::locked_fetch_next_event(unsigned long long min, unsigned long long 
         live_event_times_lock->unlock();
         return false;
         }
-    
+
     // increment num events counter
     d_nevents++;
 
@@ -651,5 +653,20 @@ int es_sink::locked_fetch_next_event(unsigned long long min, unsigned long long 
     live_event_times->insert(live_event_times->begin() + live_event_times_insert_offset, etime);
     live_event_times_lock->unlock();
     return true;
+}
+
+uint64_t es_sink::nscheduled()
+{
+  return static_cast<es_event_acceptor*>(this)->nscheduled();
+}
+
+uint64_t es_sink::nsecondary()
+{
+  return static_cast<es_event_acceptor*>(this)->nsecondary();
+}
+
+uint64_t es_sink::let_q_size()
+{
+  return static_cast<uint64_t>(live_event_times->size());
 }
 

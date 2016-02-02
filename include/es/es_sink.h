@@ -97,6 +97,9 @@ private:
   uint64_t event_queue_size();
   double event_run_ratio();
   double event_thread_utilization();
+  uint64_t nscheduled();
+  uint64_t nsecondary();
+  uint64_t let_q_size();
 
   unsigned long long d_time;
   unsigned int d_history;

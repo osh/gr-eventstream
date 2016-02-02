@@ -20,27 +20,28 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef EVENTSTREAM_H
-#define EVENTSTREAM_H
+GR_SWIG_BLOCK_MAGIC(es,distributor);
 
+%include "std_string.i"
+%include "std_vector.i"
 
-#include <gnuradio/io_signature.h>
-#include <es/es_common.h>
-//#include <es/es_event.h>
-#include <es/es_source.h>
-#include <es/es_queue.h>
-//#include <es/es_handler.h>
-#include <es/es_sink.h>
+es_distributor_sptr es_make_distributor (
+  std::vector<int> iosig, int num_sinks, bool separate_registration = false);
 
-#include <es/es_handler.h>
-#include <es/es_handler_print.h>
-//#include <es/es_handler_insert_vector_f.h>
-//#include <es/es_handler_extract_vector_f.h>
+class es_distributor: public gr::sync_block
+{
+  es_distributor (
+    gr_vector_int iosig, int num_sinks, bool separate_registration = false);   // private constructor
 
-#include <es/es_gen_vector.h>
-#include <es/es_handler_insert_vector.h>
-
-#include <es/es_trigger_edge_f.h>
-#include <es/es_distributor.h>
-
-#endif
+ public:
+  ~es_distributor();
+  int work(
+    int noutput_items,
+    gr_vector_const_void_star &input_items,
+    gr_vector_void_star &output_items
+    );
+  void dist_msg_random(pmt_t msg);
+  void dist_msg_all(pmt_t msg);
+  uint64_t nevents_registered();
+  uint64_t nevents_distributed();
+};

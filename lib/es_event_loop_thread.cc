@@ -66,8 +66,7 @@ void es_event_loop_thread::stop(){
  *    then queues the live_times for deletion.
  */
 void es_event_loop_thread::do_work(){
-
-    gr::thread::set_thread_name( 
+    gr::thread::set_thread_name(
         gr::thread::get_current_thread_id(),
         d_threadname);
 
@@ -75,6 +74,7 @@ void es_event_loop_thread::do_work(){
     boost::mutex access;
     boost::mutex::scoped_lock lock(access);
 
+    //std::cout << "Starting evt loop on thread: " << d_threadname.c_str() << "\n";
     // run the thread until we are told to shut down
     while(!finished){
         es_eh_pair* eh = NULL;

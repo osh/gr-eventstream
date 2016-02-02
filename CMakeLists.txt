@@ -48,27 +48,24 @@ if(NOT LOG4CPP_FOUND)
     message(FATAL_ERROR "LOG4CPP NOT FOUND!")
 endif(NOT LOG4CPP_FOUND)
 
-find_package(ICE-3.5)
-if (NOT ICE_FOUND)
-    find_package(ICE)
-endif()
+# locate python
+include(FindPythonLibs)
 
+########################################################################
+# Deal with Controlport.
+########################################################################
 # Enable Control Port code by default.
 option(ENABLE_GR_CTRLPORT "Enable the Control Port stats." ON)
-message(STATUS "Control Port ${ENABLE_GR_CTRLPORT}")
 
-if (NOT ICE_FOUND)
-    message(STATUS "ICE not found, GR_CTRLPORT will not be enabled.")
-else()
-    
-    if (ENABLE_GR_CTRLPORT)
-        message(STATUS "Enabling GR_CTRLPORT.")
+if (ENABLE_GR_CTRLPORT)
+    find_package(Thrift)
+    if (NOT THRIFT_FOUND)
+        message(STATUS "THRIFT not found, cannot enable GR_CTRLPORT.")
+    else()
         add_definitions(-DGR_CTRLPORT)
     endif()
 endif()
-
-# locate python
-include(FindPythonLibs)
+message(STATUS "GR_CTRLPORT ${ENABLE_GR_CTRLPORT}.")
 
 ########################################################################
 # Find boost

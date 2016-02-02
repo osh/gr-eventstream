@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <block>
-    <name>EventStream Multi-Sink</name>
-    <key>es_multisink</key>
+    <name>Message Distributor</name>
+    <key>es_distributor</key>
     <category>EVENTSTREAM</category>
     <import>import es</import>
-    <make>es.multisink($num_streams*[$type.size],$nthreads,$samplehistory,$eb.raw,$ss.raw,$tgroup, $nsinks, $distribute)</make>
+    <make>es.distributor((not $show_samp_ports)*$num_streams*[$type.size],$nports,not $add_reg_port)</make>
 
       <param>
         <name>IO Type</name>
@@ -51,89 +51,41 @@
     </param>
 
     <param>
-      <name>Hndlr-Threads per Sink</name>
-      <key>nthreads</key>
-      <value>8</value>
-      <type>int</type>
-    </param>
-    <param>
-      <name>Num Sinks</name>
-      <key>nsinks</key>
-      <value>2</value>
-      <type>int</type>
-    </param>
-
-    <param>
-      <name>Size of Sample History Ksamples</name>
-      <key>samplehistory</key>
-      <value>64</value>
+      <name>Num Out Msg Ports</name>
+      <key>nports</key>
+      <value>1</value>
       <type>int</type>
     </param>
 
   <param>
-    <name>Early Behavior</name>
-    <key>eb</key>
-    <value></value>
-    <type>enum</type>
-    <option>
-        <name>DISCARD</name>
-        <key>discard</key>
-        <opt>raw:0</opt>
-    </option>
-    <option>
-        <name>BALK</name>
-        <key>balk</key>
-        <opt>raw:1</opt>
-    </option>
-    <option>
-        <name>ASAP</name>
-        <key>asap</key>
-        <opt>raw:2</opt>
-    </option>
-  </param>
-
-  <param>
-    <name>Search Style</name>
-    <key>ss</key>
-    <value>binary</value>
-    <type>enum</type>
-    <hide>part</hide>
-    <option>
-        <name>FORWARD</name>
-        <key>forward</key>
-        <opt>raw:0</opt>
-    </option>
-    <option>
-        <name>REVERSE</name>
-        <key>reverse</key>
-        <opt>raw:1</opt>
-    </option>
-    <option>
-        <name>BINARY</name>
-        <key>binary</key>
-        <opt>raw:2</opt>
-    </option>
-  </param>
-
-  <param>
-    <name>Thread Group</name>
-    <key>tgroup</key>
-    <value></value>
-    <type>string</type>
-  </param>
-
-  <param>
-    <name>Distribute Events</name>
-    <key>distribute</key>
+    <name>Show Registration Port</name>
+    <key>add_reg_port</key>
     <value>False</value>
     <type>enum</type>
     <hide>part</hide>
     <option>
-        <name>FALSE</name>
+        <name>YES</name>
         <key>False</key>
     </option>
     <option>
-        <name>TRUE</name>
+        <name>No</name>
+        <key>True</key>
+    </option>
+  </param>
+
+  <!-- Beware: YES is false, NO is true. -->
+  <param>
+    <name>Show Sample Ports</name>
+    <key>show_samp_ports</key>
+    <value>False</value>
+    <type>enum</type>
+    <hide>part</hide>
+    <option>
+        <name>YES</name>
+        <key>False</key>
+    </option>
+    <option>
+        <name>NO</name>
         <key>True</key>
     </option>
   </param>
@@ -143,22 +95,35 @@
     <type>$type</type>
     <vlen>1</vlen>
     <nports>$num_streams</nports>
+    <optional>1</optional>
+    <hide>$show_samp_ports</hide>
   </sink>
 
   <sink>
-    <name>schedule_event</name>
+    <name>dist_random</name>
     <type>message</type>
     <optional>1</optional>
   </sink>
 
-  <source>
-    <name>nconsumed</name>
+  <sink>
+    <name>dist_all</name>
     <type>message</type>
     <optional>1</optional>
+    <hide>$add_reg_port</hide>
+  </sink>
+
+  <source>
+    <name>out</name>
+    <type>$type</type>
+    <vlen>1</vlen>
+    <nports>$num_streams</nports>
+    <optional>1</optional>
+    <hide>$show_samp_ports</hide>
   </source>
   <source>
-    <name>pdu_event</name>
+    <name>dist_out</name>
     <type>message</type>
+    <nports>$nports</nports>
     <optional>1</optional>
   </source>
 
