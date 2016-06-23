@@ -48,24 +48,22 @@ if(NOT LOG4CPP_FOUND)
     message(FATAL_ERROR "LOG4CPP NOT FOUND!")
 endif(NOT LOG4CPP_FOUND)
 
-find_package(ICE-3.5)
-if (NOT ICE_FOUND)
-    find_package(ICE)
-endif()
-
+########################################################################
+# Deal with Controlport.
+########################################################################
 # Enable Control Port code by default.
 option(ENABLE_GR_CTRLPORT "Enable the Control Port stats." ON)
-message(STATUS "Control Port ${ENABLE_GR_CTRLPORT}")
 
-if (NOT ICE_FOUND)
-    message(STATUS "ICE not found, GR_CTRLPORT will not be enabled.")
-else()
-    
-    if (ENABLE_GR_CTRLPORT)
-        message(STATUS "Enabling GR_CTRLPORT.")
-        add_definitions(-DGR_CTRLPORT)
-    endif()
+# This doesn't mean the backend for Control Port (ICE or THRIFT) is 
+# installed or working. It just means that you want to compile in the
+# Control Port related methods of this OOT module. If you are running
+# your graph and wish to view Control Port data/stats from this module,
+# then your GNU Radio build must deal with ensuring your Control Port
+# backend is installed/working.
+if (ENABLE_GR_CTRLPORT)
+    add_definitions(-DGR_CTRLPORT)
 endif()
+message(STATUS "GR_CTRLPORT ${ENABLE_GR_CTRLPORT}.")
 
 # locate python
 include(FindPythonLibs)
