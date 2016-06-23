@@ -43,6 +43,7 @@ list(APPEND eventstream_sources
     es_patterned_interleaver.cc
     es_exceptions.cc
     es_event_acceptor.cc
+    es_distributor.cc
 )
 
 list(APPEND test_eventstream_sources
@@ -98,4 +99,3 @@ INCLUDE(GrTest)
 SET(GR_TEST_TARGET_DEPS eventstream)
 #turn each test cpp file into an executable with an int main() function
 ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK -DBOOST_TEST_MAIN)
-

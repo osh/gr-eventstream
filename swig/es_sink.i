@@ -36,4 +36,18 @@ class es_sink : public gr::sync_block
 
 public:
   void wait_events();
+  uint64_t num_discarded();
+  uint64_t num_asap();
+  uint64_t num_soon();
+  uint64_t num_events_added();
+  uint64_t num_events_removed();
+  uint64_t buffer_window_size();
+  uint64_t event_time();
+  uint64_t num_running_handlers();
+  uint64_t event_queue_size();
+  double event_run_ratio();
+  double event_thread_utilization();
+  uint64_t nscheduled();
+  uint64_t nsecondary();
+  uint64_t let_q_size();
 };

@@ -12,7 +12,10 @@ void es_event_acceptor::schedule_event(pmt::pmt_t m){
 
     // if we are a secondary on a thread group don't add anything ...
     if(d_group.enabled() && !d_group.primary())
+    {
+        d_n_secondary++;
         return;
+    }
 
     if(pmt::is_pair(m) && (pmt::eqv(pmt::car(m), pmt::mp("ES_REGISTER_HANDLER")))){
         // if this is a registration message, register the handlers
@@ -24,10 +27,10 @@ void es_event_acceptor::schedule_event(pmt::pmt_t m){
         t->event_queue = event_queue;
         } else {
 
-
         // otherwise assume it is an event we are scheduling
         if(is_event(m)){
             event_queue->add_event(m);
+            d_n_scheduled++;
         } else {
             // perform secondary check to see if it is a PDU we can work with
 
@@ -74,7 +77,7 @@ void es_event_acceptor::schedule_event(pmt::pmt_t m){
 
                     // add to the queue
                     event_queue->add_event(evt);
-                    
+                    d_n_scheduled++;
                 } else {
                     printf("es_event_acceptor received non event! discarding!\n");
                 }
@@ -107,4 +110,3 @@ void es_event_acceptor::add_handlers(pmt::pmt_t h){
         }
 
     }
-
