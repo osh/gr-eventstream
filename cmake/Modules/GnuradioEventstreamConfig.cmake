@@ -1,28 +1,64 @@
 INCLUDE(FindPkgConfig)
 PKG_CHECK_MODULES(PC_GNURADIO_EVENSTREAM eventstream)
 
+
+
 FIND_PATH(
     GNURADIO_EVENTSTREAM_INCLUDE_DIRS
     NAMES es/es.h
     HINTS $ENV{GNURADIO_EVENTSTREAM_DIR}/include
         ${PC_GNURADIO_EVENTSTREAM_INCLUDEDIR}
-        ${CMAKE_INSTALL_PREFIX}/include/
-    PATHS /usr/local/include/
+    PATHS ${CMAKE_INSTALL_PREFIX}/include/
+          /usr/local/include/
           /usr/include/
 )
+
+if (${GNURADIO_EVENTSTREAM_INCLUDE_DIRS} STREQUAL GNURADIO_EVENTSTREAM_INCLUDE_DIRS-NOTFOUND)
+FIND_PATH(
+    GNURADIO_EVENTSTREAM_INCLUDE_DIRS
+    NAMES es/es.h
+    HINTS $ENV{GNURADIO_EVENTSTREAM_DIR}/include
+        ${PC_GNURADIO_EVENTSTREAM_INCLUDEDIR}
+    PATHS ${CMAKE_INSTALL_PREFIX}/include/
+          /usr/local/include/
+          /usr/include/
+
+    NO_CMAKE_FIND_ROOT_PATH
+)
+endif()
+
+
 
 FIND_LIBRARY(
     GNURADIO_EVENTSTREAM_LIBRARIES
     NAMES eventstream
     HINTS $ENV{GNURADIO_RUNTIME_DIR}/lib
         ${PC_GNURADIO_RUNTIME_LIBDIR}
-        ${CMAKE_INSTALL_PREFIX}/lib64
-        ${CMAKE_INSTALL_PREFIX}/lib
-    PATHS /usr/local/lib
+    PATHS ${CMAKE_INSTALL_PREFIX}/lib64
+          ${CMAKE_INSTALL_PREFIX}/lib
+          /usr/local/lib
           /usr/local/lib64
           /usr/lib
           /usr/lib64
+ )
+
+if (${GNURADIO_EVENTSTREAM_LIBRARIES} STREQUAL GNURADIO_EVENTSTREAM_LIBRARIES-NOTFOUND)
+FIND_LIBRARY(
+    GNURADIO_EVENTSTREAM_LIBRARIES
+    NAMES eventstream
+    HINTS $ENV{GNURADIO_RUNTIME_DIR}/lib
+        ${PC_GNURADIO_RUNTIME_LIBDIR}
+    PATHS ${CMAKE_INSTALL_PREFIX}/lib64
+          ${CMAKE_INSTALL_PREFIX}/lib
+          /usr/local/lib
+          /usr/local/lib64
+          /usr/lib
+          /usr/lib64
+    NO_CMAKE_FIND_ROOT_PATH
 )
+endif()
+
+
 
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(GNURADIO_EVENTSTREAM DEFAULT_MSG GNURADIO_EVENTSTREAM_LIBRARIES GNURADIO_EVENTSTREAM_INCLUDE_DIRS)
