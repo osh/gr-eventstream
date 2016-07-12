@@ -43,10 +43,10 @@ if(NOT CPPUNIT_FOUND)
     message(FATAL_ERROR "CPPUNIT NOT FOUND!")
 endif(NOT CPPUNIT_FOUND)
 
-find_package(Log4Cpp)
-if(NOT LOG4CPP_FOUND)
-    message(FATAL_ERROR "LOG4CPP NOT FOUND!")
-endif(NOT LOG4CPP_FOUND)
+#find_package(Log4Cpp)
+#if(NOT LOG4CPP_FOUND)
+#    message(FATAL_ERROR "LOG4CPP NOT FOUND!")
+#endif(NOT LOG4CPP_FOUND)
 
 ########################################################################
 # Deal with Controlport.
@@ -54,7 +54,7 @@ endif(NOT LOG4CPP_FOUND)
 # Enable Control Port code by default.
 option(ENABLE_GR_CTRLPORT "Enable the Control Port stats." ON)
 
-# This doesn't mean the backend for Control Port (ICE or THRIFT) is 
+# This doesn't mean the backend for Control Port (ICE or THRIFT) is
 # installed or working. It just means that you want to compile in the
 # Control Port related methods of this OOT module. If you are running
 # your graph and wish to view Control Port data/stats from this module,
