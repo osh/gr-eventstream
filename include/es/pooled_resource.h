@@ -20,10 +20,6 @@
 template <class T>
 class pooled_resource {
  public:
-    ~pooled_resource()
-        {
-            boost::mutex::scoped_lock(_populate_lock);
-        }
         pooled_resource(size_t max=8) :
             d_pool(max)
             {
