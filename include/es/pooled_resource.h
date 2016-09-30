@@ -19,7 +19,7 @@
  */
 template <class T>
 class pooled_resource {
- public:
+    public:
         pooled_resource(size_t max=8) :
             d_pool(max)
             {
@@ -80,7 +80,10 @@ class managed_resource_pool {
         if(d_map.find(idx) == d_map.end()){
             boost::mutex::scoped_lock(_map_lock);
             d_map[idx] = boost::shared_ptr< pooled_resource <T > >(new pooled_resource<T>(d_max) );
+            //ARM compiler can generate code that fails to populate this shared pointer (shared_ptr.hpp throws assert when
+            //invoking -> because underlying pointer is 0: Assertion `px != 0' failed).
             while(d_map[idx].get() == 0)
+                //ensure boost allocates the underying pointer
                 {
                     d_map[idx] = boost::shared_ptr< pooled_resource <T > >(new pooled_resource<T>(d_max) );
                 }
