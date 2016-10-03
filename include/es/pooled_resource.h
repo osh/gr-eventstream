@@ -7,8 +7,6 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread/thread.hpp>
 #include <map>
 #include <vector>
 #include <signal.h>
