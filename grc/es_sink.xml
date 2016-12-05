@@ -4,65 +4,82 @@
     <key>es_sink</key>
     <category>EVENTSTREAM</category>
     <import>import es</import>
-    <make>es.sink($num_streams*[$type.size],$nthreads,$samplehistory,$eb.raw,$ss.raw)</make>
-
-      <param>
-        <name>IO Type</name>
-        <key>type</key>
-        <type>enum</type>
-        <option>
-            <name>Complex</name>
-            <key>complex</key>
-            <opt>size:gr.sizeof_gr_complex</opt>
-        </option>
-        <option>
-            <name>Float</name>
-            <key>float</key>
-            <opt>size:gr.sizeof_float</opt>
-        </option>
-        <option>
-            <name>Int</name>
-            <key>int</key>
-            <opt>size:gr.sizeof_int</opt>
-        </option>
-        <option>
-            <name>Short</name>
-            <key>short</key>
-            <opt>size:gr.sizeof_short</opt>
-        </option>
-        <option>
-            <name>Complex Short</name>
-            <key>sc16</key>
-            <opt>size:2*gr.sizeof_short</opt>
-        </option>
-        <option>
-            <name>Byte</name>
-            <key>byte</key>
-            <opt>size:gr.sizeof_char</opt>
-        </option>
-    </param>
-
+    <make>es.sink($num_streams*[$type.size],$nthreads,$samplehistory,$eb.raw,$ss.raw,$cb.raw)</make>
 
     <param>
-        <name>Num Streams</name>
-        <key>num_streams</key>
-        <value>1</value>
-        <type>int</type>
-    </param>
+      <name>IO Type</name>
+      <key>type</key>
+      <type>enum</type>
+      <option>
+          <name>Complex</name>
+          <key>complex</key>
+          <opt>size:gr.sizeof_gr_complex</opt>
+      </option>
+      <option>
+          <name>Float</name>
+          <key>float</key>
+          <opt>size:gr.sizeof_float</opt>
+      </option>
+      <option>
+          <name>Int</name>
+          <key>int</key>
+          <opt>size:gr.sizeof_int</opt>
+      </option>
+      <option>
+          <name>Short</name>
+          <key>short</key>
+          <opt>size:gr.sizeof_short</opt>
+      </option>
+      <option>
+          <name>Complex Short</name>
+          <key>sc16</key>
+          <opt>size:2*gr.sizeof_short</opt>
+      </option>
+      <option>
+          <name>Byte</name>
+          <key>byte</key>
+          <opt>size:gr.sizeof_char</opt>
+      </option>
+  </param>
 
-    <param>
-      <name>Num Handler Threads</name>
-      <key>nthreads</key>
-      <value>8</value>
+
+  <param>
+      <name>Num Streams</name>
+      <key>num_streams</key>
+      <value>1</value>
       <type>int</type>
-    </param>
+  </param>
 
-    <param>
-      <name>Size of Sample History Ksamples</name>
-      <key>samplehistory</key>
-      <value>64</value>
-      <type>int</type>
-    </param>
+  <param>
+    <name>Num Handler Threads</name>
+    <key>nthreads</key>
+    <value>8</value>
+    <type>int</type>
+  </param>
+
+  <param>
+    <name>Size of Sample History Ksamples</name>
+    <key>samplehistory</key>
+    <value>64</value>
+    <type>int</type>
+  </param>
+  
+  <param>
+    <name>Thread Congestion Behavior</name>
+    <key>cb</key>
+    <value>drop</value>
+    <type>enum</type>
+    <option>
+      <name>DROP</name>
+      <key>drop</key>
+      <opt>raw:0</opt>
+    </option>
+    <option>
+      <name>BLOCK</name>
+      <key>block</key>
+      <opt>raw:1</opt>
+    </option>
+  </param>
 
   <param>
     <name>Early Behavior</name>

@@ -45,12 +45,18 @@ using namespace boost::accumulators;
 typedef accumulator_set<double, stats<tag::rolling_mean> > acc_avg_t;
 typedef boost::shared_ptr<es_sink> es_sink_sptr;
 
+enum es_congestion_behaviors {
+            DROP,
+            BLOCK
+};
+
 es_sink_sptr es_make_sink (
     gr_vector_int insig,
     int n_threads,
     int sample_history_in_kilosamples=64,
     enum es_queue_early_behaviors = DISCARD,
-    enum es_search_behaviors = SEARCH_BINARY);
+    enum es_search_behaviors = SEARCH_BINARY,
+    enum es_congestion_behaviors = DROP);
 
 //class es_sink :  public virtual gr::sync_block, public es_event_acceptor
 class es_sink :  public virtual es_handler, public virtual es_event_acceptor
@@ -64,13 +70,15 @@ private:
     int n_threads,
     int sample_history_in_kilosamples,
     enum es_queue_early_behaviors,
-    enum es_search_behaviors);
+    enum es_search_behaviors,
+    enum es_congestion_behaviors);
   es_sink (
     gr_vector_int insig,
     int n_threads,
     int sample_history_in_kilosamples=64,
     enum es_queue_early_behaviors = DISCARD,
-    enum es_search_behaviors = SEARCH_BINARY);  // private constructor
+    enum es_search_behaviors = SEARCH_BINARY,
+    enum es_congestion_behaviors = DROP);  // private constructor
   void handler(pmt_t msg, gr_vector_void_star buf);
 
  public:
@@ -135,6 +143,10 @@ private:
     size_t find_forward(const uint64_t& evt_time);
     size_t find_reverse(const uint64_t& evt_time);
     size_t find_binary(const uint64_t& evt_time);
+    /**
+     * @brief Configuration variable for defining behavior when queue is full.
+     */
+    es_congestion_behaviors d_congestion_behavior;
 
 
 

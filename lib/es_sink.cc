@@ -48,10 +48,11 @@ es_make_sink (
     int n_threads,
     int sample_history_in_kilosamples,
     enum es_queue_early_behaviors eb,
-    enum es_search_behaviors sb)
+    enum es_search_behaviors sb,
+    enum es_congestion_behaviors cb)
 {
   return es_sink_sptr (
-    new es_sink (insig,n_threads,sample_history_in_kilosamples,eb,sb));
+    new es_sink (insig,n_threads,sample_history_in_kilosamples,eb,sb,cb));
 }
 
 /*
@@ -74,7 +75,8 @@ es_sink::es_sink (
   int _n_threads,
   int _sample_history_in_kilosamples,
   enum es_queue_early_behaviors eb,
-  enum es_search_behaviors sb)
+  enum es_search_behaviors sb,
+  enum es_congestion_behaviors cb)
     : gr::sync_block (
         "es_sink",
         es_make_io_signature(insig.size(), insig),
@@ -86,7 +88,8 @@ es_sink::es_sink (
         d_avg_ratio(tag::rolling_window::window_size=50),
         d_avg_thread_utilization(tag::rolling_window::window_size=50),
         latest_tags(pmt::make_dict()),
-        d_search_behavior(sb)
+        d_search_behavior(sb),
+        d_congestion_behavior(cb)
 {
     event_acceptor_setup(eb, sb);
 
@@ -501,11 +504,15 @@ es_sink::work (int noutput_items,
 			gr_vector_void_star &output_items)
 {
   // keep up with the latest tags
+  bool end_of_file(false);
   std::vector <gr::tag_t> v;
   get_tags_in_range(v,0,nitems_read(0),nitems_read(0)+noutput_items);
   for(int i=0; i<v.size(); i++){
     latest_tags = pmt::dict_add(latest_tags, v[i].key, pmt::cons(pmt::from_uint64(v[i].offset), v[i].value));
+    if (pmt::eqv(pmt::mp("file_end"), v[i].key)) {
+      end_of_file = true; // at the end of work(), wait until all events are done.
     }
+  }
 
   char *in = (char*) input_items[0];
 
@@ -583,7 +590,26 @@ es_sink::work (int noutput_items,
     // post the event to the event-loop input queue
     //printf("es_sink::work()::posting event to event loop queue (qq) with buffer.\n");
 
-    qq.push(eh);
+    bool push_succeeded = qq.push(eh);
+    if (!push_succeeded) {
+      switch (d_congestion_behavior){
+        case BLOCK: {
+          // Timed wait and try again:
+          while (!push_succeeded) {
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+            push_succeeded = qq.push(eh);
+          }
+          break;
+        }
+        case DROP:
+        default: {
+          // The queue didn't take ownership of eh, we need to delete it.
+          --d_nevents;
+          delete eh;
+          break;
+        }
+      }
+    }
 
     // insert event time in an ordered list of live events
     int live_event_times_insert_offset = find_index(etime);
@@ -615,6 +641,12 @@ es_sink::work (int noutput_items,
   if(nconsume == 0)
 	boost::this_thread::yield();
 //    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+
+
+  // If we're at the end of a file, wait until all events are worked off.
+  if (end_of_file) {
+    wait_events();
+  }
 
   d_time += nconsume;
   message_port_pub(pmt::mp("nconsumed"), pmt::mp(d_time));
