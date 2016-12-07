@@ -101,6 +101,13 @@ es_sink::es_sink (
     // for upstream schedulers
     message_port_register_out(pmt::mp("nconsumed"));
     message_port_register_out(pmt::mp("pdu_event"));
+    // notify_handlers is used to help shutdown in file-based flowgraphs.
+    // This is so that es_sink emits a pmt::mp("done") message to the downstream
+    // message block, and it can know to shutdown only when all of the blocks
+    // feeding it has shut down (and not just the trigger).
+    //
+    // This is a less relevant situation in realtime flowgraphs.
+    message_port_register_out(pmt::mp("notify_handlers"));
 
     // set up our special pdu handler
     event_queue->register_event_type("pdu_event");
