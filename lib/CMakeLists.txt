@@ -29,6 +29,7 @@ list(APPEND eventstream_sources
     es_handler_print.cc
     es_handler_file.cc
     es_handler_pdu.cc
+    es_handler_passthrough.cc
     es_queue.cc
     es_sink.cc
     es_source.cc

@@ -39,6 +39,7 @@ namespace std {
 #include "es/es_handler_print.h"
 #include "es/es_handler_file.h"
 #include "es/es_handler_pdu.h"
+#include "es/es_handler_passthrough.h"
 #include "es/es_handler_flowgraph.h"
 #include "es/es_trigger.h"
 #include "es/es_trigger_edge_f.h"
@@ -51,6 +52,7 @@ namespace std {
 
 
 %include "es/es_handler_pdu.h"
+%include "es/es_handler_passthrough.h"
 %include "es_handler.i"
 %include "es_event.i"
 %include "es_source.i"
