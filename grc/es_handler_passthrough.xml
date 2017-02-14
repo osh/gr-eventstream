@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<block>
+  <name>Handler Passthrough</name>
+  <key>es_handler_passthrough</key>
+  <category>EVENTSTREAM</category>
+  <import>import es</import>
+  <make>es.es_make_handler_passthrough()</make>
+  
+  <sink>
+    <name>handle_event</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+
+  <source>
+    <name>events_out</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+
+  <doc>
+    This handler passes an event pmt through to the next block.
+  </doc>
+
+</block>
