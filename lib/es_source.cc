@@ -101,6 +101,9 @@ es_source::es_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_b
     // message port that tracks the production rate
     // for upstream schedulers
     message_port_register_out(pmt::mp("nproduced"));
+
+    // message port that outputs events with timing info once they are scheduled
+    message_port_register_out(pmt::mp("events_scheduled"));
 }
 
 
@@ -164,12 +167,9 @@ es_source::work (int noutput_items,
   for(int i = 0; i<readylist.size(); i++){
     DEBUG(printf("readylist[%d] = %p\n", i, readylist[i].get());)
     pmt_t evt = readylist[i];
-//    std::cout << "iterating over ready list (i=" << i << ", evt_time = "<<event_time(evt)<<")\n";
-//    std::cout << " got reference ("<<event_time(evt)<<","<<event_length(evt),")\n";
     
     uint64_t e_time = event_time(evt);
     uint64_t e_length = event_length(evt);
-    
 
     if(e_time >= d_time + noutput_items){ // event starts after our current buffer area save for later
         break; // if event is in the future do nothing with it (since they are time ordered - we are done here)
@@ -179,9 +179,8 @@ es_source::work (int noutput_items,
         readylist.erase(readylist.begin()+i);
         i--;
 
+        // make sure event time is greater than right now 
         if(e_time < d_time){ // if event starts in the past handle the behavior appropriately
-//            printf("e_time(%d) < d_time(%d)\n", e_time, d_time);
-//            printf("values { DISCARD: %d, BALK: %d, ASAP: %d }\n", DISCARD, BALK, ASAP);
             switch(event_queue->d_early_behavior){
                 case DISCARD:
                     // discard this event
@@ -191,10 +190,8 @@ es_source::work (int noutput_items,
                     throw std::runtime_error((boost::format("source event arrived at the source work function late (evt=%lu, time=%llu)!")%e_time%d_time).str());
                 case ASAP:
                     // update event time to be as soon as possible
-                    //printf("ADDING TIME TO EVT!! %lu\n", d_time);
                     evt = event_args_add(evt, pmt::intern("es::event_time") , pmt::from_uint64(d_time));
                     e_time = event_time(evt);
-                    //printf("updating event time.\n");
                     break;
                 default:
                     std::cout <<  event_queue->d_early_behavior << "\n";
@@ -220,21 +217,12 @@ es_source::work (int noutput_items,
             DEBUG(printf("input_offset = %d (e_time = %lu, dtime = %llu)\n", input_offset, e_time, d_time);)
         }
 
-//        DEBUG(printf("space_avail = %d, e_length = %d, item_copy = %d -- ", space_avail, e_length, item_copy);)
-//        DEBUG(printf("output_offset = %d, input_offset = %d ", output_offset, input_offset);)
-//        DEBUG(printf("d_time = %llu, e_time = %llu, noutput_items = %d\n", d_time, e_time, noutput_items);)
-
-        // (*it) == event
-        // TODO: error checking on this ?
-        DEBUG(printf("making sure buffer list arg exists\n");)
         if( !event_has_field( (evt), es::event_buffer ) ){
             perror("malformed event");
             }
-        DEBUG(printf("getting buffer list element\n");)
 
         // buf_list is a pmt_list of pmt_blobs containing buffers for N output ports
         pmt_t buf_list = event_field( (evt), es::event_buffer ); 
-        //printf("buf has %d elements.\n", pmt_length(buf_list) );
 
         // sanity checking
         if( (!(item_copy <= input_offset+noutput_items)) || (!(input_offset >= 0)) ){
@@ -250,7 +238,6 @@ es_source::work (int noutput_items,
 
             // get reference to buffer stored in the event
             const char* ii = (const char*) pmt::blob_data(buf);
-            //printf("blob len = %d\n", pmt::blob_length(buf));
 
             // get reference to the output buffer
             char* oo = (char*) output_items[j];
@@ -265,7 +252,10 @@ es_source::work (int noutput_items,
             DEBUG(printf("memcpy returned\n");)
         }
 
-//        std::cout << "e_length = " << e_length << ", item_copy = " << item_copy << "\n";
+        // copy event dict to scheduled output message port incase someone else cares ¯\_(ツ)_/¯ 
+        if(pmt::length(message_subscribers(pmt::mp("events_scheduled")))){
+            message_port_pub(pmt::mp("events_scheduled"), pmt::tuple_ref(evt,1) );
+            }
 
         // if we have leftovers to store (from previous work executions)
         if(e_length > item_copy){
@@ -321,7 +311,6 @@ es_source::work (int noutput_items,
             } // done inserting
         } // done leftover exists conditional
     } // done time range if()
-//    std::cout << "e { time: " << e_time << ", length: " << e_length << "}\n";
     } // done outer loop over readylist contents
 
 
@@ -329,9 +318,7 @@ es_source::work (int noutput_items,
  
   
   // determine number to be produced
-  //printf("d_maxlen = %llu, d_time = %llu, noutput_items = %d\n", d_maxlen, d_time, noutput_items);
   int produced = (d_maxlen < d_time + noutput_items)?d_maxlen - d_time:noutput_items;
-  //std::cout << "*** produced = " << produced << "\n";
   message_port_pub(pmt::mp("nproduced"), pmt::mp(d_time));
   
   // check finished condition for exit

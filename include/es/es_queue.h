@@ -31,7 +31,6 @@
 class es_queue;
 typedef boost::shared_ptr<es_queue> es_queue_sptr;
 
-
 #include <es/es_eh_pair.hh>
 #include <es/es_event.h>
 #include <es/es_handler.h>
@@ -43,7 +42,6 @@ enum es_queue_early_behaviors {
             ASAP
 };
 
-
 es_queue_sptr es_make_queue(
     enum es_queue_early_behaviors = DISCARD,
     enum es_search_behaviors sb = SEARCH_BINARY);
@@ -51,7 +49,6 @@ es_queue_sptr es_make_queue(
 class es_eh_queue;
 
 class es_queue {
-
 
     public:
 
@@ -63,10 +60,6 @@ class es_queue {
         void print_queue(bool already_locked = false);
         int fetch_next_event(unsigned long long min, unsigned long long max, es_eh_pair **eh);
         int fetch_next_event2(unsigned long long min, unsigned long long max, es_eh_pair **eh);
-
-        //int fetch_next_event(unsigned long long min, unsigned long long max, pmt_t &eh);
-        //int fetch_next_event2(unsigned long long min, unsigned long long max, pmt_t &eh);
-
 
         void bind_handler(std::string type, gr::basic_block_sptr handler);
         void bind_handler(std::string type, es_handler* handler);

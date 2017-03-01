@@ -33,11 +33,5 @@ using namespace pmt;
 
 // event is a pmt
 
-
-
-
-
-
 #endif
-
 

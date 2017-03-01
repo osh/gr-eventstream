@@ -93,4 +93,10 @@
       <optional>1</optional>
   </source>
 
+  <source>
+      <name>events_scheduled</name>
+      <type>message</type>
+      <optional>1</optional>
+  </source>
+
 </block>

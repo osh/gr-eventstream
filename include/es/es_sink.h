@@ -58,8 +58,7 @@ es_sink_sptr es_make_sink (
     enum es_search_behaviors = SEARCH_BINARY,
     enum es_congestion_behaviors = DROP);
 
-//class es_sink :  public virtual gr::sync_block, public es_event_acceptor
-class es_sink :  public virtual es_handler, public virtual es_event_acceptor
+class es_sink : public virtual es_handler, public virtual es_event_acceptor
 {
 private:
   pmt::pmt_t latest_tags;
@@ -109,9 +108,7 @@ private:
 
   boost::atomic<int> d_nevents;
   void wait_events();
-//  void wait_events(gr_top_block_sptr tb);
 
-//  sem_t thread_notify_sem;
   boost::condition qq_cond;
 
   boost::lockfree::queue<es_eh_pair*> qq;
@@ -122,8 +119,6 @@ private:
 
   bool state_done_prevent_exit() { return (d_nevents + event_queue->length())!=0; }
   bool state_done_call_empty() { return (d_nevents + event_queue->length())!=0; }
-  //bool state_done_prevent_exit() { return false; }
-  //bool state_done_call_empty() { return false; }
   void setup_rpc();
   bool start();
   bool stop();

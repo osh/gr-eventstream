@@ -34,7 +34,6 @@ if(NOT GNURADIO_RUNTIME_FOUND)
     message(FATAL_ERROR "GR core not found")
 endif(NOT GNURADIO_RUNTIME_FOUND)
 
-
 # locate gnu radio
 include(FindPkgConfig)
 
@@ -42,11 +41,6 @@ find_package(CppUnit)
 if(NOT CPPUNIT_FOUND)
     message(FATAL_ERROR "CPPUNIT NOT FOUND!")
 endif(NOT CPPUNIT_FOUND)
-
-#find_package(Log4Cpp)
-#if(NOT LOG4CPP_FOUND)
-#    message(FATAL_ERROR "LOG4CPP NOT FOUND!")
-#endif(NOT LOG4CPP_FOUND)
 
 ########################################################################
 # Deal with Controlport.
@@ -100,7 +94,6 @@ IF(NOT Boost_FOUND)
     MESSAGE(FATAL_ERROR "Boost required")
 ENDIF()
 
-
 ########################################################################
 # Setup the package config file
 ########################################################################
@@ -113,7 +106,6 @@ set(grcdir "\${prefix}/share/gnuradio/grc/blocks/")
 set(GR_PKG_DATA_DIR "\${prefix}/share/gnuradio/")
 set(GRC_BLOCKS_DIR      ${GR_PKG_DATA_DIR}/grc/blocks)
 set(GR_LIBRARY_DIR lib${LIB_SUFFIX})
-
 
 ########################################################################
 # On Apple only, set install name and use rpath correctly, if not already set
@@ -170,8 +162,6 @@ SET(EVENTSTREAM_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/lib
 )
 
-
-
 # uninstall target
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
@@ -180,7 +170,6 @@ configure_file(
 
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
-
 
 ########################################################################
 # Setup the library
@@ -196,13 +185,6 @@ set(GR_RUNTIME_DIR ${CMAKE_INSTALL_PREFIX}/bin/)
 set(GR_PKG_CONF_DIR lib${LIB_SUFFIX}/pkgconfig)
 
 ########################################################################
-# And the utility apps
-########################################################################
-#add_subdirectory(apps)
-
-
-########################################################################
 # Print summary
 ########################################################################
-#GR_PRINT_COMPONENT_SUMMARY()
 message(STATUS "Using install prefix: ${CMAKE_INSTALL_PREFIX}")
