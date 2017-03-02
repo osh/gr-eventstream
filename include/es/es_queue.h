@@ -39,7 +39,8 @@ typedef boost::shared_ptr<es_queue> es_queue_sptr;
 enum es_queue_early_behaviors {
             DISCARD,
             BALK,
-            ASAP
+            ASAP,
+            RNDF
 };
 
 es_queue_sptr es_make_queue(

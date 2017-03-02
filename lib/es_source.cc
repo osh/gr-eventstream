@@ -173,6 +173,11 @@ es_source::work (int noutput_items,
                     evt = event_args_add(evt, pmt::intern("es::event_time") , pmt::from_uint64(d_time));
                     e_time = event_time(evt);
                     break;
+                case RNDF:
+                    // update event time to be a near future time
+                    evt = event_args_add(evt, pmt::intern("es::event_time") , pmt::from_uint64(d_time+rand()%noutput_items));
+                    e_time = event_time(evt);
+                    break;
                 default:
                     std::cout <<  event_queue->d_early_behavior << "\n";
                     throw std::runtime_error("unknown value for event_queue->d_early_behavior");
