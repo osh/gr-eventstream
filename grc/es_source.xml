@@ -4,7 +4,7 @@
   <key>es_source</key>
   <category>EVENTSTREAM</category>
   <import>import es</import>
-  <make>es.source($num_streams*[$type.size], $nthreads, $eb.raw)</make>
+  <make>es.source($num_streams*[$type.size], $nthreads, $eb.raw, $mm.raw)</make>
 
   <param>
     <name>Handler Threads</name>
@@ -75,6 +75,33 @@
     <option>
         <name>RNDF</name>
         <key>rndf</key>
+        <opt>raw:3</opt>
+    </option>
+  </param>
+  
+  <param>
+    <name>Merge Mode</name>
+    <key>mm</key>
+    <value></value>
+    <type>enum</type>
+    <option>
+        <name>MEMCPY</name>
+        <key>memcpy</key>
+        <opt>raw:0</opt>
+    </option>
+    <option>
+        <name>ADD_INT8S</name>
+        <key>addint8s</key>
+        <opt>raw:1</opt>
+    </option>
+    <option>
+        <name>ADD_INT16S</name>
+        <key>addint16s</key>
+        <opt>raw:2</opt>
+    </option>
+    <option>
+        <name>ADD_FLOATS</name>
+        <key>addfloats</key>
         <opt>raw:3</opt>
     </option>
   </param>

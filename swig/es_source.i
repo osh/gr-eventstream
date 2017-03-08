@@ -26,7 +26,7 @@ GR_SWIG_BLOCK_MAGIC(es,source);
 
 
 
-es_source_sptr es_make_source ( std::vector<int> out_sig, int nthreads, enum es_queue_early_behaviors eb = DISCARD);
+es_source_sptr es_make_source ( std::vector<int> out_sig, int nthreads, enum es_queue_early_behaviors eb = DISCARD, enum es_source_merge_behavior = MEMCPY);
 
 class es_source : public gr::sync_block
 {

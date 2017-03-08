@@ -29,9 +29,9 @@
  * a boost shared_ptr.  This is effectively the public constructor.
  */
 es_source_sptr 
-es_make_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_behaviors eb)
+es_make_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_behaviors eb, enum es_source_merge_behavior mb)
 {
-  return es_source_sptr (new es_source (out_sig, nthreads, eb));
+  return es_source_sptr (new es_source (out_sig, nthreads, eb, mb));
 }
 
 /*
@@ -53,10 +53,11 @@ unsigned long long es_source::time(){
 /*
  * The private constructor
  */
-es_source::es_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_behaviors eb)
+es_source::es_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_behaviors eb, enum es_source_merge_behavior mb)
   : gr::sync_block ("es_source",
         gr::io_signature::make (MIN_IN, MAX_IN, 0),
         es_make_io_signature (out_sig.size(), out_sig) ),
+    d_merge_mode(mb),
     d_maxlen(ULLONG_MAX),
     d_time(0),
     n_threads(nthreads), // poke this through as a constructor arg
@@ -216,10 +217,7 @@ es_source::work (int noutput_items,
 
         // copy to output buffer (iterate over number of output ports)
         for(int j=0; j<output_items.size();j++){
-            DEBUG(printf("getting %d'th buffer\n", j);)
             pmt_t buf = pmt::nth(j, buf_list);           
-
-            DEBUG(printf("got buf\n");)
 
             // get reference to buffer stored in the event
             const char* ii = (const char*) pmt::blob_data(buf);
@@ -228,13 +226,40 @@ es_source::work (int noutput_items,
             char* oo = (char*) output_items[j];
             int itemsize = d_output_signature->sizeof_stream_item(j);
 
-            DEBUG(printf("calling memcpy\n");)
-            // copy memory from event args to output buffer
-            DEBUG(printf("calling memcpy from ii=%p to oo=%p\n", ii, oo);)
-            DEBUG(printf("memcpy length = %d\n", item_copy*itemsize);)
-            DEBUG(printf("output_offset = %d, input_offset = %d\n", output_offset, input_offset);)
-            memcpy( &oo[output_offset*itemsize], &ii[input_offset*itemsize], item_copy*itemsize );
-            DEBUG(printf("memcpy returned\n");)
+            // copy our event contents into the output buffer ...
+            //   - this now supports several merge modes
+            switch(d_merge_mode){
+                case MEMCPY: // raw memcpy mode (no overlap merge)
+                    memcpy( &oo[output_offset*itemsize], &ii[input_offset*itemsize], item_copy*itemsize );
+                    DEBUG(printf("memcpy returned\n");)
+                    break;
+                case ADD_INT8S: // int8 additive merge mode
+                    {
+                    int nitem = item_copy*itemsize / sizeof(int8_t);
+                    int8_t* out = (int8_t*) &oo[output_offset*itemsize];
+                    int8_t* in  = (int8_t*) &ii[input_offset*itemsize];
+                    for(int kk=0; kk<nitem; kk++){ out[kk] += in[kk]; }
+                    }
+                    break;
+                case ADD_INT16S: // int16 additive merge mode
+                    {
+                    int nitem = item_copy*itemsize / sizeof(int16_t);
+                    int16_t* out = (int16_t*) &oo[output_offset*itemsize];
+                    int16_t* in  = (int16_t*) &ii[input_offset*itemsize];
+                    for(int kk=0; kk<nitem; kk++){ out[kk] += in[kk]; }
+                    }
+                    break;
+                case ADD_FLOATS: // float additive merge mode
+                    {
+                    int nitem = item_copy*itemsize / sizeof(float);
+                    float* out = (float*) &oo[output_offset*itemsize];
+                    float* in  = (float*) &ii[input_offset*itemsize];
+                    for(int kk=0; kk<nitem; kk++){ out[kk] += in[kk]; }
+                    }
+                    break;
+                default:
+                    throw std::runtime_error("bad value for d_merge_mode");
+            } 
         }
 
         // copy event dict to scheduled output message port incase someone else cares ¯\_(ツ)_/¯ 

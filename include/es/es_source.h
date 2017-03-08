@@ -1,19 +1,19 @@
 /* -*- c++ -*- */
 /*
  * Copyright 2011 Free Software Foundation, Inc.
- * 
+ *
  * This file is part of gr-eventstream
- * 
+ *
  * gr-eventstream is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3, or (at your option)
  * any later version.
- * 
+ *
  * gr-eventstream is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with gr-eventstream; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street,
@@ -31,20 +31,26 @@
 #include <boost/function.hpp>
 #include <boost/lockfree/queue.hpp>
 
+enum es_source_merge_behavior {
+  MEMCPY,
+  ADD_INT8S,
+  ADD_INT16S,
+  ADD_FLOATS,
+};
 
 class es_source;
 using namespace pmt;
 
 typedef boost::shared_ptr<es_source> es_source_sptr;
 
-es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads=1, enum es_queue_early_behaviors = DISCARD);
+es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads=1, enum es_queue_early_behaviors = DISCARD, enum es_source_merge_behavior = MEMCPY);
 
 class es_source : public virtual gr::sync_block, public virtual es_event_acceptor
 {
 private:
-  friend es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_behaviors);
+  friend es_source_sptr es_make_source (gr_vector_int out_sig, int nthreads, enum es_queue_early_behaviors, enum es_source_merge_behavior);
 
-  es_source (gr_vector_int out_sig, int nthreads=1, enum es_queue_early_behaviors = DISCARD);  	// private constructor
+  es_source (gr_vector_int out_sig, int nthreads=1, enum es_queue_early_behaviors = DISCARD, enum es_source_merge_behavior = MEMCPY);  	// private constructor
 
   es_handler_sptr ih;
 
@@ -54,6 +60,8 @@ private:
   int work (int noutput_items,
 	    gr_vector_const_void_star &input_items,
 	    gr_vector_void_star &output_items);
+
+  es_source_merge_behavior d_merge_mode;
 
   void set_max(unsigned long long maxlen);
 
@@ -66,12 +74,10 @@ private:
   std::vector<pmt_t> readylist;
 
   std::vector<boost::shared_ptr<es_source_thread> > threadpool;
-//  std::vector<unsigned long long> live_event_times;
 
-  //bool cb(es_eh_pair** eh){ return false; }
   bool cb(es_eh_pair** eh);
- 
-  int n_threads;   
+
+  int n_threads;
 
   unsigned long long d_maxlen;
   unsigned long long d_time;
