@@ -235,7 +235,7 @@ int es_queue::add_event(pmt_t evt){
 
     }
     queue_lock.unlock();
-
+    return 0;
 }
 
 
@@ -271,7 +271,7 @@ void es_queue::print_queue(bool already_holding){
 }
 
 int es_queue::register_event_type(pmt_t type){
-    register_event_type( pmt::symbol_to_string(type) );
+    return register_event_type( pmt::symbol_to_string(type) );
 }
 
 int es_queue::register_event_type(std::string type){
@@ -308,7 +308,7 @@ void es_queue::bind_handler(std::string type, es_handler* handler){
 
     DEBUG(printf("EVENTSTREAM_QUEUE::BIND_HANDLER (%s, %x).\n",type.c_str(), handler.get());)
 
-    if(not pmt::dict_has_key(bindings, type_pmt))
+    if(! pmt::dict_has_key(bindings, type_pmt))
         throw std::runtime_error("attempt to bind handler for unregistered event type");
 
     DEBUG(printf("Registering new handler for evt type %s\n", type.c_str());)

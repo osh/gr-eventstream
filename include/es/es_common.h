@@ -24,6 +24,11 @@
 
 #include <pmt/pmt.h>
 #include <gnuradio/basic_block.h>
+ // mode_t is defined in logger.h for MS
+#ifdef _MSC_VER
+#define HAVE_MODE_T
+#endif 
+
 using namespace pmt;
 
 #define es_make_arb es_make_arbiter

@@ -59,6 +59,7 @@ class es_trigger : public virtual gr::sync_block
             message_port_pub(pmt::mp("which_stream"), reg);
 //            std::cout << "sent registeration message: " << reg << "\n";
             }
+        return 0;
         }
   
   std::vector<pmt_t> event_types;
