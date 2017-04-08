@@ -78,13 +78,31 @@ SET(Boost_ADDITIONAL_VERSIONS
     "1.65.0" "1.65" "1.66.0" "1.66" "1.67.0" "1.67" "1.68.0" "1.68" "1.69.0" "1.69"
 )
 
-set(BOOST_ROOT ${CMAKE_INSTALL_PREFIX})
+if (NOT DEFINED BOOST_ROOT)
+	set(BOOST_ROOT ${CMAKE_INSTALL_PREFIX})
+endif (NOT DEFINED BOOST_ROOT)
+
+if(MSVC)
+    if (NOT DEFINED BOOST_ALL_DYN_LINK)
+        set(BOOST_ALL_DYN_LINK TRUE)
+    endif()
+    set(BOOST_ALL_DYN_LINK "${BOOST_ALL_DYN_LINK}" CACHE BOOL "boost enable dynamic linking")
+    if(BOOST_ALL_DYN_LINK)
+        add_definitions(-DBOOST_ALL_DYN_LINK) #setup boost auto-linking in msvc
+    else(BOOST_ALL_DYN_LINK)
+        unset(BOOST_REQUIRED_COMPONENTS) #empty components list for static link
+    endif(BOOST_ALL_DYN_LINK)
+endif(MSVC)
+
 set(BOOST_REQUIRED_COMPONENTS
     system
     date_time
     program_options
     thread
     regex
+	filesystem
+	atomic
+	chrono
 )
 MESSAGE("")
 set(Boost_USE_MULTITHREADED ON)
