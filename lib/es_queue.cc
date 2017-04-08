@@ -235,7 +235,7 @@ int es_queue::add_event(pmt_t evt){
 
     }
     queue_lock.unlock();
-
+    return 0;
 }
 
 
@@ -271,7 +271,7 @@ void es_queue::print_queue(bool already_holding){
 }
 
 int es_queue::register_event_type(pmt_t type){
-    register_event_type( pmt::symbol_to_string(type) );
+    return register_event_type( pmt::symbol_to_string(type) );
 }
 
 int es_queue::register_event_type(std::string type){
