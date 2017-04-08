@@ -335,7 +335,9 @@ es_source::work (int noutput_items,
   message_port_pub(pmt::mp("nproduced"), pmt::mp(d_time));
   
   // check finished condition for exit
+#ifndef _MSC_VER
   if(__builtin_expect(d_maxlen == d_time, false)){ return -1; } 
+#endif 
   d_time += produced; // step time ptr along
   return produced;
 }
