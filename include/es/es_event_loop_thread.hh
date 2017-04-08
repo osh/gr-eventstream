@@ -23,6 +23,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/lockfree/queue.hpp>
+#include <boost/atomic.hpp>
 #include <pmt/pmt.h>
 #include <es/es_queue.h>
 #include <es/es_common.h>
