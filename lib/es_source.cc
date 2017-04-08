@@ -265,7 +265,7 @@ es_source::work (int noutput_items,
         // copy event dict to scheduled output message port incase someone else cares ¯\_(ツ)_/¯ 
         if(pmt::length(message_subscribers(pmt::mp("events_scheduled")))){
             pmt::pmt_t dict = pmt::tuple_ref(evt,1);
-            if(not pmt::eqv(pmt::dict_ref(dict, pmt::mp("es::event_type"), PMT_NIL), pmt::mp("CONTINUATION"))){
+            if(! pmt::eqv(pmt::dict_ref(dict, pmt::mp("es::event_type"), PMT_NIL), pmt::mp("CONTINUATION"))){
                 dict = pmt::dict_delete( dict, pmt::intern("es::event_buffer") );
                 message_port_pub(pmt::mp("events_scheduled"), dict );
                 }

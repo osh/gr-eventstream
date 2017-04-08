@@ -308,7 +308,7 @@ void es_queue::bind_handler(std::string type, es_handler* handler){
 
     DEBUG(printf("EVENTSTREAM_QUEUE::BIND_HANDLER (%s, %x).\n",type.c_str(), handler.get());)
 
-    if(not pmt::dict_has_key(bindings, type_pmt))
+    if(! pmt::dict_has_key(bindings, type_pmt))
         throw std::runtime_error("attempt to bind handler for unregistered event type");
 
     DEBUG(printf("Registering new handler for evt type %s\n", type.c_str());)
