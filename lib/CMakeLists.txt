@@ -6,7 +6,7 @@ include_directories(
     ${GNURADIO_RUNTIME_INCLUDE_DIRS}
     ${GNURADIO_BLOCKS_INCLUDE_DIRS}
     ${PYTHON_INCLUDE_DIRS}
-	${BOOST_INCLUDE_DIRS}
+    ${BOOST_INCLUDE_DIRS}
 )
 
 # Set up LDFLAGS
@@ -18,6 +18,7 @@ list(APPEND eventstream_libs
     ${GNURADIO_BLOCKS_LIBRARIES}
     ${GNURADIO_PMT_LIBRARIES}
     ${PYTHON_LIBRARIES}
+    ${LOG4CPP_LIBRARIES}
 )
 
 list(APPEND eventstream_sources

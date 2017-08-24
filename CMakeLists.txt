@@ -42,6 +42,11 @@ if(NOT CPPUNIT_FOUND)
     message(FATAL_ERROR "CPPUNIT NOT FOUND!")
 endif(NOT CPPUNIT_FOUND)
 
+find_package(Log4Cpp)
+if(NOT LOG4CPP_FOUND)
+    message(FATAL_ERROR "LOG4CPP NOT FOUND!")
+endif(NOT LOG4CPP_FOUND)
+
 ########################################################################
 # Deal with Controlport.
 ########################################################################
