@@ -1,35 +1,53 @@
-# Locate log4cpp include paths and libraries
-# log4cpp can be found at http://log4cpp.sourceforge.net/
-# Written by Manfred Ulz, manfred.ulz_at_tugraz.at
+# - Find Log4cpp
+# Find the native LOG4CPP includes and library
+#
+#  LOG4CPP_INCLUDE_DIR - where to find LOG4CPP.h, etc.
+#  LOG4CPP_LIBRARIES   - List of libraries when using LOG4CPP.
+#  LOG4CPP_FOUND       - True if LOG4CPP found.
 
-# This module defines
-# LOG4CPP_INCLUDE_DIR, where to find ptlib.h, etc.
-# LOG4CPP_LIBRARIES, the libraries to link against to use pwlib.
-# LOG4CPP_FOUND, If false, don't try to use pwlib.
 
-FIND_PATH(LOG4CPP_INCLUDE_DIR log4cpp/Category.hh
-  PATHS
-    "$ENV{LOG4CPP}/include"
-    /usr/local/include
-    /usr/include
+if (LOG4CPP_INCLUDE_DIR)
+  # Already in cache, be silent
+  set(LOG4CPP_FIND_QUIETLY TRUE)
+endif ()
+
+find_path(LOG4CPP_INCLUDE_DIR log4cpp/Category.hh
+  /opt/local/include
+  /usr/local/include
+  /usr/include
 )
 
-FIND_LIBRARY(LOG4CPP_LIBRARIES log4cpp
-  PATHS
-    "$ENV{LOG4CPP}/lib"
-    /usr/local/lib
-    /usr/lib
+set(LOG4CPP_NAMES log4cpp)
+find_library(LOG4CPP_LIBRARY
+  NAMES ${LOG4CPP_NAMES}
+  PATHS /usr/lib /usr/local/lib /opt/local/lib
 )
 
-SET(LOG4CPP_FOUND 0)
-IF(LOG4CPP_INCLUDE_DIR)
-  IF(LOG4CPP_LIBRARIES)
-    SET(LOG4CPP_FOUND 1)
-    MESSAGE(STATUS "Found Log4CPP")
-  ENDIF(LOG4CPP_LIBRARIES)
-ENDIF(LOG4CPP_INCLUDE_DIR)
 
-MARK_AS_ADVANCED(
-  LOG4CPP_INCLUDE_DIR
+if (LOG4CPP_INCLUDE_DIR AND LOG4CPP_LIBRARY)
+  set(LOG4CPP_FOUND TRUE)
+  set(LOG4CPP_LIBRARIES ${LOG4CPP_LIBRARY} CACHE INTERNAL "" FORCE)
+  set(LOG4CPP_INCLUDE_DIRS ${LOG4CPP_INCLUDE_DIR} CACHE INTERNAL "" FORCE)
+else ()
+  set(LOG4CPP_FOUND FALSE CACHE INTERNAL "" FORCE)
+  set(LOG4CPP_LIBRARY "" CACHE INTERNAL "" FORCE)
+  set(LOG4CPP_LIBRARIES "" CACHE INTERNAL "" FORCE)
+  set(LOG4CPP_INCLUDE_DIR "" CACHE INTERNAL "" FORCE)
+  set(LOG4CPP_INCLUDE_DIRS "" CACHE INTERNAL "" FORCE)
+endif ()
+
+if (LOG4CPP_FOUND)
+  if (NOT LOG4CPP_FIND_QUIETLY)
+    message(STATUS "Found LOG4CPP: ${LOG4CPP_LIBRARIES}")
+  endif ()
+else ()
+  if (LOG4CPP_FIND_REQUIRED)
+    message(STATUS "Looked for LOG4CPP libraries named ${LOG4CPPS_NAMES}.")
+    message(FATAL_ERROR "Could NOT find LOG4CPP library")
+  endif ()
+endif ()
+
+mark_as_advanced(
   LOG4CPP_LIBRARIES
-) 
+  LOG4CPP_INCLUDE_DIRS
+)
