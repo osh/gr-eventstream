@@ -2,7 +2,7 @@
 <block>
   <name>Trigger Rising Edge Event</name>
   <key>es_trigger_edge_f</key>
-  <category>EVENTSTREAM</category>
+  <category>[EVENTSTREAM]</category>
   <import>import es</import>
   <make>es.trigger_edge_f($thresh,$length,$lookback,$type.size,$guard)</make>
   

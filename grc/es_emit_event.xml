@@ -2,7 +2,7 @@
 <block>
   <name>Hier Stream Event - Emitted Event</name>
   <key>es_hier_event_emit</key>
-  <category>EVENTSTREAM</category>
+  <category>[EVENTSTREAM]</category>
   <import>import es;
 import pmt;</import>
   <make>self.$(id) = $(id) = $evtname</make>

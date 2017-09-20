@@ -2,7 +2,7 @@
 <block>
   <name>Trigger System-Timer Event</name>
   <key>es_timer_trigger</key>
-  <category>EVENTSTREAM</category>
+  <category>[EVENTSTREAM]</category>
   <import>import es</import>
   <make>#slurp
 es.es_trigger_timer("TIMER_EXPIRED_EVENT", $length, $delay, $iterations); </make>

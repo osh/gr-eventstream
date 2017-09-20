@@ -2,7 +2,7 @@
 <block>
   <name>Trigger Sample-Timer Event</name>
   <key>es_trigger_sample_timer</key>
-  <category>EVENTSTREAM</category>
+  <category>[EVENTSTREAM]</category>
   <import>import es</import>
   <make>es.trigger_sample_timer($type.size, $period, $shift, $sched_dist, $length )</make>
   
