@@ -2,7 +2,7 @@
 <block>
   <name>EventStream Arbiter</name>
   <key>variable_es_arb</key>
-  <category>EVENTSTREAM</category>
+  <category>[EVENTSTREAM]</category>
   <import>import es</import>
   <var_make>self.$(id) = $(id) = es.es_make_arbiter()</var_make>
   <make></make>

@@ -2,7 +2,7 @@
 <block>
     <name>Patterned Interleaver</name>
     <key>patterned_interlaver</key>
-    <category>Stream Conversions</category>
+    <category>[EVENTSTREAM]/Stream Conversions</category>
     <import>import es, numpy</import>
     <make>es.patterned_interleaver($type.np, $ninputs, $pattern)</make>
 

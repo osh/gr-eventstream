@@ -7,7 +7,7 @@
 <block>
 	<name>Event-Time Parameter</name>
 	<key>variable_es_evt</key>
-    <category>EVENTSTREAM</category>
+    <category>[EVENTSTREAM]</category>
 	<var_make>self.$(id) = $(id) = $value</var_make>
 	<make></make>
 	<param>

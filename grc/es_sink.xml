@@ -2,7 +2,7 @@
 <block>
     <name>EventStream Sink</name>
     <key>es_sink</key>
-    <category>EVENTSTREAM</category>
+    <category>[EVENTSTREAM]</category>
     <import>import es</import>
     <make>es.sink($num_streams*[$type.size],$nthreads,$samplehistory,$eb.raw,$ss.raw,$cb.raw)</make>
 

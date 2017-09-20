@@ -2,7 +2,7 @@
 <block>
   <name>patterned_interleaver</name>
   <key>es_patterned_interleaver</key>
-  <category>es</category>
+  <category>[EVENTSTREAM]/es</category>
   <import>import es</import>
   <make>es.patterned_interleaver(items, itemsize, pattern)</make>
   <!-- Make one 'param' node for every Parameter you want settable from the GUI.

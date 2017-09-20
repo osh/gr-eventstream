@@ -2,7 +2,7 @@
 <block>
   <name>Handler File</name>
   <key>es_handler_file</key>
-  <category>EVENTSTREAM</category>
+  <category>[EVENTSTREAM]</category>
   <import>import es</import>
   <make>es.es_make_handler_file($dt, $path, $desc)</make>
   

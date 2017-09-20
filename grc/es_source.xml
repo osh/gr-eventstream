@@ -2,7 +2,7 @@
 <block>
   <name>EventStream Source</name>
   <key>es_source</key>
-  <category>EVENTSTREAM</category>
+  <category>[EVENTSTREAM]</category>
   <import>import es</import>
   <make>es.source($num_streams*[$type.size], $nthreads, $eb.raw, $mm.raw)</make>
 

@@ -2,7 +2,7 @@
 <block>
   <name>Handler Print</name>
   <key>es_handler_print</key>
-  <category>EVENTSTREAM</category>
+  <category>[EVENTSTREAM]</category>
   <import>import es</import>
   <make>es.es_make_handler_print($dt)</make>
   
